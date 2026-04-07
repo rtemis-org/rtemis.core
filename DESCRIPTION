@@ -1,0 +1,23 @@
+Package: rtemis.core
+Title: Type Checking and Validation
+Version: 0.0.0.9000
+Authors@R: person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"), 
+    email = "gennatas@gmail.com", comment = c(ORCID = "0000-0001-9280-3609"))
+Description: Utilities for type checking, argument validation, and input
+    cleaning. Provides 'test_*' functions that return logical values, 'check_*'
+    functions that throw informative errors, and 'clean_*' functions that
+    return validated and coerced inputs.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    cli,
+    data.table,
+    methods,
+    S7
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Config/testthat/parallel: true
+Additional_repositories: https://rtemis-org.r-universe.dev

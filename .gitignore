@@ -1,0 +1,19 @@
+# Dev
+__dev/
+Makefile
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Zed
+.zed/
+
+# R
+*.Rcheck/
+
+# Agents
+AGENTS.md

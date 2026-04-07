@@ -1,0 +1,182 @@
+# test-check.R
+
+# check_inherits ----
+test_that("check_inherits passes for correct class", {
+  expect_invisible(check_inherits("papaya", "character"))
+  expect_invisible(check_inherits(1L, "integer"))
+})
+
+test_that("check_inherits errors for wrong class", {
+  expect_error(check_inherits(1.5, "integer", allow_null = FALSE))
+  expect_error(check_inherits(iris, "list", allow_null = FALSE))
+})
+
+test_that("check_inherits allows NULL by default", {
+  expect_invisible(check_inherits(NULL, "character"))
+})
+
+test_that("check_inherits errors on NULL when allow_null = FALSE", {
+  expect_error(check_inherits(NULL, "character", allow_null = FALSE))
+})
+
+# check_logical ----
+test_that("check_logical passes for logical input", {
+  expect_invisible(check_logical(TRUE))
+  expect_invisible(check_logical(c(TRUE, FALSE)))
+})
+
+test_that("check_logical errors for non-logical input", {
+  expect_error(check_logical(1, allow_null = FALSE))
+  expect_error(check_logical("true", allow_null = FALSE))
+})
+
+test_that("check_logical errors on NAs", {
+  expect_error(check_logical(c(TRUE, NA)))
+})
+
+test_that("check_logical allows NULL by default", {
+  expect_invisible(check_logical(NULL))
+})
+
+test_that("check_logical errors on NULL when allow_null = FALSE", {
+  expect_error(check_logical(NULL, allow_null = FALSE))
+})
+
+# check_character ----
+test_that("check_character passes for character input", {
+  expect_invisible(check_character("hello"))
+  expect_invisible(check_character(c("a", "b")))
+})
+
+test_that("check_character errors for non-character input", {
+  expect_error(check_character(1, allow_null = FALSE))
+  expect_error(check_character(TRUE, allow_null = FALSE))
+})
+
+test_that("check_character errors on NAs", {
+  expect_error(check_character(c("a", NA)))
+})
+
+test_that("check_character allows NULL by default", {
+  expect_invisible(check_character(NULL))
+})
+
+# check_floatpos ----
+test_that("check_floatpos passes for positive numeric", {
+  expect_invisible(check_floatpos(1.5))
+  expect_invisible(check_floatpos(c(0.1, 2, 3.5)))
+})
+
+test_that("check_floatpos errors on zero or negative values", {
+  expect_error(check_floatpos(0, allow_null = FALSE))
+  expect_error(check_floatpos(-1, allow_null = FALSE))
+})
+
+test_that("check_floatpos errors on non-numeric", {
+  expect_error(check_floatpos("a", allow_null = FALSE))
+})
+
+test_that("check_floatpos errors on NAs", {
+  expect_error(check_floatpos(c(1, NA)))
+})
+
+test_that("check_floatpos allows NULL by default", {
+  expect_invisible(check_floatpos(NULL))
+})
+
+# check_float01exc ----
+test_that("check_float01exc passes for values in (0, 1)", {
+  expect_invisible(check_float01exc(0.5))
+  expect_invisible(check_float01exc(c(0.1, 0.5, 0.9)))
+})
+
+test_that("check_float01exc errors on boundaries", {
+  expect_error(check_float01exc(0, allow_null = FALSE))
+  expect_error(check_float01exc(1, allow_null = FALSE))
+})
+
+test_that("check_float01exc errors outside range", {
+  expect_error(check_float01exc(-0.1, allow_null = FALSE))
+  expect_error(check_float01exc(1.1, allow_null = FALSE))
+})
+
+# check_float01inc ----
+test_that("check_float01inc passes for values in [0, 1]", {
+  expect_invisible(check_float01inc(0))
+  expect_invisible(check_float01inc(1))
+  expect_invisible(check_float01inc(0.5))
+  expect_invisible(check_float01inc(c(0, 0.5, 1)))
+})
+
+test_that("check_float01inc errors outside range", {
+  expect_error(check_float01inc(-0.1, allow_null = FALSE))
+  expect_error(check_float01inc(1.1, allow_null = FALSE))
+})
+
+test_that("check_float01inc errors on non-numeric", {
+  expect_error(check_float01inc("a", allow_null = FALSE))
+})
+
+# check_floatpos1 ----
+test_that("check_floatpos1 passes for values in (0, 1]", {
+  expect_invisible(check_floatpos1(1))
+  expect_invisible(check_floatpos1(0.5))
+  expect_invisible(check_floatpos1(c(0.1, 0.5, 1)))
+})
+
+test_that("check_floatpos1 errors on zero and values > 1", {
+  expect_error(check_floatpos1(0, allow_null = FALSE))
+  expect_error(check_floatpos1(1.1, allow_null = FALSE))
+})
+
+# check_float0pos ----
+test_that("check_float0pos passes for non-negative values", {
+  expect_invisible(check_float0pos(0))
+  expect_invisible(check_float0pos(1.5))
+  expect_invisible(check_float0pos(c(0, 1, 2.5)))
+})
+
+test_that("check_float0pos errors on negative values", {
+  expect_error(check_float0pos(-0.1, allow_null = FALSE))
+  expect_error(check_float0pos(c(1, -1), allow_null = FALSE))
+})
+
+# check_float_neg1_1 ----
+test_that("check_float_neg1_1 passes for values in [-1, 1]", {
+  expect_invisible(check_float_neg1_1(-1))
+  expect_invisible(check_float_neg1_1(0))
+  expect_invisible(check_float_neg1_1(1))
+  expect_invisible(check_float_neg1_1(c(-1, 0, 0.5, 1)))
+})
+
+test_that("check_float_neg1_1 errors outside range", {
+  expect_error(check_float_neg1_1(-1.1, allow_null = FALSE))
+  expect_error(check_float_neg1_1(1.1, allow_null = FALSE))
+})
+
+# check_dependencies ----
+test_that("check_dependencies passes for installed packages", {
+  expect_invisible(check_dependencies("base"))
+})
+
+# check_data.table ----
+test_that("check_data.table passes for data.table", {
+  dt <- data.table::data.table(a = 1:3)
+  expect_invisible(check_data.table(dt))
+})
+
+test_that("check_data.table errors for non-data.table", {
+  expect_error(check_data.table(iris))
+  expect_error(check_data.table(list(a = 1)))
+})
+
+# check_tabular ----
+test_that("check_tabular passes for tabular objects", {
+  expect_invisible(check_tabular(iris))
+  expect_invisible(check_tabular(data.table::data.table(a = 1)))
+})
+
+test_that("check_tabular errors for non-tabular objects", {
+  expect_error(check_tabular(list(a = 1)))
+  expect_error(check_tabular(matrix(1:4, 2, 2)))
+})

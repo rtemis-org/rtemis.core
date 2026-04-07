@@ -1,0 +1,456 @@
+# check.R
+# ::rtemis.strict::
+# 2024- EDG rtemis.org
+
+# check_* functions perform checks and throw error using cli::cli_abort if checks fail;
+# do not return a value.
+
+# %% check_inherits ----
+#' Check class of object
+#'
+#' @param x Object to check.
+#' @param cl Character: class to check against.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#'
+#' @export
+#'
+#' @examples
+#' check_inherits("papaya", "character")
+#' # These will throw errors:
+#' # check_inherits(c(1, 2.5, 3.2), "integer")
+#' # check_inherits(iris, "list")
+check_inherits <- function(
+  x,
+  cl,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (!inherits(x, cl)) {
+    cli::cli_abort(
+      "{.var {xname}} must be of class {.cls {cl}}."
+    )
+  }
+
+  invisible()
+} # /rtemis.strict::check_inherits
+
+
+# %% check_logical ----
+#' Check logical
+#'
+#' @param x Vector to check.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#' @author EDG
+#'
+#' @export
+check_logical <- function(
+  x,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (anyNA(x)) {
+    cli::cli_abort("{.var {xname}} must not contain NAs.")
+  }
+  if (!is.logical(x)) {
+    cli::cli_abort("{.var {xname}} must be logical.")
+  }
+
+  invisible()
+} # /rtemis.strict::check_logical
+
+
+# %% check_character ----
+#' Check character
+#'
+#' @param x Vector to check.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+check_character <- function(
+  x,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (anyNA(x)) {
+    cli::cli_abort("{.var {xname}} must not contain NAs.")
+  }
+  if (!is.character(x)) {
+    cli::cli_abort("{.var {xname}} must be character.")
+  }
+
+  invisible()
+} # /rtemis.strict::check_character
+
+
+# %% check_floatpos ----
+#' Check positive float
+#'
+#' @details
+#' Checking with `is.numeric()` allows integer inputs as well, which should be ok since it is
+#' unlikely the function that consumes this will enforce double type only, but instead is most
+#' likely to allow implicit coercion from integer to numeric.
+#'
+#' @param x Numeric vector.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+check_floatpos <- function(
+  x,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (!is.numeric(x)) {
+    cli::cli_abort("{.var {xname}} must be numeric.")
+  }
+
+  if (anyNA(x)) {
+    cli::cli_abort("{.var {xname}} must not contain NAs.")
+  }
+
+  if (any(x <= 0)) {
+    cli::cli_abort("{.var {xname}} must be greater than 0.")
+  }
+
+  invisible()
+} # /rtemis.strict::check_floatpos
+
+
+# %% check_float01exc ----
+#' Check float between 0 and 1, exclusive
+#'
+#' @param x Numeric vector.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' check_float01exc(0.5)
+check_float01exc <- function(
+  x,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (!is.numeric(x)) {
+    cli::cli_abort("{.var {xname}} must be numeric.")
+  }
+
+  if (anyNA(x)) {
+    cli::cli_abort("{.var {xname}} must not contain NAs.")
+  }
+
+  if (any(x <= 0 | x >= 1)) {
+    cli::cli_abort(
+      "{.var {xname}} must be between 0 and 1, exclusive."
+    )
+  }
+
+  invisible()
+} # /rtemis.strict::check_float01exc
+
+
+# %% check_float01inc ----
+#' Check float between 0 and 1, inclusive
+#'
+#' @param x Numeric vector.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' check_float01inc(0.5)
+check_float01inc <- function(
+  x,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (!is.numeric(x)) {
+    cli::cli_abort(
+      "{.var {xname}} must be numeric. Received: {.val {x}} of class {class(x)}"
+    )
+  }
+
+  if (anyNA(x)) {
+    cli::cli_abort("{.var {xname}} must not contain NAs.")
+  }
+
+  if (any(x < 0 | x > 1)) {
+    cli::cli_abort("{.var {xname}} must be between 0 and 1, inclusive.")
+  }
+
+  invisible()
+} # /rtemis.strict::check_float01inc
+
+
+# %% check_floatpos1 ----
+#' Check float in (0, 1]
+#'
+#' @param x Numeric vector.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+check_floatpos1 <- function(
+  x,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (!is.numeric(x)) {
+    cli::cli_abort("{.var {xname}} must be numeric.")
+  }
+
+  if (anyNA(x)) {
+    cli::cli_abort("{.var {xname}} must not contain NAs.")
+  }
+
+  if (any(x <= 0) || any(x > 1)) {
+    cli::cli_abort(
+      "{.var {xname}} must be greater than 0 and less or equal to 1."
+    )
+  }
+
+  invisible()
+} # /rtemis.strict::check_floatpos1
+
+
+# %% check_float0pos ----
+#' Check float greater than or equal to 0
+#'
+#' Checks if an input is a numeric vector containing non-negative
+#'   (>= 0) values and no `NA`s. It is designed to validate function arguments.
+#'
+#' @param x Numeric vector.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#'
+#' @export
+check_float0pos <- function(
+  x,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (!is.numeric(x)) {
+    cli::cli_abort("{.var {xname}} must be numeric.")
+  }
+
+  if (anyNA(x)) {
+    cli::cli_abort("{.var {xname}} must not contain NAs.")
+  }
+
+  if (any(x < 0)) {
+    cli::cli_abort("{.var {xname}} must be zero or greater.")
+  }
+
+  invisible()
+} # /rtemis.strict::check_float0pos
+
+
+# %% check_float_neg1_1 ----
+#' Check float -1 <= x <= 1
+#'
+#' @param x Numeric vector.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#'
+#' @export
+check_float_neg1_1 <- function(
+  x,
+  allow_null = TRUE,
+  xname = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {xname}} cannot be NULL.")
+  }
+
+  if (!is.numeric(x)) {
+    cli::cli_abort("{.var {xname}} must be numeric.")
+  }
+
+  if (anyNA(x)) {
+    cli::cli_abort("{.var {xname}} must not contain NAs.")
+  }
+
+  if (any(x < -1 | x > 1)) {
+    cli::cli_abort("{.var {xname}} must be between -1 and 1, inclusive.")
+  }
+
+  invisible()
+} # /rtemis.strict::check_float_neg1_1
+
+
+# %% check_dependencies ----
+#' \pkg{rtemis.strict} internal: Dependencies check
+#'
+#' Checks if dependencies can be loaded; names missing dependencies if not.
+#'
+#' @param ... List or vector of strings defining namespaces to be checked
+#' @param verbosity Integer: Verbosity level.
+#' Note: An error will always printed if dependencies are missing.
+#' Setting this to FALSE stops it from printing
+#' "Dependencies check passed".
+#'
+#' @return Called for side effects. Aborts and prints list of missing dependencies, if any.
+#'
+#' @author EDG
+#'
+#' @export
+check_dependencies <- function(..., verbosity = 0L) {
+  ns <- as.list(c(...))
+  err <- !sapply(ns, \(i) requireNamespace(i, quietly = TRUE))
+  if (any(err)) {
+    cli::cli_abort(
+      paste0(
+        "Please install the following ",
+        ngettext(sum(err), "dependency", "dependencies"),
+        ":\n",
+        pastels(ns[err], bullet = "    -")
+      )
+    )
+  } else {
+    if (verbosity > 0L) msg("Dependency check passed")
+  }
+  invisible()
+} # /rtemis.strict::check_dependencies
+
+
+# %% check_data.table ----
+#' Check data.table
+#'
+#' @param x Object to check.
+#' @param xname Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if input is not a data.table, returns x
+#' invisibly otherwise.
+#'
+#' @author EDG
+#' @export
+check_data.table <- function(x, xname = deparse(substitute(x))) {
+  if (!data.table::is.data.table(x)) {
+    cli::cli_abort("{.var {xname}} must be a data.table.")
+  }
+  invisible(x)
+} # /rtemis.strict::check_data.table
+
+
+# %% check_tabular ----
+#' Check object is tabular
+#'
+#' Checks if object is of class `data.frame`, `data.table`, or `tbl_df`.
+#'
+#' @param x Object to check.
+#'
+#' @return Called for side effects. Throws an error if input is not tabular, returns x invisibly
+#' otherwise.
+#'
+#' @author EDG
+#' @export
+check_tabular <- function(x) {
+  if (!inherits(x, c("data.frame", "data.table", "tbl_df"))) {
+    cli::cli_abort(
+      "{.var {deparse(substitute(x))}} must be a data.frame, data.table, or tbl_df."
+    )
+  }
+  invisible(x)
+} # /rtemis.strict::check_tabular
