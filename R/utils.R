@@ -1,5 +1,5 @@
 # utils.R
-# ::rtemis.strict::
+# ::rtemis.core::
 # 2024- EDG rtemis.org
 
 # %% match_arg ----
@@ -19,7 +19,7 @@
 match_arg <- function(x, choices) {
   out <- match.arg(tolower(x), tolower(choices))
   grep(out, choices, value = TRUE, ignore.case = TRUE)
-} # /rtemis.strict::match_arg
+} # /rtemis.core::match_arg
 
 
 # %% abbreviate_class ----
@@ -39,4 +39,4 @@ match_arg <- function(x, choices) {
 #' abbreviate_class(iris, n = 3)
 abbreviate_class <- function(x, n = 4L) {
   paste0("<", abbreviate(class(x)[1], minlength = n), ">")
-} # /rtemis.strict::abbreviate_class
+} # /rtemis.core::abbreviate_class

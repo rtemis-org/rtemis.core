@@ -1,5 +1,5 @@
 # clean.R
-# ::rtemis.strict::
+# ::rtemis.core::
 # 2024- EDG rtemis.org
 
 # clean_* functions perform checks and return clean inputs.
@@ -40,7 +40,7 @@ clean_int <- function(x, xname = deparse(substitute(x))) {
     return(NULL)
   }
   cli::cli_abort("{.var {xname}} must be integer.")
-} # /rtemis.strict::clean_int
+} # /rtemis.core::clean_int
 
 
 # %% clean_posint ----
@@ -74,4 +74,4 @@ clean_posint <- function(x, allow_na = FALSE, xname = deparse(substitute(x))) {
   }
 
   clean_int(x, xname = xname)
-} # /rtemis.strict::clean_posint
+} # /rtemis.core::clean_posint

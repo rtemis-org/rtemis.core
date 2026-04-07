@@ -1,5 +1,5 @@
 # test.R
-# ::rtemis.strict::
+# ::rtemis.core::
 # 2024- EDG rtemis.org
 
 # test_* functions perform checks and return TRUE/FALSE; do not throw errors.
@@ -26,4 +26,4 @@ test_inherits <- function(x, cl) {
     return(FALSE)
   }
   TRUE
-} # /rtemis.strict::test_inherits
+} # /rtemis.core::test_inherits

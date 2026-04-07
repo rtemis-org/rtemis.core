@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(rtemis.strict)
+library(rtemis.core)
 
-test_check("rtemis.strict")
+test_check("rtemis.core")

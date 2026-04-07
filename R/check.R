@@ -1,5 +1,5 @@
 # check.R
-# ::rtemis.strict::
+# ::rtemis.core::
 # 2024- EDG rtemis.org
 
 # check_* functions perform checks and throw error using cli::cli_abort if checks fail;
@@ -45,7 +45,7 @@ check_inherits <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_inherits
+} # /rtemis.core::check_inherits
 
 
 # %% check_logical ----
@@ -80,7 +80,7 @@ check_logical <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_logical
+} # /rtemis.core::check_logical
 
 
 # %% check_character ----
@@ -115,7 +115,7 @@ check_character <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_character
+} # /rtemis.core::check_character
 
 
 # %% check_floatpos ----
@@ -160,7 +160,7 @@ check_floatpos <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_floatpos
+} # /rtemis.core::check_floatpos
 
 
 # %% check_float01exc ----
@@ -205,7 +205,7 @@ check_float01exc <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_float01exc
+} # /rtemis.core::check_float01exc
 
 
 # %% check_float01inc ----
@@ -250,7 +250,7 @@ check_float01inc <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_float01inc
+} # /rtemis.core::check_float01inc
 
 
 # %% check_floatpos1 ----
@@ -292,7 +292,7 @@ check_floatpos1 <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_floatpos1
+} # /rtemis.core::check_floatpos1
 
 
 # %% check_float0pos ----
@@ -336,7 +336,7 @@ check_float0pos <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_float0pos
+} # /rtemis.core::check_float0pos
 
 
 # %% check_float_neg1_1 ----
@@ -377,11 +377,11 @@ check_float_neg1_1 <- function(
   }
 
   invisible()
-} # /rtemis.strict::check_float_neg1_1
+} # /rtemis.core::check_float_neg1_1
 
 
 # %% check_dependencies ----
-#' \pkg{rtemis.strict} internal: Dependencies check
+#' \pkg{rtemis.core} internal: Dependencies check
 #'
 #' Checks if dependencies can be loaded; names missing dependencies if not.
 #'
@@ -412,7 +412,7 @@ check_dependencies <- function(..., verbosity = 0L) {
     if (verbosity > 0L) msg("Dependency check passed")
   }
   invisible()
-} # /rtemis.strict::check_dependencies
+} # /rtemis.core::check_dependencies
 
 
 # %% check_data.table ----
@@ -431,7 +431,7 @@ check_data.table <- function(x, xname = deparse(substitute(x))) {
     cli::cli_abort("{.var {xname}} must be a data.table.")
   }
   invisible(x)
-} # /rtemis.strict::check_data.table
+} # /rtemis.core::check_data.table
 
 
 # %% check_tabular ----
@@ -453,4 +453,4 @@ check_tabular <- function(x) {
     )
   }
   invisible(x)
-} # /rtemis.strict::check_tabular
+} # /rtemis.core::check_tabular

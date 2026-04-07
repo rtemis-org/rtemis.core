@@ -2,7 +2,7 @@
 % Please edit documentation in R/check.R
 \name{check_dependencies}
 \alias{check_dependencies}
-\title{\pkg{rtemis.strict} internal: Dependencies check}
+\title{\pkg{rtemis.core} internal: Dependencies check}
 \usage{
 check_dependencies(..., verbosity = 0L)
 }
