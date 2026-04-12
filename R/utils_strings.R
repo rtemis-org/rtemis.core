@@ -45,7 +45,7 @@ highlightbig <- function(x, output_type = c("ansi", "html", "plain")) {
 red <- function(..., bold = FALSE) {
   fmt(
     paste(...),
-    col = rt_red,
+    col = rtemis_colors[["red"]],
     bold = bold
   )
 }
@@ -61,7 +61,7 @@ red <- function(..., bold = FALSE) {
 green <- function(..., bold = FALSE) {
   fmt(
     paste(...),
-    col = rt_green,
+    col = rtemis_colors[["green"]],
     bold = bold
   )
 }
@@ -75,7 +75,7 @@ green <- function(..., bold = FALSE) {
 blue <- function(..., bold = FALSE) {
   fmt(
     paste(...),
-    col = rt_blue,
+    col = rtemis_colors[["blue"]],
     bold = bold
   )
 }
@@ -91,7 +91,7 @@ blue <- function(..., bold = FALSE) {
 orange <- function(..., bold = FALSE) {
   fmt(
     paste(...),
-    col = rt_orange,
+    col = rtemis_colors[["orange"]],
     bold = bold
   )
 }
@@ -120,9 +120,9 @@ reset <- function(...) {
 #' @noRd
 rtcitation <- paste0(
   "> ",
-  fmt("citation", col = rt_blue),
+  fmt("citation", col = rtemis_colors[["blue"]]),
   "(",
-  fmt("rtemis", col = rt_teal),
+  fmt("rtemis", col = rtemis_colors[["teal"]]),
   ")"
 )
 
