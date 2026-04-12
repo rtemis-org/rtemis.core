@@ -3,38 +3,15 @@
 \docType{data}
 \name{rtemis_colors}
 \alias{rtemis_colors}
-\title{rtemis Color System}
+\title{rtemis Colors}
 \format{
-A named list with the following elements:
-\describe{
-\item{red}{"kaimana red"}
-\item{blue}{"kaimana light blue"}
-\item{green}{"kaimana medium green"}
-\item{orange}{"coastside orange"}
-\item{teal}{"rtemis teal"}
-\item{purple}{"rtemis purple"}
-\item{magenta}{"rtemis magenta"}
-\item{col_highlight}{"highlight color"}
-\item{object}{"rtemis teal"}
-\item{info}{"lmd burgundy"}
-\item{outer}{"kaimana red"}
-\item{tuner}{"coastside orange"}
-}
+An object of class \code{character} of length 10.
 }
 \usage{
 rtemis_colors
 }
 \description{
-A named list of colors used consistently across all packages
-in the rtemis ecosystem.
-}
-\details{
-Colors are provided as hex strings.
-}
-\examples{
-rtemis_colors[["orange"]]
-
-rtemis_colors[["teal"]]
+A named vector of colors used in the rtemis ecosystem, provided as hex strings.
 }
 \author{
 EDG

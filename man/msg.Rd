@@ -7,14 +7,14 @@
 \usage{
 msg(
   ...,
-  date = TRUE,
   caller = NULL,
   call_depth = 1L,
   caller_id = 1L,
   newline_pre = FALSE,
   newline = TRUE,
   format_fn = plain,
-  sep = " "
+  sep = " ",
+  verbosity = 1L
 )
 
 msg0(
@@ -25,13 +25,12 @@ msg0(
   newline_pre = FALSE,
   newline = TRUE,
   format_fn = plain,
-  sep = ""
+  sep = "",
+  verbosity = 1L
 )
 }
 \arguments{
 \item{...}{Message to print}
-
-\item{date}{Logical: if TRUE, include date and time in the prefix}
 
 \item{caller}{Character: Name of calling function}
 
@@ -46,9 +45,13 @@ msg0(
 \item{format_fn}{Function: Formatting function to use on the message text.}
 
 \item{sep}{Character: Use to separate objects in \code{...}}
+
+\item{verbosity}{Integer: Verbosity level of the message. If 0L, does not print anything and
+returns NULL, invisibly.}
 }
 \value{
-Invisibly: List with call, message, and date
+If verbosity > 0L, returns a list with call, message, and date, invisibly, otherwise
+returns NULL invisibly.
 }
 \description{
 Print message to output with a prefix including data and time, and calling function or full
@@ -60,9 +63,7 @@ the call stack.
 \code{msg0}, similar to \code{paste0}, is \code{msg(..., sep = "")}
 }
 \examples{
-msg("Hello, world!")
-x <- 42L
-msg0("The answer is what you think it is (", x, ").")
+msg("Hello")
 }
 \author{
 EDG
