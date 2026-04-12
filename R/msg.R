@@ -88,11 +88,8 @@ format_caller <- function(call_stack, call_depth, caller_id, max_char = 30L) {
 #'   the call stack.
 #' `msg0`, similar to `paste0`, is `msg(..., sep = "")`
 #'
-# Add following to each function using \code{msg}:
-# \code{current <- as.list(sys.call())[[1]]}
 #'
 #' @param ... Message to print
-#' @param date Logical: if TRUE, include date and time in the prefix
 #' @param caller Character: Name of calling function
 #' @param call_depth Integer: Print the system call path of this depth.
 #' @param caller_id Integer: Which function in the call stack to print
@@ -100,25 +97,31 @@ format_caller <- function(call_stack, call_depth, caller_id, max_char = 30L) {
 #' @param newline Logical: If TRUE end with a new line.
 #' @param format_fn Function: Formatting function to use on the message text.
 #' @param sep Character: Use to separate objects in `...`
+#' @param verbosity Integer: Verbosity level of the message. If 0L, does not print anything and
+#' returns NULL, invisibly.
 #'
-#' @return Invisibly: List with call, message, and date
+#' @return If verbosity > 0L, returns a list with call, message, and date, invisibly, otherwise
+#' returns NULL invisibly.
 #'
 #' @author EDG
 #' @export
 #'
 #' @examples
-#' msg("Hello, world!")
+#' msg("Hello")
 msg <- function(
   ...,
-  date = TRUE,
   caller = NULL,
   call_depth = 1L,
   caller_id = 1L,
   newline_pre = FALSE,
   newline = TRUE,
   format_fn = plain,
-  sep = " "
+  sep = " ",
+  verbosity = 1L
 ) {
+  if (verbosity < 1L) {
+    return(invisible(NULL))
+  }
   if (is.null(caller)) {
     call_stack <- as.list(sys.calls())
     caller <- format_caller(call_stack, call_depth, caller_id)
@@ -128,9 +131,7 @@ msg <- function(
   if (newline_pre) {
     message("")
   }
-  if (date) {
-    msgdatetime()
-  }
+  msgdatetime()
   message(
     format_fn(paste(txt, collapse = sep)),
     appendLF = FALSE
@@ -140,17 +141,12 @@ msg <- function(
   } else if (newline) {
     message("")
   }
-}
+} # /rtemis::msg
 
 
 #' @rdname msg
 #'
-#' @author EDG
 #' @export
-#'
-#' @examples
-#' x <- 42L
-#' msg0("The answer is what you think it is (", x, ").")
 msg0 <- function(
   ...,
   caller = NULL,
@@ -159,8 +155,12 @@ msg0 <- function(
   newline_pre = FALSE,
   newline = TRUE,
   format_fn = plain,
-  sep = ""
+  sep = "",
+  verbosity = 1L
 ) {
+  if (verbosity < 1L) {
+    return(invisible(NULL))
+  }
   if (is.null(caller)) {
     call_stack <- as.list(sys.calls())
     caller <- format_caller(call_stack, call_depth, caller_id)
@@ -180,7 +180,7 @@ msg0 <- function(
   } else if (newline) {
     message("")
   }
-}
+} #
 
 
 #' Pad-cat
