@@ -1,96 +1,25 @@
-# rtemis color system
-# ::rtemis.core::
-# 2025- EDG rtemis.org
+# rtemis_color_system.R
 
-# Violet: Class names (structure)
-# Blue: Outer resampling (evaluation)
-# Orange: Hyperparameter tuning (optimization)
-# Green: Model training + important highlights (execution)
-# Cyan: Info messages (communication)
-
-# References
-# ANSI escape codes
-# https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
-# Xterm color names: https://jonasjacek.github.io/colors/
-# CSS color keywords: https://www.uxgem.com/docs/css-color-keywords
-# Unicode emojis: https://www.unicode.org/emoji/charts/full-emoji-list.html
-# UTF-8 icons: https://www.utf8icons.com/
-
-rtemis_light_teal <- "#00fdfd"
-rtemis_teal <- "#00b2b2"
-rtemis_light_blue <- "#30cefe"
-kaimana_red <- "#ff004c"
-kaimana_blue <- "#0067e0"
-kaimana_light_blue <- "#479cff"
-coastside_orange <- "#ff9f20"
-rtemis_orange <- "#ff4f36"
-kaimana_green <- "#00ffb3"
-kaimana_med_green <- "#00996b"
-rtemis_purple <- "#6125f7"
-rtemis_magenta <- "#912ac8"
-rtemis_light_magenta <- "#b25bd6"
-magenta <- "#ff00ff"
-lmd_burgundy <- "#a92459"
-rtms_gray <- "#808080"
-
-
-# %% internal colors ----
-rt_gray <- rtms_gray
-rt_red <- kaimana_red
-rt_blue <- kaimana_light_blue
-rt_green <- kaimana_med_green
-rt_orange <- coastside_orange
-rt_teal <- rtemis_teal
-rt_purple <- rtemis_purple
-rt_magenta <- rtemis_light_magenta
-
-col_highlight <- rt_orange
-col_suggest <- rt_orange
-col_object <- rt_green
-
-
-#' rtemis Color System
+#' rtemis Colors
 #'
-#' A named list of colors used consistently across all packages
-#' in the rtemis ecosystem.
-#'
-#' Colors are provided as hex strings.
-#'
-#' @format A named list with the following elements:
-#' \describe{
-#'   \item{red}{"kaimana red"}
-#'   \item{blue}{"kaimana light blue"}
-#'   \item{green}{"kaimana medium green"}
-#'   \item{orange}{"coastside orange"}
-#'   \item{teal}{"rtemis teal"}
-#'   \item{purple}{"rtemis purple"}
-#'   \item{magenta}{"rtemis magenta"}
-#'   \item{col_highlight}{"highlight color"}
-#'   \item{object}{"rtemis teal"}
-#'   \item{info}{"lmd burgundy"}
-#'   \item{outer}{"kaimana red"}
-#'   \item{tuner}{"coastside orange"}
-#' }
-#'
-#' @examples
-#' rtemis_colors[["orange"]]
+#' A named vector of colors used in the rtemis ecosystem, provided as hex strings.
 #'
 #' @author EDG
-#'
 #' @export
-#'
-#' @examples
-#' rtemis_colors[["teal"]]
-rtemis_colors <- list(
-  red = kaimana_red,
-  light_blue = kaimana_light_blue,
-  blue = kaimana_blue,
-  light_green = kaimana_green,
-  green = kaimana_med_green,
-  orange = coastside_orange,
-  light_teal = rtemis_light_teal,
-  teal = rtemis_teal,
-  purple = rtemis_purple,
-  light_magenta = rtemis_light_magenta,
-  magenta = rtemis_magenta
+rtemis_colors <- c(
+  teal = "#6CA3A0",
+  orange = "#F08904",
+  magenta = "#BE2E5F",
+  light_blue = "#B3CFE8",
+  green = "#4F662A",
+  light_orange = "#FDB808",
+  blue = "#466D96",
+  red = "#EA384A",
+  light_mauve = "#ECBDC3",
+  pink = "#F384FF"
 )
+
+
+col_highlight <- rtemis_colors[["orange"]]
+col_suggest <- rtemis_colors[["orange"]]
+col_object <- rtemis_colors[["green"]]
