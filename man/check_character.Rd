@@ -4,14 +4,14 @@
 \alias{check_character}
 \title{Check character}
 \usage{
-check_character(x, allow_null = TRUE, xname = deparse(substitute(x)))
+check_character(x, allow_null = TRUE, arg_name = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Vector to check.}
 
 \item{allow_null}{Logical: If TRUE, NULL values are allowed and return early.}
 
-\item{xname}{Character: Name of the variable for error messages.}
+\item{arg_name}{Character: Name of the variable for error messages.}
 }
 \value{
 Called for side effects. Throws an error if checks fail.

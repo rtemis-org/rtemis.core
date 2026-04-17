@@ -4,14 +4,14 @@
 \alias{check_float01inc}
 \title{Check float between 0 and 1, inclusive}
 \usage{
-check_float01inc(x, allow_null = TRUE, xname = deparse(substitute(x)))
+check_float01inc(x, allow_null = TRUE, arg_name = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Numeric vector.}
 
 \item{allow_null}{Logical: If TRUE, NULL values are allowed and return early.}
 
-\item{xname}{Character: Name of the variable for error messages.}
+\item{arg_name}{Character: Name of the variable for error messages.}
 }
 \value{
 Called for side effects. Throws an error if checks fail.

@@ -4,12 +4,12 @@
 \alias{check_data.table}
 \title{Check data.table}
 \usage{
-check_data.table(x, xname = deparse(substitute(x)))
+check_data.table(x, arg_name = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Object to check.}
 
-\item{xname}{Character: Name of the variable for error messages.}
+\item{arg_name}{Character: Name of the variable for error messages.}
 }
 \value{
 Called for side effects. Throws an error if input is not a data.table, returns x
