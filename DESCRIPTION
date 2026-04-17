@@ -1,6 +1,7 @@
 Package: rtemis.core
 Title: Type Checking and Validation
-Version: 0.0.1
+Version: 0.0.2
+Date: 2026-04-17
 Authors@R: person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"), 
     email = "gennatas@gmail.com", comment = c(ORCID = "0000-0001-9280-3609"))
 Description: Utilities for type checking, argument validation, and input
