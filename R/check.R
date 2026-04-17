@@ -11,7 +11,7 @@
 #' @param x Object to check.
 #' @param cl Character: class to check against.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #'
@@ -28,19 +28,19 @@ check_inherits <- function(
   x,
   cl,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (!inherits(x, cl)) {
     cli::cli_abort(
-      "{.var {xname}} must be of class {.cls {cl}}."
+      "{.var {arg_name}} must be of class {.cls {cl}}."
     )
   }
 
@@ -53,7 +53,7 @@ check_inherits <- function(
 #'
 #' @param x Vector to check.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #' @author EDG
@@ -62,21 +62,21 @@ check_inherits <- function(
 check_logical <- function(
   x,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   }
   if (!is.logical(x)) {
-    cli::cli_abort("{.var {xname}} must be logical.")
+    cli::cli_abort("{.var {arg_name}} must be logical.")
   }
 
   invisible()
@@ -88,7 +88,7 @@ check_logical <- function(
 #'
 #' @param x Vector to check.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #'
@@ -97,21 +97,21 @@ check_logical <- function(
 check_character <- function(
   x,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   }
   if (!is.character(x)) {
-    cli::cli_abort("{.var {xname}} must be character.")
+    cli::cli_abort("{.var {arg_name}} must be character.")
   }
 
   invisible()
@@ -128,7 +128,7 @@ check_character <- function(
 #'
 #' @param x Numeric vector.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #'
@@ -137,26 +137,26 @@ check_character <- function(
 check_floatpos <- function(
   x,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {xname}} must be numeric.")
+    cli::cli_abort("{.var {arg_name}} must be numeric.")
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   }
 
   if (any(x <= 0)) {
-    cli::cli_abort("{.var {xname}} must be greater than 0.")
+    cli::cli_abort("{.var {arg_name}} must be greater than 0.")
   }
 
   invisible()
@@ -168,7 +168,7 @@ check_floatpos <- function(
 #'
 #' @param x Numeric vector.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #'
@@ -180,27 +180,27 @@ check_floatpos <- function(
 check_float01exc <- function(
   x,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {xname}} must be numeric.")
+    cli::cli_abort("{.var {arg_name}} must be numeric.")
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   }
 
   if (any(x <= 0 | x >= 1)) {
     cli::cli_abort(
-      "{.var {xname}} must be between 0 and 1, exclusive."
+      "{.var {arg_name}} must be between 0 and 1, exclusive."
     )
   }
 
@@ -213,7 +213,7 @@ check_float01exc <- function(
 #'
 #' @param x Numeric vector.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #'
@@ -225,28 +225,28 @@ check_float01exc <- function(
 check_float01inc <- function(
   x,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (!is.numeric(x)) {
     cli::cli_abort(
-      "{.var {xname}} must be numeric. Received: {.val {x}} of class {class(x)}"
+      "{.var {arg_name}} must be numeric. Received: {.val {x}} of class {class(x)}"
     )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   }
 
   if (any(x < 0 | x > 1)) {
-    cli::cli_abort("{.var {xname}} must be between 0 and 1, inclusive.")
+    cli::cli_abort("{.var {arg_name}} must be between 0 and 1, inclusive.")
   }
 
   invisible()
@@ -258,7 +258,7 @@ check_float01inc <- function(
 #'
 #' @param x Numeric vector.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #'
@@ -267,27 +267,27 @@ check_float01inc <- function(
 check_floatpos1 <- function(
   x,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {xname}} must be numeric.")
+    cli::cli_abort("{.var {arg_name}} must be numeric.")
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   }
 
   if (any(x <= 0) || any(x > 1)) {
     cli::cli_abort(
-      "{.var {xname}} must be greater than 0 and less or equal to 1."
+      "{.var {arg_name}} must be greater than 0 and less or equal to 1."
     )
   }
 
@@ -303,7 +303,7 @@ check_floatpos1 <- function(
 #'
 #' @param x Numeric vector.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #'
@@ -313,26 +313,26 @@ check_floatpos1 <- function(
 check_float0pos <- function(
   x,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {xname}} must be numeric.")
+    cli::cli_abort("{.var {arg_name}} must be numeric.")
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   }
 
   if (any(x < 0)) {
-    cli::cli_abort("{.var {xname}} must be zero or greater.")
+    cli::cli_abort("{.var {arg_name}} must be zero or greater.")
   }
 
   invisible()
@@ -344,7 +344,7 @@ check_float0pos <- function(
 #'
 #' @param x Numeric vector.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
 #'
@@ -354,26 +354,26 @@ check_float0pos <- function(
 check_float_neg1_1 <- function(
   x,
   allow_null = TRUE,
-  xname = deparse(substitute(x))
+  arg_name = deparse(substitute(x))
 ) {
   if (allow_null && is.null(x)) {
     return(invisible())
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {xname}} cannot be NULL.")
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {xname}} must be numeric.")
+    cli::cli_abort("{.var {arg_name}} must be numeric.")
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   }
 
   if (any(x < -1 | x > 1)) {
-    cli::cli_abort("{.var {xname}} must be between -1 and 1, inclusive.")
+    cli::cli_abort("{.var {arg_name}} must be between -1 and 1, inclusive.")
   }
 
   invisible()
@@ -419,16 +419,16 @@ check_dependencies <- function(..., verbosity = 0L) {
 #' Check data.table
 #'
 #' @param x Object to check.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if input is not a data.table, returns x
 #' invisibly otherwise.
 #'
 #' @author EDG
 #' @export
-check_data.table <- function(x, xname = deparse(substitute(x))) {
+check_data.table <- function(x, arg_name = deparse(substitute(x))) {
   if (!data.table::is.data.table(x)) {
-    cli::cli_abort("{.var {xname}} must be a data.table.")
+    cli::cli_abort("{.var {arg_name}} must be a data.table.")
   }
   invisible(x)
 } # /rtemis.core::check_data.table
@@ -454,3 +454,27 @@ check_tabular <- function(x) {
   }
   invisible(x)
 } # /rtemis.core::check_tabular
+
+
+# %% check_enum ----
+#' Check if value is in set of allowed values
+#'
+#' Checks if a value is in a set of allowed values, and throws an error if not.
+#'
+#' @param x Value to check.
+#' @param allowed_values Vector of allowed values.
+#' @param arg_name Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if x is not in allowed_values, returns x
+#'   invisibly otherwise.
+#'
+#' @author EDG
+#' @export
+check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
+  if (!x %in% allowed_values) {
+    cli::cli_abort(
+      "{.var {arg_name}} must be one of: {.val {allowed_values}}. Received: {.val {x}}"
+    )
+  }
+  invisible(x)
+} # /rtemis.core::check_enum
