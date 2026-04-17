@@ -5,7 +5,7 @@
 \alias{rtemis_colors}
 \title{rtemis Colors}
 \format{
-An object of class \code{character} of length 10.
+An object of class \code{character} of length 12.
 }
 \usage{
 rtemis_colors
