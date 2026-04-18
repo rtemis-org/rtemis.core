@@ -3,7 +3,7 @@
 #'
 #' Creates an S7 union type that allows for the specified type or `NULL`.
 #'
-#' @param type S7 class
+#' @param type S7 base class or S7 class.
 #' @return An S7 union type that allows for the specified type or `NULL`.
 #' @author EDG
 #' @export
@@ -11,6 +11,10 @@
 #' # Create an optional character type
 #' optional(S7::class_character)
 optional <- function(type) {
-  check_inherits(type, "S7_base_class", allow_null = FALSE)
-  S7::new_union(type, class_missing)
+  if (!inherits(type, "S7_base_class") && !inherits(type, "S7_class")) {
+    cli::cli_abort(
+      "{.var type} must be an S7 base class or S7 class."
+    )
+  }
+  S7::new_union(type, NULL)
 }
