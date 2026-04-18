@@ -493,9 +493,9 @@ check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
 #' @examples
 #' check_scalar_logical(TRUE, "my_arg") # Passes
 #' check_scalar_logical(FALSE, "my_arg") # Passes
-#' check_scalar_logical(c(TRUE, FALSE), "my_arg") # Throws error
-#' check_scalar_logical(NA, "my_arg") # Throws error
-#' check_scalar_logical("TRUE", "my_arg") # Throws error
+#' # check_scalar_logical(c(TRUE, FALSE), "my_arg") # Throws error
+#' # check_scalar_logical(NA, "my_arg") # Throws error
+#' # check_scalar_logical("TRUE", "my_arg") # Throws error
 check_scalar_logical <- function(x, arg_name) {
   check_logical(x, allow_null = FALSE, arg_name = arg_name)
   if (length(x) != 1L) {
@@ -519,8 +519,8 @@ check_scalar_logical <- function(x, arg_name) {
 #' @examples
 #' check_optional_scalar_character(NULL, "my_arg") # Passes
 #' check_optional_scalar_character("hello", "my_arg") # Passes
-#' check_optional_scalar_character(c("hello", "world"), "my_arg") # Throws error
-#' check_optional_scalar_character(123, "my_arg") # Throws error
+#' # check_optional_scalar_character(c("hello", "world"), "my_arg") # Throws error
+#' # check_optional_scalar_character(123, "my_arg") # Throws error
 check_optional_scalar_character <- function(x, arg_name) {
   check_character(x, allow_null = TRUE, arg_name = arg_name)
   if (!is.null(x) && length(x) != 1L) {
