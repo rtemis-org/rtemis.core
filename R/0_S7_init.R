@@ -1,5 +1,3 @@
-# S7_init.R
-# ::rtemis.core::
 # 2026- EDG rtemis.org
 
 #' String representation
