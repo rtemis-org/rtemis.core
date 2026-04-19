@@ -21,7 +21,7 @@ rtemis_colors <- c(
   pink = "#F384FF"
 )
 
-
+# Internal colors
 col_highlight <- rtemis_colors[["orange"]]
 col_suggest <- rtemis_colors[["orange"]]
 col_object <- rtemis_colors[["green"]]
