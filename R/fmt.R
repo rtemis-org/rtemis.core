@@ -15,8 +15,8 @@
 #' @return Character with selected output type.
 #'
 #' @author EDG
-#'
 #' @export
+#'
 #' @examples
 #' get_output_type()
 get_output_type <- function(
@@ -314,10 +314,12 @@ muted <- function(x, output_type = c("ansi", "html", "plain")) {
 #' @return Character: Formatted text with gray styling
 #'
 #' @details
+#' This is an internal function so it does not mask `grDevices::gray()`.
 #' Can be useful in contexts where muted is not supported.
 #'
 #' @author EDG
-#' @export
+#' @keywords internal
+#' @noRd
 gray <- function(x, output_type = c("ansi", "html", "plain")) {
   fmt(x, col = "#808080", output_type = output_type)
 }
@@ -334,6 +336,9 @@ gray <- function(x, output_type = c("ansi", "html", "plain")) {
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' col256("Hello", col = 160, output_type = "ansi")
 col256 <- function(
   text,
   col = "79",
@@ -380,9 +385,14 @@ col256 <- function(
 #' Convert ANSI 256 color code to HEX
 #'
 #' @param code Integer: ANSI 256 color code (0-255).
+#'
 #' @return Character: HEX color string.
+#'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' ansi256_to_hex(1)
 ansi256_to_hex <- function(code) {
   code <- as.integer(code)
   if (is.na(code) || code < 0 || code > 255) {
