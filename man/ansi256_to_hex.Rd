@@ -15,6 +15,9 @@ Character: HEX color string.
 \description{
 Convert ANSI 256 color code to HEX
 }
+\examples{
+ansi256_to_hex(1)
+}
 \author{
 EDG
 }

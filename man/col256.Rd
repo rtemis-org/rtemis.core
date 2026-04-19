@@ -21,6 +21,9 @@ Character: Formatted text with 256-color styling
 \description{
 Apply 256-color formatting
 }
+\examples{
+col256("Hello", col = 160, output_type = "ansi")
+}
 \author{
 EDG
 }
