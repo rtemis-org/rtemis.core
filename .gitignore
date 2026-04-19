@@ -16,5 +16,7 @@ Makefile
 *.Rcheck/
 
 # Agents
+.claude/
 AGENTS.md
 CLAUDE.md
+SKILL.md
