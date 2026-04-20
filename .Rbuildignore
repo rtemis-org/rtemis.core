@@ -1,5 +1,6 @@
-^strict\.Rproj$
-^\.Rproj\.user$
-^Makefile$
-^AGENTS\.md$
+^__dev$
 ^\.github$
+^AGENTS\.md$
+^CLAUDE\.md$
+^Makefile$
+^SKILL\.md$
