@@ -19,6 +19,10 @@ Called for side effects. Throws an error if checks fail.
 \description{
 Check logical
 }
+\examples{
+check_logical(c(TRUE, FALSE))
+# check_logical(c(0, 1)) # Throws error
+}
 \author{
 EDG
 }

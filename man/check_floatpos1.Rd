@@ -19,6 +19,11 @@ Called for side effects. Throws an error if checks fail.
 \description{
 Check float in (0, 1]
 }
+\examples{
+check_floatpos1(c(0.5, 1))
+# check_floatpos1(c(0, 0.7)) # Throws error
+# check_floatpos1(c(0.5, 1.5)) # Throws error
+}
 \author{
 EDG
 }

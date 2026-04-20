@@ -20,6 +20,12 @@ Called for side effects. Throws an error if checks fail.
 Checks if an input is a numeric vector containing non-negative
 (>= 0) values and no \code{NA}s. It is designed to validate function arguments.
 }
+\examples{
+check_float0pos(c(0, 0.5, 1))
+# Allows integers since they are numeric and can be coerced to double without loss of information
+check_float0pos(c(0L, 1L))
+# check_float0pos(c(-1.5, 0, 1.5)) # Throws error
+}
 \author{
 EDG
 }

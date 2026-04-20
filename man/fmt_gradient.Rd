@@ -21,6 +21,9 @@ Character: Text with gradient color applied.
 \description{
 Gradient text
 }
+\examples{
+fmt_gradient("Gradient Text", colors = c("blue", "red")) |> message()
+}
 \author{
 EDG
 }

@@ -20,6 +20,10 @@ Called for side effects. Aborts and prints list of missing dependencies, if any.
 \description{
 Checks if dependencies can be loaded; names missing dependencies if not.
 }
+\examples{
+check_dependencies("base")
+# check_dependencies("zlorbglorb") # Throws error
+}
 \author{
 EDG
 }

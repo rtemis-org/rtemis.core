@@ -15,8 +15,15 @@ msgdone(caller = NULL, call_depth = 1, caller_id = 1, sep = " ")
 
 \item{sep}{Character: Use to separate objects in \code{...}}
 }
+\value{
+NULL invisibly
+}
 \description{
 msgdone
+}
+\examples{
+msgstart("Starting process...")
+msgdone("Process complete")
 }
 \author{
 EDG

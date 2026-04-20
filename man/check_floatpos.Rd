@@ -24,6 +24,12 @@ Checking with \code{is.numeric()} allows integer inputs as well, which should be
 unlikely the function that consumes this will enforce double type only, but instead is most
 likely to allow implicit coercion from integer to numeric.
 }
+\examples{
+check_floatpos(c(0.5, 1.5))
+# Allows integers since they are numeric and can be coerced to double without loss of information
+check_floatpos(c(1L, 3L))
+# check_floatpos(c(-1.5, 0.5, 1.5)) # Throws error
+}
 \author{
 EDG
 }

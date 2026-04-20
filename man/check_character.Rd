@@ -14,10 +14,13 @@ check_character(x, allow_null = TRUE, arg_name = deparse(substitute(x)))
 \item{arg_name}{Character: Name of the variable for error messages.}
 }
 \value{
-Called for side effects. Throws an error if checks fail.
+Called for side effects. Throws an error if check fails.
 }
 \description{
 Check character
+}
+\examples{
+check_character("papaya")
 }
 \author{
 EDG

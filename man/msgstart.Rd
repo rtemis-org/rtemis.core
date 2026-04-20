@@ -13,8 +13,15 @@ msgstart(..., newline_pre = FALSE, sep = "")
 
 \item{sep}{Character: Use to separate objects in \code{...}}
 }
+\value{
+NULL invisibly
+}
 \description{
 msgstart
+}
+\examples{
+msgstart("Starting process...")
+msgdone("Process complete.")
 }
 \author{
 EDG

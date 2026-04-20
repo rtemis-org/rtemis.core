@@ -16,6 +16,11 @@ otherwise.
 \description{
 Checks if object is of class \code{data.frame}, \code{data.table}, or \code{tbl_df}.
 }
+\examples{
+check_tabular(iris)
+check_tabular(data.table::as.data.table(iris))
+# check_tabular(rnorm(100)) # Throws error
+}
 \author{
 EDG
 }

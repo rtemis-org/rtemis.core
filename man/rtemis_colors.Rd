@@ -10,8 +10,14 @@ An object of class \code{character} of length 12.
 \usage{
 rtemis_colors
 }
+\value{
+Named character vector of hex color codes.
+}
 \description{
 A named vector of colors used in the rtemis ecosystem, provided as hex strings.
+}
+\examples{
+rtemis_colors[["teal"]]
 }
 \author{
 EDG

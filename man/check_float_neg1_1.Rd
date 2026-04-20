@@ -19,6 +19,10 @@ Called for side effects. Throws an error if checks fail.
 \description{
 Check float -1 <= x <= 1
 }
+\examples{
+check_float_neg1_1(c(-1, 0, 1))
+# check_float_neg1_1(c(-1.5, 0, 1.5)) # Throws error
+}
 \author{
 EDG
 }

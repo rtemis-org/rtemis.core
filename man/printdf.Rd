@@ -45,6 +45,9 @@ formatting.}
 
 \item{newline}{Logical: If TRUE, print a new line after printing data frame.}
 }
+\value{
+NULL invisibly
+}
 \description{
 Pretty print a data frame
 }
@@ -52,7 +55,9 @@ Pretty print a data frame
 By design, numbers will not be justified, but using ddSci_dp will convert to characters,
 which will be justified. This is intentional for internal use.
 }
+\examples{
+printdf(iris[1:6, ])
+}
 \author{
 EDG
 }
-\keyword{internal}

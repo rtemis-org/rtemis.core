@@ -19,7 +19,9 @@ Character: Formatted text with highlight.
 \description{
 A \code{fmt()} convenience wrapper for highlighting text.
 }
+\examples{
+message(highlight("This is highlighted!"))
+}
 \author{
 EDG
 }
-\keyword{internal}

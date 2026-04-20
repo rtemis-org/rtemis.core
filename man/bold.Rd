@@ -17,6 +17,9 @@ Character: Formatted text with bold styling
 \description{
 A \code{fmt()} convenience wrapper for making text bold.
 }
+\examples{
+message(bold("This is bold!"))
+}
 \author{
 EDG
 }

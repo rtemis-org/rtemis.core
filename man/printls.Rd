@@ -53,13 +53,18 @@ printls(
 
 \item{limit}{Integer: Maximum number of items to show. Use -1 for unlimited.}
 }
+\value{
+NULL invisibly
+}
 \description{
 Pretty print a list (or data frame) recursively
 }
 \details{
 Data frames in R began life as lists
 }
+\examples{
+printls(list(a = 1:10, b = "Hello", c = list(d = 1, e = 2)), title = "A List")
+}
 \author{
 EDG
 }
-\keyword{internal}
