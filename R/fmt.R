@@ -214,7 +214,9 @@ fmt <- function(
 #'
 #' @author EDG
 #' @export
-#' @keywords internal
+#'
+#' @examples
+#' message(highlight("This is highlighted!"))
 highlight <- function(
   x,
   pad = 0L,
@@ -235,6 +237,9 @@ highlight <- function(
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' message(bold("This is bold!"))
 bold <- function(text, output_type = c("ansi", "html", "plain")) {
   fmt(text, bold = TRUE, output_type = output_type)
 }
@@ -250,7 +255,8 @@ bold <- function(text, output_type = c("ansi", "html", "plain")) {
 #' @return Character: Formatted text with italic styling
 #'
 #' @author EDG
-#' @export
+#' @keywords internal
+#' @noRd
 italic <- function(text, output_type = c("ansi", "html", "plain")) {
   fmt(text, italic = TRUE, output_type = output_type)
 }
@@ -266,7 +272,8 @@ italic <- function(text, output_type = c("ansi", "html", "plain")) {
 #' @return Character: Formatted text with underline styling
 #'
 #' @author EDG
-#' @export
+#' @keywords internal
+#' @noRd
 underline <- function(text, output_type = c("ansi", "html", "plain")) {
   fmt(text, underline = TRUE, output_type = output_type)
 }
@@ -282,7 +289,8 @@ underline <- function(text, output_type = c("ansi", "html", "plain")) {
 #' @return Character: Formatted text with thin/light styling
 #'
 #' @author EDG
-#' @export
+#' @keywords internal
+#' @noRd
 thin <- function(text, output_type = c("ansi", "html", "plain")) {
   fmt(text, thin = TRUE, output_type = output_type)
 }
@@ -298,7 +306,8 @@ thin <- function(text, output_type = c("ansi", "html", "plain")) {
 #' @return Character: Formatted text with muted styling
 #'
 #' @author EDG
-#' @export
+#' @keywords internal
+#' @noRd
 muted <- function(x, output_type = c("ansi", "html", "plain")) {
   fmt(x, muted = TRUE, output_type = output_type)
 }
@@ -458,6 +467,9 @@ ansi256_to_hex <- function(code) {
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' fmt_gradient("Gradient Text", colors = c("blue", "red")) |> message()
 fmt_gradient <- function(
   x,
   colors,
@@ -505,33 +517,4 @@ fmt_gradient <- function(
 
   # Combine all colored characters
   paste(gradient_chars, collapse = "")
-}
-
-
-#' Add padding
-#'
-#' Convenience function to add padding.
-#'
-#' @param pad Integer: Number of spaces to ouput - that's all.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
-#'
-#' @author EDG
-#' @export
-show_pad <- function(pad = 2L, output_type = NULL) {
-  if (is.null(output_type)) {
-    output_type <- get_output_type()
-  }
-  pad_str <- strrep(" ", pad)
-  switch(
-    output_type,
-    "ansi" = {
-      # ANSI: pad with spaces, optionally style (no color for pad)
-      pad_str
-    },
-    "html" = {
-      # HTML: pad with non-breaking spaces
-      strrep("&nbsp;", pad)
-    },
-    "plain" = pad_str
-  )
 }

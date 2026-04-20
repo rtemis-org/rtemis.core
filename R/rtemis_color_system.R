@@ -4,8 +4,13 @@
 #'
 #' A named vector of colors used in the rtemis ecosystem, provided as hex strings.
 #'
+#' @return Named character vector of hex color codes.
+#'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' rtemis_colors[["teal"]]
 rtemis_colors <- c(
   teal = "#6CA3A0",
   light_orange = "#FDB808",

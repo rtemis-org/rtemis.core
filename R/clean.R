@@ -1,5 +1,3 @@
-# clean.R
-# ::rtemis.core::
 # 2024- EDG rtemis.org
 
 # clean_* functions perform checks and return clean inputs.

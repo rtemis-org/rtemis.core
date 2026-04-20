@@ -1,5 +1,3 @@
-# check.R
-# ::rtemis.core::
 # 2024- EDG rtemis.org
 
 # check_* functions perform checks and throw error using cli::cli_abort if checks fail;
@@ -56,9 +54,13 @@ check_inherits <- function(
 #' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
-#' @author EDG
 #'
+#' @author EDG
 #' @export
+#'
+#' @examples
+#' check_logical(c(TRUE, FALSE))
+#' # check_logical(c(0, 1)) # Throws error
 check_logical <- function(
   x,
   allow_null = TRUE,
@@ -90,10 +92,13 @@ check_logical <- function(
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
 #' @param arg_name Character: Name of the variable for error messages.
 #'
-#' @return Called for side effects. Throws an error if checks fail.
+#' @return Called for side effects. Throws an error if check fails.
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' check_character("papaya")
 check_character <- function(
   x,
   allow_null = TRUE,
@@ -134,6 +139,12 @@ check_character <- function(
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' check_floatpos(c(0.5, 1.5))
+#' # Allows integers since they are numeric and can be coerced to double without loss of information
+#' check_floatpos(c(1L, 3L))
+#' # check_floatpos(c(-1.5, 0.5, 1.5)) # Throws error
 check_floatpos <- function(
   x,
   allow_null = TRUE,
@@ -264,6 +275,11 @@ check_float01inc <- function(
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' check_floatpos1(c(0.5, 1))
+#' # check_floatpos1(c(0, 0.7)) # Throws error
+#' # check_floatpos1(c(0.5, 1.5)) # Throws error
 check_floatpos1 <- function(
   x,
   allow_null = TRUE,
@@ -308,8 +324,13 @@ check_floatpos1 <- function(
 #' @return Called for side effects. Throws an error if checks fail.
 #'
 #' @author EDG
-#'
 #' @export
+#'
+#' @examples
+#' check_float0pos(c(0, 0.5, 1))
+#' # Allows integers since they are numeric and can be coerced to double without loss of information
+#' check_float0pos(c(0L, 1L))
+#' # check_float0pos(c(-1.5, 0, 1.5)) # Throws error
 check_float0pos <- function(
   x,
   allow_null = TRUE,
@@ -349,8 +370,11 @@ check_float0pos <- function(
 #' @return Called for side effects. Throws an error if checks fail.
 #'
 #' @author EDG
-#'
 #' @export
+#'
+#' @examples
+#' check_float_neg1_1(c(-1, 0, 1))
+#' # check_float_neg1_1(c(-1.5, 0, 1.5)) # Throws error
 check_float_neg1_1 <- function(
   x,
   allow_null = TRUE,
@@ -396,6 +420,10 @@ check_float_neg1_1 <- function(
 #' @author EDG
 #'
 #' @export
+#'
+#' @examples
+#' check_dependencies("base")
+#' # check_dependencies("zlorbglorb") # Throws error
 check_dependencies <- function(..., verbosity = 0L) {
   ns <- as.list(c(...))
   err <- !sapply(ns, \(i) requireNamespace(i, quietly = TRUE))
@@ -426,6 +454,10 @@ check_dependencies <- function(..., verbosity = 0L) {
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' check_data.table(data.table::as.data.table(iris))
+#' # check_data.table(iris) # Throws error
 check_data.table <- function(x, arg_name = deparse(substitute(x))) {
   if (!data.table::is.data.table(x)) {
     cli::cli_abort("{.var {arg_name}} must be a data.table.")
@@ -446,6 +478,11 @@ check_data.table <- function(x, arg_name = deparse(substitute(x))) {
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' check_tabular(iris)
+#' check_tabular(data.table::as.data.table(iris))
+#' # check_tabular(rnorm(100)) # Throws error
 check_tabular <- function(x) {
   if (!inherits(x, c("data.frame", "data.table", "tbl_df"))) {
     cli::cli_abort(
@@ -470,6 +507,10 @@ check_tabular <- function(x) {
 #'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' check_enum("apple", c("apple", "banana", "cherry"))
+#' # check_enum("granola", c("croissant", "bagel", "scramble")) # Throws error
 check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
   if (!x %in% allowed_values) {
     cli::cli_abort(

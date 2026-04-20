@@ -46,10 +46,13 @@ is_common_struct <- function(x) {
 #' @param print_S4 Logical: If TRUE, print S4 object contents, otherwise print class name.
 #' @param limit Integer: Maximum number of items to show. Use -1 for unlimited.
 #'
-#' @author EDG
+#' @return NULL invisibly
 #'
+#' @author EDG
 #' @export
-#' @keywords internal
+#'
+#' @examples
+#' printls(list(a = 1:10, b = "Hello", c = list(d = 1, e = 2)), title = "A List")
 printls <- function(
   x,
   prefix = "",
@@ -330,9 +333,13 @@ printdf1 <- function(x, pad = 2) {
 #' @param newline_pre Logical: If TRUE, print a new line before printing data frame.
 #' @param newline Logical: If TRUE, print a new line after printing data frame.
 #'
+#' @return NULL invisibly
+#'
 #' @author EDG
 #' @export
-#' @keywords internal
+#'
+#' @examples
+#' printdf(iris[1:6, ])
 printdf <- function(
   x,
   pad = 0,

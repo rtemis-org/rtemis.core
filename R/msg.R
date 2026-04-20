@@ -11,11 +11,14 @@ datetime <- function(datetime_format = "%Y-%m-%d %H:%M:%S") {
 #'
 #' @param datetime_format Character: Format for the date and time.
 #'
+#' @details
+#' Used by msg(), msg0(), msgstart()
+#'
 #' @return Character: Formatted date and time.
 #'
 #' @author EDG
-#' @export
-# Used by msg(), msg0(), msgstart()
+#' @keywords internal
+#' @noRd
 msgdatetime <- function(datetime_format = "%Y-%m-%d %H:%M:%S") {
   message(gray(paste0(datetime(), " ")), appendLF = FALSE)
 }
@@ -192,16 +195,17 @@ msg0 <- function(
 #' @param pad Integer: Total width to pad the left string to.
 #' @param newline Logical: If TRUE, print a newline after the right string.
 #'
+#' @return NULL invisibly
+#'
 #' @author EDG
-#' @export
+#' @keywords internal
+#' @noRd
 #'
 #' @examples
-#' \dontrun{
 #' {
 #'   msg("Hello")
 #'   pcat("super", "wow")
 #'   pcat(NULL, "oooo")
-#' }
 #' }
 pcat <- function(left, right, pad = 17, newline = TRUE) {
   lpad <- max(0, pad - 1 - max(0, nchar(left)))
@@ -210,6 +214,9 @@ pcat <- function(left, right, pad = 17, newline = TRUE) {
 }
 
 
+#' @author EDG
+#' @keywords internal
+#' @noRd
 pad_string <- function(x, target = 17, char = " ") {
   lpad <- max(0, target - max(0, nchar(x)))
   paste0(
@@ -223,8 +230,14 @@ pad_string <- function(x, target = 17, char = " ") {
 #'
 #' @inheritParams msg
 #'
+#' @return NULL invisibly
+#'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' msgstart("Starting process...")
+#' msgdone("Process complete.")
 msgstart <- function(
   ...,
   newline_pre = FALSE,
@@ -243,8 +256,14 @@ msgstart <- function(
 #'
 #' @inheritParams msg
 #'
+#' @return NULL invisibly
+#'
 #' @author EDG
 #' @export
+#'
+#' @examples
+#' msgstart("Starting process...")
+#' msgdone("Process complete")
 msgdone <- function(caller = NULL, call_depth = 1, caller_id = 1, sep = " ") {
   if (is.null(caller)) {
     call_stack <- as.list(sys.calls())

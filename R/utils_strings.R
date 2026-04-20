@@ -1,5 +1,3 @@
-# strng.R
-# ::rtemis.core::
 # 2022- EDG rtemis.org
 
 # General hilite function output bold + any color.
@@ -57,7 +55,9 @@ red <- function(..., bold = FALSE) {
 #' @param bold Logical: If TRUE, make text bold.
 #'
 #' @author EDG
-#' @export
+#'
+#' @keywords internal
+#' @noRd
 green <- function(..., bold = FALSE) {
   fmt(
     paste(...),
@@ -76,22 +76,6 @@ blue <- function(..., bold = FALSE) {
   fmt(
     paste(...),
     col = rtemis_colors[["blue"]],
-    bold = bold
-  )
-}
-
-
-#' Make text orange
-#'
-#' @param ... Character: Text to colorize.
-#' @param bold Logical: If TRUE, make text bold.
-#'
-#' @author EDG
-#' @export
-orange <- function(..., bold = FALSE) {
-  fmt(
-    paste(...),
-    col = rtemis_colors[["orange"]],
     bold = bold
   )
 }

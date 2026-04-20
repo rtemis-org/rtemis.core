@@ -1,5 +1,3 @@
-# utils.R
-# ::rtemis.core::
 # 2024- EDG rtemis.org
 
 # %% match_arg ----
@@ -11,7 +9,6 @@
 #' @return Character: Matched argument.
 #'
 #' @author EDG
-#'
 #' @export
 #'
 #' @examples
@@ -31,7 +28,6 @@ match_arg <- function(x, choices) {
 #' @return Character: Abbreviated class wrapped in angle brackets.
 #'
 #' @author EDG
-#'
 #' @export
 #'
 #' @examples
