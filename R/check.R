@@ -468,7 +468,7 @@ check_dependencies <- function(..., verbosity = 0L) {
 #' @examples
 #' check_data.table(data.table::as.data.table(iris))
 #' # Throws error:
-#' try(check_data.table(iris)))
+#' try(check_data.table(iris))
 check_data.table <- function(x, arg_name = deparse(substitute(x))) {
   if (!data.table::is.data.table(x)) {
     cli::cli_abort("{.var {arg_name}} must be a data.table.")

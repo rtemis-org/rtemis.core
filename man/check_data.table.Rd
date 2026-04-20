@@ -21,7 +21,7 @@ Check data.table
 \examples{
 check_data.table(data.table::as.data.table(iris))
 # Throws error:
-try(check_data.table(iris)))
+try(check_data.table(iris))
 }
 \author{
 EDG
