@@ -21,6 +21,8 @@ Check character
 }
 \examples{
 check_character("papaya")
+# Throws error:
+try(check_character(42L))
 }
 \author{
 EDG

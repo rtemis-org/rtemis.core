@@ -24,8 +24,8 @@ Check class of object
 \examples{
 check_inherits("papaya", "character")
 # These will throw errors:
-# check_inherits(c(1, 2.5, 3.2), "integer")
-# check_inherits(iris, "list")
+try(check_inherits(c(1, 2.5, 3.2), "integer"))
+try(check_inherits(iris, "list"))
 }
 \author{
 EDG

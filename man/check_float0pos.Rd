@@ -24,7 +24,8 @@ Checks if an input is a numeric vector containing non-negative
 check_float0pos(c(0, 0.5, 1))
 # Allows integers since they are numeric and can be coerced to double without loss of information
 check_float0pos(c(0L, 1L))
-# check_float0pos(c(-1.5, 0, 1.5)) # Throws error
+# Throws error:
+try(check_float0pos(c(-1.5, 0, 1.5)))
 }
 \author{
 EDG

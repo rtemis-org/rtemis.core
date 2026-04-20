@@ -21,7 +21,8 @@ Check logical
 }
 \examples{
 check_logical(c(TRUE, FALSE))
-# check_logical(c(0, 1)) # Throws error
+# Throws error:
+try(check_logical(c(0, 1)))
 }
 \author{
 EDG

@@ -271,7 +271,8 @@ clean_colnames <- function(x) {
 #' @return Character: Text with ANSI escape codes removed.
 #'
 #' @author EDG
-#' @export
+#' @keywords internal
+#' @noRd
 plain <- function(x) {
   paste0("\033[0m", x)
 }

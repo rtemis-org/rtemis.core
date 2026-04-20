@@ -20,8 +20,9 @@ Check Optional Scalar Character
 \examples{
 check_optional_scalar_character(NULL, "my_arg") # Passes
 check_optional_scalar_character("hello", "my_arg") # Passes
-# check_optional_scalar_character(c("hello", "world"), "my_arg") # Throws error
-# check_optional_scalar_character(123, "my_arg") # Throws error
+# Throw error:
+try(check_optional_scalar_character(c("hello", "world"), "my_arg"))
+try(check_optional_scalar_character(123, "my_arg"))
 }
 \author{
 EDG

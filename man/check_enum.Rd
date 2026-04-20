@@ -22,7 +22,8 @@ Checks if a value is in a set of allowed values, and throws an error if not.
 }
 \examples{
 check_enum("apple", c("apple", "banana", "cherry"))
-# check_enum("granola", c("croissant", "bagel", "scramble")) # Throws error
+# Throws error:
+try(check_enum("granola", c("croissant", "bagel", "scramble")))
 }
 \author{
 EDG

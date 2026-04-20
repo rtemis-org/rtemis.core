@@ -19,7 +19,8 @@ Checks if object is of class \code{data.frame}, \code{data.table}, or \code{tbl_
 \examples{
 check_tabular(iris)
 check_tabular(data.table::as.data.table(iris))
-# check_tabular(rnorm(100)) # Throws error
+# Throws error:
+try(check_tabular(matrix(1:10, ncol = 2)))
 }
 \author{
 EDG

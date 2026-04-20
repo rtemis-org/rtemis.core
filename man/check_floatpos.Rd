@@ -28,7 +28,8 @@ likely to allow implicit coercion from integer to numeric.
 check_floatpos(c(0.5, 1.5))
 # Allows integers since they are numeric and can be coerced to double without loss of information
 check_floatpos(c(1L, 3L))
-# check_floatpos(c(-1.5, 0.5, 1.5)) # Throws error
+# Throws error:
+try(check_floatpos(c(-1.5, 0.5, 1.5)))
 }
 \author{
 EDG

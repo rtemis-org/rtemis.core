@@ -20,8 +20,8 @@
 #' @examples
 #' check_inherits("papaya", "character")
 #' # These will throw errors:
-#' # check_inherits(c(1, 2.5, 3.2), "integer")
-#' # check_inherits(iris, "list")
+#' try(check_inherits(c(1, 2.5, 3.2), "integer"))
+#' try(check_inherits(iris, "list"))
 check_inherits <- function(
   x,
   cl,
@@ -60,7 +60,8 @@ check_inherits <- function(
 #'
 #' @examples
 #' check_logical(c(TRUE, FALSE))
-#' # check_logical(c(0, 1)) # Throws error
+#' # Throws error:
+#' try(check_logical(c(0, 1)))
 check_logical <- function(
   x,
   allow_null = TRUE,
@@ -99,6 +100,8 @@ check_logical <- function(
 #'
 #' @examples
 #' check_character("papaya")
+#' # Throws error:
+#' try(check_character(42L))
 check_character <- function(
   x,
   allow_null = TRUE,
@@ -144,7 +147,8 @@ check_character <- function(
 #' check_floatpos(c(0.5, 1.5))
 #' # Allows integers since they are numeric and can be coerced to double without loss of information
 #' check_floatpos(c(1L, 3L))
-#' # check_floatpos(c(-1.5, 0.5, 1.5)) # Throws error
+#' # Throws error:
+#' try(check_floatpos(c(-1.5, 0.5, 1.5)))
 check_floatpos <- function(
   x,
   allow_null = TRUE,
@@ -187,7 +191,9 @@ check_floatpos <- function(
 #' @export
 #'
 #' @examples
-#' check_float01exc(0.5)
+#' check_float01exc(c(0.2, 0.7))
+#' # Throws error:
+#' try(check_float01exc(c(0, 0.5, 1)))
 check_float01exc <- function(
   x,
   allow_null = TRUE,
@@ -278,8 +284,9 @@ check_float01inc <- function(
 #'
 #' @examples
 #' check_floatpos1(c(0.5, 1))
-#' # check_floatpos1(c(0, 0.7)) # Throws error
-#' # check_floatpos1(c(0.5, 1.5)) # Throws error
+#' # Throw error:
+#' try(check_floatpos1(c(0, 0.7)))
+#' try(check_floatpos1(c(0.5, 1.5)))
 check_floatpos1 <- function(
   x,
   allow_null = TRUE,
@@ -330,7 +337,8 @@ check_floatpos1 <- function(
 #' check_float0pos(c(0, 0.5, 1))
 #' # Allows integers since they are numeric and can be coerced to double without loss of information
 #' check_float0pos(c(0L, 1L))
-#' # check_float0pos(c(-1.5, 0, 1.5)) # Throws error
+#' # Throws error:
+#' try(check_float0pos(c(-1.5, 0, 1.5)))
 check_float0pos <- function(
   x,
   allow_null = TRUE,
@@ -374,7 +382,8 @@ check_float0pos <- function(
 #'
 #' @examples
 #' check_float_neg1_1(c(-1, 0, 1))
-#' # check_float_neg1_1(c(-1.5, 0, 1.5)) # Throws error
+#' # Throws error:
+#' try(check_float_neg1_1(c(-1.5, 0, 1.5))))
 check_float_neg1_1 <- function(
   x,
   allow_null = TRUE,
@@ -423,7 +432,8 @@ check_float_neg1_1 <- function(
 #'
 #' @examples
 #' check_dependencies("base")
-#' # check_dependencies("zlorbglorb") # Throws error
+#' # Throws error:
+#' try(check_dependencies("zlorbglorb"))
 check_dependencies <- function(..., verbosity = 0L) {
   ns <- as.list(c(...))
   err <- !sapply(ns, \(i) requireNamespace(i, quietly = TRUE))
@@ -457,7 +467,8 @@ check_dependencies <- function(..., verbosity = 0L) {
 #'
 #' @examples
 #' check_data.table(data.table::as.data.table(iris))
-#' # check_data.table(iris) # Throws error
+#' # Throws error:
+#' try(check_data.table(iris)))
 check_data.table <- function(x, arg_name = deparse(substitute(x))) {
   if (!data.table::is.data.table(x)) {
     cli::cli_abort("{.var {arg_name}} must be a data.table.")
@@ -482,7 +493,8 @@ check_data.table <- function(x, arg_name = deparse(substitute(x))) {
 #' @examples
 #' check_tabular(iris)
 #' check_tabular(data.table::as.data.table(iris))
-#' # check_tabular(rnorm(100)) # Throws error
+#' # Throws error:
+#' try(check_tabular(matrix(1:10, ncol = 2)))
 check_tabular <- function(x) {
   if (!inherits(x, c("data.frame", "data.table", "tbl_df"))) {
     cli::cli_abort(
@@ -510,7 +522,8 @@ check_tabular <- function(x) {
 #'
 #' @examples
 #' check_enum("apple", c("apple", "banana", "cherry"))
-#' # check_enum("granola", c("croissant", "bagel", "scramble")) # Throws error
+#' # Throws error:
+#' try(check_enum("granola", c("croissant", "bagel", "scramble")))
 check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
   if (!x %in% allowed_values) {
     cli::cli_abort(
@@ -534,9 +547,10 @@ check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
 #' @examples
 #' check_scalar_logical(TRUE, "my_arg") # Passes
 #' check_scalar_logical(FALSE, "my_arg") # Passes
-#' # check_scalar_logical(c(TRUE, FALSE), "my_arg") # Throws error
-#' # check_scalar_logical(NA, "my_arg") # Throws error
-#' # check_scalar_logical("TRUE", "my_arg") # Throws error
+#' # Throw error:
+#' try(check_scalar_logical(c(TRUE, FALSE), "my_arg"))
+#' try(check_scalar_logical(NA, "my_arg"))
+#' try(check_scalar_logical("TRUE", "my_arg"))
 check_scalar_logical <- function(x, arg_name) {
   check_logical(x, allow_null = FALSE, arg_name = arg_name)
   if (length(x) != 1L) {
@@ -560,8 +574,9 @@ check_scalar_logical <- function(x, arg_name) {
 #' @examples
 #' check_optional_scalar_character(NULL, "my_arg") # Passes
 #' check_optional_scalar_character("hello", "my_arg") # Passes
-#' # check_optional_scalar_character(c("hello", "world"), "my_arg") # Throws error
-#' # check_optional_scalar_character(123, "my_arg") # Throws error
+#' # Throw error:
+#' try(check_optional_scalar_character(c("hello", "world"), "my_arg"))
+#' try(check_optional_scalar_character(123, "my_arg"))
 check_optional_scalar_character <- function(x, arg_name) {
   check_character(x, allow_null = TRUE, arg_name = arg_name)
   if (!is.null(x) && length(x) != 1L) {

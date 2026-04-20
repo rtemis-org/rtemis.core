@@ -20,9 +20,10 @@ Check Scalar Logical
 \examples{
 check_scalar_logical(TRUE, "my_arg") # Passes
 check_scalar_logical(FALSE, "my_arg") # Passes
-# check_scalar_logical(c(TRUE, FALSE), "my_arg") # Throws error
-# check_scalar_logical(NA, "my_arg") # Throws error
-# check_scalar_logical("TRUE", "my_arg") # Throws error
+# Throw error:
+try(check_scalar_logical(c(TRUE, FALSE), "my_arg"))
+try(check_scalar_logical(NA, "my_arg"))
+try(check_scalar_logical("TRUE", "my_arg"))
 }
 \author{
 EDG

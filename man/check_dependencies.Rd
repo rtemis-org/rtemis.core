@@ -22,7 +22,8 @@ Checks if dependencies can be loaded; names missing dependencies if not.
 }
 \examples{
 check_dependencies("base")
-# check_dependencies("zlorbglorb") # Throws error
+# Throws error:
+try(check_dependencies("zlorbglorb"))
 }
 \author{
 EDG

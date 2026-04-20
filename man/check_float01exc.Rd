@@ -20,7 +20,9 @@ Called for side effects. Throws an error if checks fail.
 Check float between 0 and 1, exclusive
 }
 \examples{
-check_float01exc(0.5)
+check_float01exc(c(0.2, 0.7))
+# Throws error:
+try(check_float01exc(c(0, 0.5, 1)))
 }
 \author{
 EDG
