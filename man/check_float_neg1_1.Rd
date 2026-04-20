@@ -22,7 +22,7 @@ Check float -1 <= x <= 1
 \examples{
 check_float_neg1_1(c(-1, 0, 1))
 # Throws error:
-try(check_float_neg1_1(c(-1.5, 0, 1.5))))
+try(check_float_neg1_1(c(-1.5, 0, 1.5)))
 }
 \author{
 EDG

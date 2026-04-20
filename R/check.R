@@ -383,7 +383,7 @@ check_float0pos <- function(
 #' @examples
 #' check_float_neg1_1(c(-1, 0, 1))
 #' # Throws error:
-#' try(check_float_neg1_1(c(-1.5, 0, 1.5))))
+#' try(check_float_neg1_1(c(-1.5, 0, 1.5)))
 check_float_neg1_1 <- function(
   x,
   allow_null = TRUE,
