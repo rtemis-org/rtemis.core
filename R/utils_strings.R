@@ -221,8 +221,10 @@ labelify <- function(
 #' @return Character: Text with ANSI escape codes removed.
 #'
 #' @author EDG
-#' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' message(plain("hello"))
 plain <- function(x) {
   paste0("\033[0m", x)
 }
