@@ -1,5 +1,3 @@
-# msg.R
-# ::rtemis.core::
 # 2016- EDG rtemis.org
 
 # used by msgdatetime, log_to_file

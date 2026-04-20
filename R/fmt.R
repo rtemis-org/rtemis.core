@@ -1,6 +1,4 @@
-# fmt.R
-# ::rtemis.core::
-# 2025 EDG rtemis.org
+# 2025- EDG rtemis.org
 
 #' Get output type
 #'

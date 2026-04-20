@@ -6,7 +6,7 @@
 \alias{rtemis.core-package}
 \title{\pkg{rtemis.core}: Rtemis Utilities}
 \description{
-Core Utilities for Rtemis R Packages
+Core Utilities for rtemis R Packages
 }
 \author{
 \strong{Maintainer}: E.D. Gennatas \email{gennatas@gmail.com} (\href{https://orcid.org/0000-0001-9280-3609}{ORCID}) [copyright holder]

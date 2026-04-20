@@ -1,5 +1,3 @@
-# ddSci.R
-# ::rtemis.core::
 # 2015- EDG rtemis.org
 
 #' Format Numbers for Printing

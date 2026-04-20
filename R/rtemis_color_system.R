@@ -1,4 +1,4 @@
-# rtemis_color_system.R
+# 2016- EDG rtemis.org
 
 #' rtemis Colors
 #'

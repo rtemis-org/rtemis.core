@@ -4,10 +4,12 @@ Version: 0.0.3
 Date: 2026-04-19
 Authors@R: person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"), 
     email = "gennatas@gmail.com", comment = c(ORCID = "0000-0001-9280-3609"))
-Description: Utilities for type checking, argument validation, and input
-    cleaning. Includes the rtemis msg() messaging system and the fmt() formatting system. Provides 
-    test_* functions that return logical values, check_* functions that throw informative errors, 
-    and clean_* functions that return validated and coerced values.
+Description: Utilities shared across packages of the 'rtemis' ecosystem. Includes the msg() 
+    messaging system and the fmt() formatting system. Provides test_* functions that return logical 
+    values, check_* functions that throw informative errors, and clean_* functions that return 
+    validated and coerced values. This code began as part of the 'rtemis' package, which first 
+    appeared in E.D. Gennatas (2017)
+    <https://repository.upenn.edu/entities/publication/d81892ea-3087-4b71-a6f5-739c58626d64>.
 License: GPL (>= 3)
 Depends:
     R (>= 4.1.0)

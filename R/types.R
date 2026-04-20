@@ -1,4 +1,6 @@
-# %% optional
+# 2026- EDG rtemis.org
+
+# %% optional ----
 #' Create an optional S7 type
 #'
 #' Creates an S7 union type that allows for the specified type or `NULL`.

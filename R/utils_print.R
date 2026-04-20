@@ -1,5 +1,3 @@
-# print_ops.R
-# ::rtemis.core::
 # 2016-23 EDG rtemis.org
 
 is_common_struct <- function(x) {

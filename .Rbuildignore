@@ -1,5 +1,6 @@
 ^__dev$
 ^\.github$
+^.*\.code-workspace$
 ^AGENTS\.md$
 ^CLAUDE\.md$
 ^Makefile$

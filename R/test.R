@@ -1,5 +1,3 @@
-# test.R
-# ::rtemis.core::
 # 2024- EDG rtemis.org
 
 # test_* functions perform checks and return TRUE/FALSE; do not throw errors.
