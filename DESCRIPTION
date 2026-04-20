@@ -4,7 +4,7 @@ Version: 0.0.3
 Date: 2026-04-19
 Authors@R: person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"), 
     email = "gennatas@gmail.com", comment = c(ORCID = "0000-0001-9280-3609"))
-Description: Utilities shared across packages of the 'rtemis' ecosystem. Includes the msg() 
+Description: Utilities used across packages of the 'rtemis' ecosystem. Includes the msg() 
     messaging system and the fmt() formatting system. Provides test_* functions that return logical 
     values, check_* functions that throw informative errors, and clean_* functions that return 
     validated and coerced values. This code began as part of the 'rtemis' package
