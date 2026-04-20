@@ -17,6 +17,12 @@ Character string representation of the object.
 \description{
 String representation
 }
+\examples{
+S7::method(repr, S7::class_character) <- function(x, ...) {
+  paste0("<chr> \"", x, "\"")
+}
+cat(repr("hello"))
+}
 \author{
 EDG
 }

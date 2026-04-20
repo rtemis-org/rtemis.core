@@ -8,6 +8,15 @@
 \description{
 Core Utilities for rtemis R Packages
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://www.rtemis.org}
+  \item \url{https://github.com/rtemis-org/rtemis.core}
+  \item Report bugs at \url{https://github.com/rtemis-org/rtemis.core/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: E.D. Gennatas \email{gennatas@gmail.com} (\href{https://orcid.org/0000-0001-9280-3609}{ORCID}) [copyright holder]
 

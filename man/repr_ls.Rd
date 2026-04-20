@@ -67,7 +67,17 @@ looks identical to printls(x) for any list x
 \details{
 Exported as internal function for use by other rtemis packages.
 }
+\examples{
+x <- list(
+  a = 1:10,
+  b = "Hello",
+  c = list(
+    d = 1,
+    e = 2
+  )
+)
+cat(repr_ls(x, title = "A List"))
+}
 \author{
 EDG
 }
-\keyword{internal}
