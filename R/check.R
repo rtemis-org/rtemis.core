@@ -554,7 +554,31 @@ check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
 check_scalar_logical <- function(x, arg_name) {
   check_logical(x, allow_null = FALSE, arg_name = arg_name)
   if (length(x) != 1L) {
-    cli::cli_abort("{.var {arg_name}} must be TRUE or FALSE. Use one value.")
+    cli::cli_abort("{.var {arg_name}} must be a single TRUE or FALSE value.")
+  }
+  invisible()
+}
+
+
+#' Check Scalar Character
+#'
+#' @param x Character: Value to check.
+#' @param arg_name Character: Argument name to use in error messages.
+#'
+#' @return Called for side effects.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' check_scalar_character("hello", "my_arg") # Passes
+#' # Throw error:
+#' try(check_scalar_character(c("hello", "world"), "my_arg"))
+#' try(check_scalar_character(123, "my_arg"))
+check_scalar_character <- function(x, arg_name) {
+  check_character(x, allow_null = FALSE, arg_name = arg_name)
+  if (length(x) != 1L) {
+    cli::cli_abort("{.var {arg_name}} must be a single string.")
   }
   invisible()
 }
