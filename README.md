@@ -1,4 +1,5 @@
 [![r-ci](https://github.com/rtemis-org/rtemis.core/actions/workflows/r-ci.yml/badge.svg)](https://github.com/rtemis-org/rtemis.core/actions/workflows/r-ci.yml) [![rtemis.core status badge](https://rtemis-org.r-universe.dev/rtemis.core/badges/version)](https://rtemis-org.r-universe.dev/rtemis.core)
+[![CRAN status](https://www.r-pkg.org/badges/version/rtemis.core)](https://CRAN.R-project.org/package=rtemis.core)
 
 # rtemis.core: Core utilities for `rtemis` R packages
 
@@ -16,6 +17,12 @@ Shared rtemis utilities, including:
 > It is not intended for end-user installation or use.
 
 ## Installation
+
+### From CRAN
+
+```r
+install.packages("rtemis.core")
+```
 
 ### Latest version from `r-universe`
 
