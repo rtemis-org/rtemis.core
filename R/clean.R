@@ -12,9 +12,9 @@
 #' otherwise an error is thrown.
 #'
 #' @param x Double or integer vector to check.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
-#' @return Integer vector.
+#' @return Integer vector
 #' @author EDG
 #'
 #' @export
@@ -25,20 +25,21 @@
 #' # clean_int(12.1) # Error
 #' clean_int(c(3, 5, 7))
 #' # clean_int(c(3, 5, 7.01)) # Error
-clean_int <- function(x, xname = deparse(substitute(x))) {
+clean_int <- function(x, arg_name = deparse(substitute(x))) {
   if (is.integer(x)) {
     return(x)
   } else if (is.numeric(x)) {
-    if (all(x %% 1 == 0)) {
-      return(as.integer(x))
+    if (all(is.finite(x)) && all(x %% 1 == 0)) {
+      storage.mode(x) <- "integer"
+      return(x)
     } else {
-      cli::cli_abort("{.var {xname}} must be integer.")
+      cli::cli_abort("{.var {arg_name}} must be integer.")
     }
   } else if (is.null(x)) {
     return(NULL)
   }
-  cli::cli_abort("{.var {xname}} must be integer.")
-} # /rtemis.core::clean_int
+  cli::cli_abort("{.var {arg_name}} must be integer.")
+}
 
 
 # %% clean_posint ----
@@ -47,7 +48,7 @@ clean_int <- function(x, xname = deparse(substitute(x))) {
 #' @param x Integer vector.
 #' @param allow_na Logical: If TRUE, NAs are excluded before checking. If FALSE (default),
 #'   NAs trigger an error.
-#' @param xname Character: Name of the variable for error messages.
+#' @param arg_name Character: Name of the variable for error messages.
 #'
 #' @return Integer vector of positive values.
 #'
@@ -56,23 +57,27 @@ clean_int <- function(x, xname = deparse(substitute(x))) {
 #'
 #' @examples
 #' clean_posint(5)
-clean_posint <- function(x, allow_na = FALSE, xname = deparse(substitute(x))) {
+clean_posint <- function(
+  x,
+  allow_na = FALSE,
+  arg_name = deparse(substitute(x))
+) {
   if (is.null(x)) {
     return(NULL)
   }
 
   if (!allow_na && anyNA(x)) {
-    cli::cli_abort("{.var {xname}} must not contain NAs.")
+    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
   } else {
-    x <- na.exclude(x)
+    x <- x[!is.na(x)]
   }
 
   if (any(x <= 0)) {
-    cli::cli_abort("{.var {xname}} must contain only positive integers.")
+    cli::cli_abort("{.var {arg_name}} must contain only positive integers.")
   }
 
-  clean_int(x, xname = xname)
-} # /rtemis.core::clean_posint
+  clean_int(x, arg_name = arg_name)
+}
 
 
 #' Clean names

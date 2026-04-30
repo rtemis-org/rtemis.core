@@ -4,7 +4,7 @@
 \alias{check_optional_scalar_character}
 \title{Check Optional Scalar Character}
 \usage{
-check_optional_scalar_character(x, arg_name)
+check_optional_scalar_character(x, arg_name = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Optional Character: Value to check.}
@@ -18,8 +18,8 @@ Called for side effects.
 Check Optional Scalar Character
 }
 \examples{
-check_optional_scalar_character(NULL, "my_arg") # Passes
-check_optional_scalar_character("hello", "my_arg") # Passes
+check_optional_scalar_character(NULL, "my_arg")
+check_optional_scalar_character("hello", "my_arg")
 # Throw error:
 try(check_optional_scalar_character(c("hello", "world"), "my_arg"))
 try(check_optional_scalar_character(123, "my_arg"))

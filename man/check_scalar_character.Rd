@@ -4,7 +4,7 @@
 \alias{check_scalar_character}
 \title{Check Scalar Character}
 \usage{
-check_scalar_character(x, arg_name)
+check_scalar_character(x, arg_name = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Character: Value to check.}
@@ -18,7 +18,7 @@ Called for side effects.
 Check Scalar Character
 }
 \examples{
-check_scalar_character("hello", "my_arg") # Passes
+check_scalar_character("hello", "my_arg")
 # Throw error:
 try(check_scalar_character(c("hello", "world"), "my_arg"))
 try(check_scalar_character(123, "my_arg"))

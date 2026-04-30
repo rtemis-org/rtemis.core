@@ -4,7 +4,7 @@
 \alias{clean_posint}
 \title{Check positive integer}
 \usage{
-clean_posint(x, allow_na = FALSE, xname = deparse(substitute(x)))
+clean_posint(x, allow_na = FALSE, arg_name = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Integer vector.}
@@ -12,7 +12,7 @@ clean_posint(x, allow_na = FALSE, xname = deparse(substitute(x)))
 \item{allow_na}{Logical: If TRUE, NAs are excluded before checking. If FALSE (default),
 NAs trigger an error.}
 
-\item{xname}{Character: Name of the variable for error messages.}
+\item{arg_name}{Character: Name of the variable for error messages.}
 }
 \value{
 Integer vector of positive values.

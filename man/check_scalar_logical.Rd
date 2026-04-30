@@ -4,7 +4,7 @@
 \alias{check_scalar_logical}
 \title{Check Scalar Logical}
 \usage{
-check_scalar_logical(x, arg_name)
+check_scalar_logical(x, arg_name = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Logical: Value to check.}
@@ -18,12 +18,10 @@ Called for side effects.
 Check Scalar Logical
 }
 \examples{
-check_scalar_logical(TRUE, "my_arg") # Passes
-check_scalar_logical(FALSE, "my_arg") # Passes
+check_scalar_logical(TRUE, "my_arg")
 # Throw error:
 try(check_scalar_logical(c(TRUE, FALSE), "my_arg"))
 try(check_scalar_logical(NA, "my_arg"))
-try(check_scalar_logical("TRUE", "my_arg"))
 }
 \author{
 EDG
