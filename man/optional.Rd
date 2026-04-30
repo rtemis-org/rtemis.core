@@ -7,7 +7,7 @@
 optional(type)
 }
 \arguments{
-\item{type}{S7 class.}
+\item{type}{S7 base class or S7 class.}
 }
 \value{
 An S7 union type that allows for the specified type or \code{NULL}.

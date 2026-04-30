@@ -714,7 +714,7 @@ enum <- function(values, default = NULL, nullable = FALSE) {
 #' non-NULL case. Otherwise, create a new S7 property with appropriate validator using
 #' `S7::new_property()`.
 #'
-#' @param type S7 class.
+#' @param type S7 base class or S7 class.
 #' @return An S7 union type that allows for the specified type or `NULL`.
 #' @author EDG
 #' @export
