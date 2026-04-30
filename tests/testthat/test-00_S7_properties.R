@@ -5,29 +5,68 @@ library(S7)
 # Define one test class per property so S7 validation fires on construction.
 .TC <- local({
   list(
-    chr     = new_class("TC_chr",     properties = list(x = character_scalar)),
-    opt_chr = new_class("TC_opt_chr", properties = list(x = optional_character_scalar)),
-    dbl     = new_class("TC_dbl",     properties = list(x = double_scalar)),
-    opt_dbl = new_class("TC_opt_dbl", properties = list(x = optional_double_scalar)),
-    int     = new_class("TC_int",     properties = list(x = integer_scalar)),
-    opt_int = new_class("TC_opt_int", properties = list(x = optional_integer_scalar)),
-    lgl     = new_class("TC_lgl",     properties = list(x = logical_scalar)),
-    opt_lgl = new_class("TC_opt_lgl", properties = list(x = optional_logical_scalar)),
-    prob    = new_class("TC_prob",    properties = list(x = prob_scalar)),
-    opt_prb = new_class("TC_opt_prb", properties = list(x = optional_prob_scalar)),
-    unit_o  = new_class("TC_unit_o",  properties = list(x = unit_open_scalar)),
+    chr = new_class("TC_chr", properties = list(x = character_scalar)),
+    opt_chr = new_class(
+      "TC_opt_chr",
+      properties = list(x = optional_character_scalar)
+    ),
+    dbl = new_class("TC_dbl", properties = list(x = double_scalar)),
+    opt_dbl = new_class(
+      "TC_opt_dbl",
+      properties = list(x = optional_double_scalar)
+    ),
+    int = new_class("TC_int", properties = list(x = integer_scalar)),
+    opt_int = new_class(
+      "TC_opt_int",
+      properties = list(x = optional_integer_scalar)
+    ),
+    lgl = new_class("TC_lgl", properties = list(x = logical_scalar)),
+    opt_lgl = new_class(
+      "TC_opt_lgl",
+      properties = list(x = optional_logical_scalar)
+    ),
+    prob = new_class("TC_prob", properties = list(x = prob_scalar)),
+    opt_prb = new_class(
+      "TC_opt_prb",
+      properties = list(x = optional_prob_scalar)
+    ),
+    unit_o = new_class("TC_unit_o", properties = list(x = unit_open_scalar)),
     pos_dbl = new_class("TC_pos_dbl", properties = list(x = pos_double_scalar)),
-    opt_pos = new_class("TC_opt_pos", properties = list(x = optional_pos_double_scalar)),
-    nng_dbl  = new_class("TC_nng_dbl",  properties = list(x = nonneg_double_scalar)),
-    opt_nng  = new_class("TC_opt_nng",  properties = list(x = optional_nonneg_double_scalar)),
-    pvec     = new_class("TC_pvec",     properties = list(x = prob_vector)),
-    opt_pvec = new_class("TC_opt_pvec", properties = list(x = optional_prob_vector)),
-    uovec    = new_class("TC_uovec",    properties = list(x = unit_open_vector)),
-    opt_uov  = new_class("TC_opt_uov",  properties = list(x = optional_unit_open_vector)),
-    posvec   = new_class("TC_posvec",   properties = list(x = pos_double_vector)),
-    opt_posv = new_class("TC_opt_posv", properties = list(x = optional_pos_double_vector)),
-    nngvec   = new_class("TC_nngvec",   properties = list(x = nonneg_double_vector)),
-    opt_nngv = new_class("TC_opt_nngv", properties = list(x = optional_nonneg_double_vector))
+    opt_pos = new_class(
+      "TC_opt_pos",
+      properties = list(x = optional_pos_double_scalar)
+    ),
+    nng_dbl = new_class(
+      "TC_nng_dbl",
+      properties = list(x = nonneg_double_scalar)
+    ),
+    opt_nng = new_class(
+      "TC_opt_nng",
+      properties = list(x = optional_nonneg_double_scalar)
+    ),
+    pvec = new_class("TC_pvec", properties = list(x = prob_vector)),
+    opt_pvec = new_class(
+      "TC_opt_pvec",
+      properties = list(x = optional_prob_vector)
+    ),
+    uovec = new_class("TC_uovec", properties = list(x = unit_open_vector)),
+    opt_uov = new_class(
+      "TC_opt_uov",
+      properties = list(x = optional_unit_open_vector)
+    ),
+    posvec = new_class("TC_posvec", properties = list(x = pos_double_vector)),
+    opt_posv = new_class(
+      "TC_opt_posv",
+      properties = list(x = optional_pos_double_vector)
+    ),
+    nngvec = new_class(
+      "TC_nngvec",
+      properties = list(x = nonneg_double_vector)
+    ),
+    opt_nngv = new_class(
+      "TC_opt_nngv",
+      properties = list(x = optional_nonneg_double_vector)
+    )
   )
 })
 
@@ -276,40 +315,58 @@ test_that("optional_nonneg_double_scalar rejects negative value", {
 
 # bounded_double_property ----
 test_that("bounded_double_property closed interval accepts endpoints", {
-  TC <- new_class("TC_bnd1", properties = list(x = bounded_double_property(0, 10)))
+  TC <- new_class(
+    "TC_bnd1",
+    properties = list(x = bounded_double_property(0, 10))
+  )
   expect_no_error(TC(x = 0))
   expect_no_error(TC(x = 10))
   expect_no_error(TC(x = 5))
 })
 
 test_that("bounded_double_property closed interval rejects outside", {
-  TC <- new_class("TC_bnd2", properties = list(x = bounded_double_property(0, 10)))
+  TC <- new_class(
+    "TC_bnd2",
+    properties = list(x = bounded_double_property(0, 10))
+  )
   expect_error(TC(x = -0.1))
   expect_error(TC(x = 10.1))
 })
 
 test_that("bounded_double_property lower_open rejects lower endpoint", {
-  TC <- new_class("TC_bnd3", properties = list(x = bounded_double_property(0, 1, lower_open = TRUE)))
+  TC <- new_class(
+    "TC_bnd3",
+    properties = list(x = bounded_double_property(0, 1, lower_open = TRUE))
+  )
   expect_error(TC(x = 0))
   expect_no_error(TC(x = 0.001))
   expect_no_error(TC(x = 1))
 })
 
 test_that("bounded_double_property upper_open rejects upper endpoint", {
-  TC <- new_class("TC_bnd4", properties = list(x = bounded_double_property(0, 1, upper_open = TRUE)))
+  TC <- new_class(
+    "TC_bnd4",
+    properties = list(x = bounded_double_property(0, 1, upper_open = TRUE))
+  )
   expect_no_error(TC(x = 0))
   expect_error(TC(x = 1))
 })
 
 test_that("bounded_double_property nullable accepts NULL", {
-  TC <- new_class("TC_bnd5", properties = list(x = bounded_double_property(0, 1, nullable = TRUE)))
+  TC <- new_class(
+    "TC_bnd5",
+    properties = list(x = bounded_double_property(0, 1, nullable = TRUE))
+  )
   expect_no_error(TC(x = NULL))
   expect_no_error(TC(x = 0.5))
   expect_error(TC(x = 2.0))
 })
 
 test_that("bounded_double_property rejects Inf", {
-  TC <- new_class("TC_bnd6", properties = list(x = bounded_double_property(0, 100)))
+  TC <- new_class(
+    "TC_bnd6",
+    properties = list(x = bounded_double_property(0, 100))
+  )
   expect_error(TC(x = Inf))
 })
 
