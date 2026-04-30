@@ -180,3 +180,175 @@ test_that("check_tabular errors for non-tabular objects", {
   expect_error(check_tabular(list(a = 1)))
   expect_error(check_tabular(matrix(1:4, 2, 2)))
 })
+
+# check_prob_vector ----
+test_that("check_prob_vector passes for valid vector", {
+  expect_invisible(check_prob_vector(c(0, 0.5, 1)))
+})
+
+test_that("check_prob_vector rejects empty vector", {
+  expect_error(check_prob_vector(double(0)))
+})
+
+test_that("check_prob_vector rejects NA", {
+  expect_error(check_prob_vector(c(0.5, NA)))
+})
+
+test_that("check_prob_vector rejects out-of-range values", {
+  expect_error(check_prob_vector(c(0.5, 1.5)))
+  expect_error(check_prob_vector(c(-0.1, 0.5)))
+})
+
+test_that("check_prob_vector rejects non-numeric", {
+  expect_error(check_prob_vector("0.5"))
+})
+
+test_that("check_optional_prob_vector accepts NULL", {
+  expect_invisible(check_optional_prob_vector(NULL))
+})
+
+test_that("check_optional_prob_vector passes for valid vector", {
+  expect_invisible(check_optional_prob_vector(c(0.2, 0.8)))
+})
+
+test_that("check_optional_prob_vector rejects out-of-range values", {
+  expect_error(check_optional_prob_vector(c(0.5, 2)))
+})
+
+# check_unit_open_vector ----
+test_that("check_unit_open_vector passes for strictly interior values", {
+  expect_invisible(check_unit_open_vector(c(0.1, 0.5, 0.9)))
+})
+
+test_that("check_unit_open_vector rejects 0", {
+  expect_error(check_unit_open_vector(c(0, 0.5)))
+})
+
+test_that("check_unit_open_vector rejects 1", {
+  expect_error(check_unit_open_vector(c(0.5, 1)))
+})
+
+test_that("check_unit_open_vector rejects empty vector", {
+  expect_error(check_unit_open_vector(double(0)))
+})
+
+test_that("check_unit_open_vector rejects NA", {
+  expect_error(check_unit_open_vector(c(0.5, NA)))
+})
+
+test_that("check_optional_unit_open_vector accepts NULL", {
+  expect_invisible(check_optional_unit_open_vector(NULL))
+})
+
+test_that("check_optional_unit_open_vector passes for valid vector", {
+  expect_invisible(check_optional_unit_open_vector(c(0.2, 0.8)))
+})
+
+test_that("check_optional_unit_open_vector rejects endpoints", {
+  expect_error(check_optional_unit_open_vector(c(0, 0.5)))
+  expect_error(check_optional_unit_open_vector(c(0.5, 1)))
+})
+
+# check_pos_double_vector ----
+test_that("check_pos_double_vector passes for positive values", {
+  expect_invisible(check_pos_double_vector(c(0.001, 1, 100)))
+})
+
+test_that("check_pos_double_vector rejects 0", {
+  expect_error(check_pos_double_vector(c(0, 1)))
+})
+
+test_that("check_pos_double_vector rejects negative values", {
+  expect_error(check_pos_double_vector(c(-1, 1)))
+})
+
+test_that("check_pos_double_vector rejects Inf", {
+  expect_error(check_pos_double_vector(c(1, Inf)))
+})
+
+test_that("check_pos_double_vector rejects empty vector", {
+  expect_error(check_pos_double_vector(double(0)))
+})
+
+test_that("check_pos_double_vector rejects NA", {
+  expect_error(check_pos_double_vector(c(1, NA)))
+})
+
+test_that("check_optional_pos_double_vector accepts NULL", {
+  expect_invisible(check_optional_pos_double_vector(NULL))
+})
+
+test_that("check_optional_pos_double_vector passes for positive values", {
+  expect_invisible(check_optional_pos_double_vector(c(0.5, 2)))
+})
+
+test_that("check_optional_pos_double_vector rejects 0", {
+  expect_error(check_optional_pos_double_vector(c(0, 1)))
+})
+
+# check_nonneg_double_vector ----
+test_that("check_nonneg_double_vector passes for 0 and positive values", {
+  expect_invisible(check_nonneg_double_vector(c(0, 1, 2.5)))
+})
+
+test_that("check_nonneg_double_vector rejects negative values", {
+  expect_error(check_nonneg_double_vector(c(-1, 0, 1)))
+})
+
+test_that("check_nonneg_double_vector rejects Inf", {
+  expect_error(check_nonneg_double_vector(c(1, Inf)))
+})
+
+test_that("check_nonneg_double_vector rejects empty vector", {
+  expect_error(check_nonneg_double_vector(double(0)))
+})
+
+test_that("check_nonneg_double_vector rejects NA", {
+  expect_error(check_nonneg_double_vector(c(0, NA)))
+})
+
+test_that("check_optional_nonneg_double_vector accepts NULL", {
+  expect_invisible(check_optional_nonneg_double_vector(NULL))
+})
+
+test_that("check_optional_nonneg_double_vector passes for valid values", {
+  expect_invisible(check_optional_nonneg_double_vector(c(0, 1, 5)))
+})
+
+test_that("check_optional_nonneg_double_vector rejects negative values", {
+  expect_error(check_optional_nonneg_double_vector(c(-1, 0)))
+})
+
+# check_pos_integer_scalar ----
+test_that("check_pos_integer_scalar passes for positive integers", {
+  expect_invisible(check_pos_integer_scalar(1L))
+  expect_invisible(check_pos_integer_scalar(10))
+})
+
+test_that("check_pos_integer_scalar rejects 0", {
+  expect_error(check_pos_integer_scalar(0L))
+})
+
+test_that("check_pos_integer_scalar rejects negative values", {
+  expect_error(check_pos_integer_scalar(-1L))
+})
+
+test_that("check_pos_integer_scalar rejects non-whole numbers", {
+  expect_error(check_pos_integer_scalar(1.5))
+})
+
+test_that("check_pos_integer_scalar rejects NA", {
+  expect_error(check_pos_integer_scalar(NA_integer_))
+})
+
+test_that("check_optional_pos_integer_scalar accepts NULL", {
+  expect_invisible(check_optional_pos_integer_scalar(NULL))
+})
+
+test_that("check_optional_pos_integer_scalar passes for valid values", {
+  expect_invisible(check_optional_pos_integer_scalar(5L))
+})
+
+test_that("check_optional_pos_integer_scalar rejects 0", {
+  expect_error(check_optional_pos_integer_scalar(0L))
+})
