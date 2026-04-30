@@ -8,11 +8,9 @@ clean_int(x, xname = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Double or integer vector to check.}
-
-\item{xname}{Character: Name of the variable for error messages.}
 }
 \value{
-Integer vector.
+Integer vector
 }
 \description{
 Clean integer input
