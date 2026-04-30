@@ -12,9 +12,8 @@
 #' otherwise an error is thrown.
 #'
 #' @param x Double or integer vector to check.
-#' @param xname Character: Name of the variable for error messages.
 #'
-#' @return Integer vector.
+#' @return Integer vector
 #' @author EDG
 #'
 #' @export
@@ -30,7 +29,8 @@ clean_int <- function(x, xname = deparse(substitute(x))) {
     return(x)
   } else if (is.numeric(x)) {
     if (all(x %% 1 == 0)) {
-      return(as.integer(x))
+      storage.mode(x) <- "integer"
+      return(x)
     } else {
       cli::cli_abort("{.var {xname}} must be integer.")
     }
@@ -38,7 +38,7 @@ clean_int <- function(x, xname = deparse(substitute(x))) {
     return(NULL)
   }
   cli::cli_abort("{.var {xname}} must be integer.")
-} # /rtemis.core::clean_int
+}
 
 
 # %% clean_posint ----
@@ -64,7 +64,7 @@ clean_posint <- function(x, allow_na = FALSE, xname = deparse(substitute(x))) {
   if (!allow_na && anyNA(x)) {
     cli::cli_abort("{.var {xname}} must not contain NAs.")
   } else {
-    x <- na.exclude(x)
+    x <- x[!is.na(x)]
   }
 
   if (any(x <= 0)) {
@@ -72,7 +72,7 @@ clean_posint <- function(x, allow_na = FALSE, xname = deparse(substitute(x))) {
   }
 
   clean_int(x, xname = xname)
-} # /rtemis.core::clean_posint
+}
 
 
 #' Clean names
