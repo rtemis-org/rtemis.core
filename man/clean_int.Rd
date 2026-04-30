@@ -4,10 +4,12 @@
 \alias{clean_int}
 \title{Clean integer input}
 \usage{
-clean_int(x, xname = deparse(substitute(x)))
+clean_int(x, arg_name = deparse(substitute(x)))
 }
 \arguments{
 \item{x}{Double or integer vector to check.}
+
+\item{arg_name}{Character: Name of the variable for error messages.}
 }
 \value{
 Integer vector
