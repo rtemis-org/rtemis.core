@@ -582,7 +582,8 @@ check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
 
 
 # %% S7-parallel scalar checks ----
-# Naming mirrors the S7 properties in 00_S7_properties.R one-to-one.
+# Naming aligns with the S7 properties in 00_S7_properties.R where matching
+# scalar check helpers are implemented.
 # Use these in regular function bodies for early, user-friendly argument validation.
 
 # %% check_character_scalar ----
@@ -720,8 +721,8 @@ check_integer_scalar <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.numeric(x)) {
     cli::cli_abort("{.var {arg_name}} must be numeric.")
   }
-  if (length(x) != 1L || is.na(x)) {
-    cli::cli_abort("{.var {arg_name}} must be a single non-NA number.")
+  if (length(x) != 1L || is.na(x) || !is.finite(x)) {
+    cli::cli_abort("{.var {arg_name}} must be a single finite non-NA number.")
   }
   if (x != round(x)) {
     cli::cli_abort("{.var {arg_name}} must be a whole number.")

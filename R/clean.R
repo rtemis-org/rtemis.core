@@ -29,7 +29,7 @@ clean_int <- function(x, arg_name = deparse(substitute(x))) {
   if (is.integer(x)) {
     return(x)
   } else if (is.numeric(x)) {
-    if (all(x %% 1 == 0)) {
+    if (all(is.finite(x)) && all(x %% 1 == 0)) {
       storage.mode(x) <- "integer"
       return(x)
     } else {
