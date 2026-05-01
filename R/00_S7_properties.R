@@ -633,7 +633,7 @@ bounded_double_property <- function(
     function(v) v <= upper
   }
 
-  cls <- if (nullable) new_union(class_double, NULL) else class_double
+  cls <- if (nullable) new_union(NULL, class_double) else class_double
 
   new_property(
     class = cls,
@@ -669,7 +669,7 @@ bounded_double_property <- function(
 #' @examples
 #' type_prop <- enum(c("string", "number", "boolean"), default = "string")
 enum <- function(values, default = NULL, nullable = FALSE) {
-  cls <- if (nullable) new_union(class_character, NULL) else class_character
+  cls <- if (nullable) new_union(NULL, class_character) else class_character
   new_property(
     class = cls,
     validator = function(value) {
@@ -714,5 +714,5 @@ optional <- function(type) {
       "{.var type} must be an S7 base class or S7 class."
     )
   }
-  S7::new_union(type, NULL)
+  S7::new_union(NULL, type)
 }
