@@ -50,8 +50,7 @@ character_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_character_scalar <- new_property(
-  class = new_union(class_character, NULL),
-  default = NULL,
+  class = new_union(NULL, class_character),
   validator = function(value) {
     if (
       !is.null(value) &&
@@ -91,8 +90,7 @@ double_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_double_scalar <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (!is.null(value) && (length(value) != 1L || is.na(value))) {
       return("must be NULL or a double scalar")
@@ -129,8 +127,7 @@ integer_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_integer_scalar <- new_property(
-  class = new_union(class_integer, NULL),
-  default = NULL,
+  class = new_union(NULL, class_integer),
   validator = function(value) {
     if (!is.null(value) && (length(value) != 1L || is.na(value))) {
       return("must be NULL or an integer scalar (e.g. 1L)")
@@ -166,8 +163,7 @@ pos_integer_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_pos_integer_scalar <- new_property(
-  class = new_union(class_integer, NULL),
-  default = NULL,
+  class = new_union(NULL, class_integer),
   validator = function(value) {
     if (
       !is.null(value) && (length(value) != 1L || is.na(value) || value <= 0L)
@@ -206,8 +202,7 @@ logical_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_logical_scalar <- new_property(
-  class = new_union(class_logical, NULL),
-  default = NULL,
+  class = new_union(NULL, class_logical),
   validator = function(value) {
     if (!is.null(value) && (length(value) != 1L || is.na(value))) {
       return("must be NULL or a logical scalar (TRUE or FALSE)")
@@ -244,8 +239,7 @@ prob_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_prob_scalar <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (
       !is.null(value) &&
@@ -284,8 +278,7 @@ unit_open_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_unit_open_scalar <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (
       !is.null(value) &&
@@ -326,8 +319,7 @@ pos_double_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_pos_double_scalar <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (
       !is.null(value) &&
@@ -366,8 +358,7 @@ nonneg_double_scalar <- new_property(
 #' @author EDG
 #' @export
 optional_nonneg_double_scalar <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (
       !is.null(value) &&
@@ -414,8 +405,7 @@ prob_vector <- new_property(
 #' @author EDG
 #' @export
 optional_prob_vector <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (is.null(value)) {
       return(NULL)
@@ -468,8 +458,7 @@ unit_open_vector <- new_property(
 #' @author EDG
 #' @export
 optional_unit_open_vector <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (is.null(value)) {
       return(NULL)
@@ -522,8 +511,7 @@ pos_double_vector <- new_property(
 #' @author EDG
 #' @export
 optional_pos_double_vector <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (is.null(value)) {
       return(NULL)
@@ -576,8 +564,7 @@ nonneg_double_vector <- new_property(
 #' @author EDG
 #' @export
 optional_nonneg_double_vector <- new_property(
-  class = new_union(class_double, NULL),
-  default = NULL,
+  class = new_union(NULL, class_double),
   validator = function(value) {
     if (is.null(value)) {
       return(NULL)
@@ -651,7 +638,7 @@ bounded_double_property <- function(
   new_property(
     class = cls,
     validator = function(value) {
-      if (is.null(value)) {
+      if (nullable && is.null(value)) {
         return(NULL)
       }
       if (length(value) != 1L || is.na(value) || !is.finite(value)) {
@@ -686,7 +673,7 @@ enum <- function(values, default = NULL, nullable = FALSE) {
   new_property(
     class = cls,
     validator = function(value) {
-      if (is.null(value)) {
+      if (nullable && is.null(value)) {
         return(NULL)
       }
       if (length(value) != 1L || is.na(value)) {
