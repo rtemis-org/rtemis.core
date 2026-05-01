@@ -1,6 +1,7 @@
 # Dev
 __dev/
 Makefile
+specs/
 
 # macOS
 .DS_Store
