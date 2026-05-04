@@ -1,6 +1,7 @@
 ^__dev$
 ^\.github$
 ^.*\.code-workspace$
+^revdep$
 ^specs$
 ^AGENTS\.md$
 ^CLAUDE\.md$
