@@ -2,9 +2,8 @@
 
 ## Version 0.1.0
 
-- Added S7 property library + tests
-- Expanded check_ function set + tests
-- Updated rtemis_colors
+- Added set of custom S7 properties
+- Expanded `check_*` function set
 
 ## Version 0.0.3
 
