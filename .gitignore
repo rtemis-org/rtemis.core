@@ -17,6 +17,7 @@ specs/
 *.Rcheck/
 *.tar.gz
 revdep/
+cran-comments.md
 
 # Agents
 .claude/
