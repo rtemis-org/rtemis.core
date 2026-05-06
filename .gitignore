@@ -1,6 +1,7 @@
 # Dev
 __dev/
 Makefile
+specs/
 
 # macOS
 .DS_Store
@@ -15,6 +16,8 @@ Makefile
 # R
 *.Rcheck/
 *.tar.gz
+revdep/
+cran-comments.md
 
 # Agents
 .claude/
