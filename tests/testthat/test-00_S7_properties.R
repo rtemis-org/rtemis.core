@@ -20,6 +20,14 @@ library(S7)
       "TC_opt_int",
       properties = list(x = optional_integer_scalar)
     ),
+    nng_int = new_class(
+      "TC_nng_int",
+      properties = list(x = nonneg_integer_scalar)
+    ),
+    opt_nng_int = new_class(
+      "TC_opt_nng_int",
+      properties = list(x = optional_nonneg_integer_scalar)
+    ),
     lgl = new_class("TC_lgl", properties = list(x = logical_scalar)),
     opt_lgl = new_class(
       "TC_opt_lgl",
@@ -162,6 +170,52 @@ test_that("optional_integer_scalar accepts an integer", {
 
 test_that("optional_integer_scalar rejects NA_integer_", {
   expect_error(.TC$opt_int(x = NA_integer_))
+})
+
+# nonneg_integer_scalar ----
+test_that("nonneg_integer_scalar accepts 0L", {
+  expect_no_error(.TC$nng_int(x = 0L))
+})
+
+test_that("nonneg_integer_scalar accepts a positive integer", {
+  expect_no_error(.TC$nng_int(x = 5L))
+})
+
+test_that("nonneg_integer_scalar rejects a negative integer", {
+  expect_error(.TC$nng_int(x = -1L))
+})
+
+test_that("nonneg_integer_scalar rejects NA_integer_", {
+  expect_error(.TC$nng_int(x = NA_integer_))
+})
+
+test_that("nonneg_integer_scalar rejects a plain double", {
+  expect_error(.TC$nng_int(x = 0.0))
+})
+
+test_that("nonneg_integer_scalar rejects length > 1", {
+  expect_error(.TC$nng_int(x = c(0L, 1L)))
+})
+
+# optional_nonneg_integer_scalar ----
+test_that("optional_nonneg_integer_scalar accepts NULL", {
+  expect_no_error(.TC$opt_nng_int(x = NULL))
+})
+
+test_that("optional_nonneg_integer_scalar accepts 0L", {
+  expect_no_error(.TC$opt_nng_int(x = 0L))
+})
+
+test_that("optional_nonneg_integer_scalar accepts a positive integer", {
+  expect_no_error(.TC$opt_nng_int(x = 3L))
+})
+
+test_that("optional_nonneg_integer_scalar rejects a negative integer", {
+  expect_error(.TC$opt_nng_int(x = -1L))
+})
+
+test_that("optional_nonneg_integer_scalar rejects NA_integer_", {
+  expect_error(.TC$opt_nng_int(x = NA_integer_))
 })
 
 # logical_scalar ----
