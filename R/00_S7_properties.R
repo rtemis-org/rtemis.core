@@ -7,7 +7,8 @@
 #   double_scalar / optional_double_scalar
 # Integer ---------------------------------------------------------------------
 #   integer_scalar / optional_integer_scalar
-#   pos_integer_scalar / optional_pos_integer_scalar     (0, Inf)
+#   nonneg_integer_scalar / optional_nonneg_integer_scalar [0, Inf)
+#   pos_integer_scalar / optional_pos_integer_scalar       (0, Inf)
 # Logical ---------------------------------------------------------------------
 #   logical_scalar / optional_logical_scalar
 # Bounded double scalars ------------------------------------------------------
@@ -131,6 +132,45 @@ optional_integer_scalar <- new_property(
   validator = function(value) {
     if (!is.null(value) && (length(value) != 1L || is.na(value))) {
       return("must be NULL or an integer scalar (e.g. 1L)")
+    }
+    NULL
+  }
+)
+
+
+#' Non-negative integer scalar S7 property
+#'
+#' S7 property accepting a single non-NA integer value greater than or equal to zero,
+#' i.e. in \eqn{[0, \infty)} (e.g. `0L`, `1L`).
+#'
+#' @return An S7 property object.
+#' @author EDG
+#' @export
+nonneg_integer_scalar <- new_property(
+  class_integer,
+  validator = function(value) {
+    if (length(value) != 1L || is.na(value) || value < 0L) {
+      return("must be a non-negative integer scalar (>= 0, e.g. 0L)")
+    }
+    NULL
+  }
+)
+
+
+#' Optional non-negative integer scalar S7 property
+#'
+#' S7 property accepting `NULL` or a single non-NA integer value greater than or equal to zero.
+#'
+#' @return An S7 property object.
+#' @author EDG
+#' @export
+optional_nonneg_integer_scalar <- new_property(
+  class = new_union(NULL, class_integer),
+  validator = function(value) {
+    if (
+      !is.null(value) && (length(value) != 1L || is.na(value) || value < 0L)
+    ) {
+      return("must be NULL or a non-negative integer scalar (>= 0, e.g. 0L)")
     }
     NULL
   }
