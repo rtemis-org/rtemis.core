@@ -29,3 +29,10 @@ rtemis_colors <- c(
 col_highlight <- rtemis_colors[["orange"]]
 col_suggest <- rtemis_colors[["orange"]]
 col_object <- rtemis_colors[["green"]]
+
+# Log-level colors — used by info() / warn() / success() / debug() / abort()
+col_info <- rtemis_colors[["blue"]]
+col_warn <- rtemis_colors[["light_orange"]]
+col_error <- rtemis_colors[["red"]]
+col_success <- rtemis_colors[["green"]]
+col_debug <- "#808080"
