@@ -145,7 +145,7 @@ yay <- function(..., sep = " ", end = "\n", pad = 0) {
 nay <- function(..., sep = " ", end = "\n", pad = 0) {
   message(
     strrep(" ", pad),
-    red("\u2715 "),
+    red(paste0(glyph_error, " ")),
     paste(..., sep = sep),
     end,
     appendLF = FALSE
