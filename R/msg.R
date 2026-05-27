@@ -151,9 +151,9 @@ msg <- function(
   # bracket-free output. Default TRUE preserves existing behavior; set
   # `options(rtemis.show_caller = FALSE)` in .Rprofile to disable for
   # all sessions.
-  show_caller <- !is.null(caller) &&
+  show_caller <- length(caller) > 0L &&
     !is.na(caller) &&
-    nchar(caller) > 0L &&
+    nzchar(caller) &&
     isTRUE(getOption("rtemis.show_caller", TRUE))
   if (show_caller) {
     message(plain(gray(paste0(" [", caller, "]"))))
@@ -194,7 +194,11 @@ msg0 <- function(
     format_fn(paste(txt, collapse = sep)),
     appendLF = FALSE
   )
-  if (!is.null(caller) && !is.na(caller) && nchar(caller) > 0L) {
+  show_caller <- length(caller) > 0L &&
+    !is.na(caller) &&
+    nzchar(caller) &&
+    isTRUE(getOption("rtemis.show_caller", TRUE))
+  if (show_caller) {
     message(plain(gray(paste0(" [", caller, "]"))))
   } else if (newline) {
     message("")

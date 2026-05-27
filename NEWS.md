@@ -45,9 +45,11 @@
   with structured condition classes rather than via `cli::cli_abort()`.
   Error message text changes from cli's `{.var x}` styling to plain
   backtick-quoted names (e.g. `` `x` cannot be NULL. ``). Code that
-  matches on exact error message strings will need to be updated; code
-  that uses `tryCatch()` is unaffected and now gains access to the new
-  classes.
+  matches on exact error message strings will need to be updated.
+  Generic `tryCatch(error = ...)` handlers continue to work; handlers
+  keyed on the previous `rlang_error` / `cli`-specific classes will
+  need to be updated to the new `rtemis_error` hierarchy (which also
+  gains structured failure-mode subclasses).
 
 ## Version 0.1.0
 
