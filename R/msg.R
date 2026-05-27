@@ -194,7 +194,11 @@ msg0 <- function(
     format_fn(paste(txt, collapse = sep)),
     appendLF = FALSE
   )
-  if (!is.null(caller) && !is.na(caller) && nchar(caller) > 0L) {
+  show_caller <- !is.null(caller) &&
+    !is.na(caller) &&
+    nchar(caller) > 0L &&
+    isTRUE(getOption("rtemis.show_caller", TRUE))
+  if (show_caller) {
     message(plain(gray(paste0(" [", caller, "]"))))
   } else if (newline) {
     message("")
