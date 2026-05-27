@@ -9,7 +9,6 @@
 #'
 #' @import stats methods graphics grDevices data.table S7
 #' @importFrom utils head
-#' @importFrom cli cli_abort
 "_PACKAGE"
 
 NULL

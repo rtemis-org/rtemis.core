@@ -73,8 +73,18 @@ format_caller <- function(call_stack, call_depth, caller_id, max_char = 30L) {
       error = function(e) "(fn)"
     )
   }
-  if (is.character(caller)) {
-    if (nchar(caller) > 30) caller <- paste0(substr(caller, 1, 27), "...")
+  if (is.character(caller) && !is.na(caller)) {
+    # A useful caller label is a function reference: bare symbol (`foo`),
+    # namespaced (`pkg::foo`, `pkg:::foo`), field/slot access
+    # (`obj$method`, `obj@slot`), optionally chained via `>>`. Anything
+    # containing whitespace, parens, or braces is an inline expression
+    # (anonymous function literal, `do.call`-style invocation, etc.) -
+    # not a useful name to print. Drop the bracket entirely in that case.
+    if (grepl("[[:space:](){}]", caller)) {
+      caller <- NA_character_
+    } else if (nchar(caller) > 30L) {
+      caller <- paste0(substr(caller, 1L, 27L), "...")
+    }
   }
   caller
 }
@@ -137,7 +147,15 @@ msg <- function(
     format_fn(paste(txt, collapse = sep)),
     appendLF = FALSE
   )
-  if (!is.null(caller) && !is.na(caller) && nchar(caller) > 0L) {
+  # `rtemis.show_caller` is a global escape hatch for users who prefer
+  # bracket-free output. Default TRUE preserves existing behavior; set
+  # `options(rtemis.show_caller = FALSE)` in .Rprofile to disable for
+  # all sessions.
+  show_caller <- !is.null(caller) &&
+    !is.na(caller) &&
+    nchar(caller) > 0L &&
+    isTRUE(getOption("rtemis.show_caller", TRUE))
+  if (show_caller) {
     message(plain(gray(paste0(" [", caller, "]"))))
   } else if (newline) {
     message("")
@@ -216,9 +234,9 @@ pcat <- function(left, right, pad = 17, newline = TRUE) {
 #' @keywords internal
 #' @noRd
 pad_string <- function(x, target = 17, char = " ") {
-  lpad <- max(0, target - max(0, nchar(x)))
+  leftpad <- max(0, target - max(0, nchar(x)))
   paste0(
-    paste(rep(char, lpad), collapse = ""),
+    paste(rep(char, leftpad), collapse = ""),
     x
   )
 }

@@ -1,7 +1,7 @@
 Package: rtemis.core
 Title: Core Utilities for the 'rtemis' Ecosystem
-Version: 0.1.0
-Date: 2026-04-29
+Version: 0.2.0
+Date: 2026-05-27
 Authors@R: person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"), 
     email = "gennatas@gmail.com", comment = c(ORCID = "0000-0001-9280-3609"))
 Description: Utilities used across packages of the 'rtemis' ecosystem. Includes the msg() 
@@ -17,7 +17,6 @@ Depends:
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
-    cli,
     data.table,
     methods,
     S7

@@ -20,7 +20,7 @@
 test_inherits <- function(x, cl) {
   if (!inherits(x, cl)) {
     input <- deparse(substitute(x))
-    cli::cli_alert_danger("{.var {input}} is not {.cls {cl}}")
+    warn("`", input, "` is not <", paste(cl, collapse = "/"), ">")
     return(FALSE)
   }
   TRUE

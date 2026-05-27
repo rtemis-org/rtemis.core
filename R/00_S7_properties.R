@@ -750,8 +750,9 @@ enum <- function(values, default = NULL, nullable = FALSE) {
 #' optional(S7::class_character)
 optional <- function(type) {
   if (!inherits(type, "S7_base_class") && !inherits(type, "S7_class")) {
-    cli::cli_abort(
-      "{.var type} must be an S7 base class or S7 class."
+    abort(
+      "`type` must be an S7 base class or S7 class.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   S7::new_union(NULL, type)
