@@ -198,3 +198,39 @@ test_that("abort suppresses console output at verbosity 0", {
     expect_no_message(expect_error(abort("quiet boom")))
   })
 })
+
+
+# format_trace ----
+test_that("format_trace returns empty string for NULL or empty trace", {
+  expect_identical(format_trace(NULL), "")
+  expect_identical(format_trace(list()), "")
+})
+
+test_that("format_trace accepts a condition and extracts $trace", {
+  cond <- tryCatch(
+    abort("boom", verbosity = 0L),
+    condition = function(e) e
+  )
+  out <- format_trace(cond)
+  expect_type(out, "character")
+  expect_true(nchar(out) > 0L)
+})
+
+test_that("format_trace numbers frames with newest last", {
+  trace <- list(quote(f()), quote(g()), quote(h()))
+  out <- format_trace(trace)
+  lines <- strsplit(out, "\n", fixed = TRUE)[[1L]]
+  expect_length(lines, 3L)
+  expect_match(lines[[1L]], "^ 1: f\\(\\)$")
+  expect_match(lines[[2L]], "^ 2: g\\(\\)$")
+  expect_match(lines[[3L]], "^ 3: h\\(\\)$")
+})
+
+test_that("format_trace truncates lines longer than max_width", {
+  long_call <- as.call(c(list(as.name("f")), as.list(rep("xxxxxxxx", 20L))))
+  out <- format_trace(list(long_call), max_width = 40L)
+  # Line is "%2d: " (5 chars) plus deparsed call, truncated to max_width.
+  body <- sub("^ *\\d+: ", "", out)
+  expect_identical(nchar(body), 40L)
+  expect_true(endsWith(body, "..."))
+})
