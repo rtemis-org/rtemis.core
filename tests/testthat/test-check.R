@@ -19,6 +19,36 @@ test_that("check_inherits errors on NULL when allow_null = FALSE", {
   expect_error(check_inherits(NULL, "character", allow_null = FALSE))
 })
 
+# check_numeric ----
+test_that("check_numeric passes for both integer and double", {
+  expect_invisible(check_numeric(1L))
+  expect_invisible(check_numeric(1.5))
+  expect_invisible(check_numeric(c(1L, 2L, 3L)))
+  expect_invisible(check_numeric(c(0.1, 0.2)))
+})
+
+# Regression guard: this is the whole reason check_numeric exists.
+# `inherits(1L, "numeric")` is FALSE in R, which broke wire-format
+# callers where jsonlite parses `1` as integer.
+test_that("check_numeric accepts integers (unlike check_inherits)", {
+  expect_invisible(check_numeric(1L))
+  expect_error(check_inherits(1L, "numeric", allow_null = FALSE))
+})
+
+test_that("check_numeric errors for non-numeric input", {
+  expect_error(check_numeric("1", allow_null = FALSE))
+  expect_error(check_numeric(TRUE, allow_null = FALSE))
+  expect_error(check_numeric(list(1, 2), allow_null = FALSE))
+})
+
+test_that("check_numeric allows NULL by default", {
+  expect_invisible(check_numeric(NULL))
+})
+
+test_that("check_numeric errors on NULL when allow_null = FALSE", {
+  expect_error(check_numeric(NULL, allow_null = FALSE))
+})
+
 # check_logical ----
 test_that("check_logical passes for logical input", {
   expect_invisible(check_logical(TRUE))

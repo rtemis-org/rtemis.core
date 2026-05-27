@@ -6,6 +6,7 @@
 # TOC ----
 # General checks
 #   check_inherits
+#   check_numeric
 #   check_logical
 #   check_character
 #   check_floatpos
@@ -91,6 +92,55 @@ check_inherits <- function(
 
   invisible()
 } # /rtemis.core::check_inherits
+
+
+# %% check_numeric ----
+#' Check numeric
+#'
+#' Checks that `x` is numeric. Uses `is.numeric()`, which accepts both
+#' "double" and "integer" inputs - the right semantics for "is this a
+#' number?". Prefer this over `check_inherits(x, "numeric")`, which
+#' rejects integers because their literal class is `"integer"`, not
+#' `"numeric"` (a long-standing R/S3 quirk). This trips up wire-format
+#' callers: `jsonlite::fromJSON("1")` returns an integer, and the value
+#' would then fail `inherits(., "numeric")` despite being a perfectly
+#' good number.
+#'
+#' @param x Vector to check.
+#' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
+#' @param arg_name Character: Name of the variable for error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' check_numeric(1L)
+#' check_numeric(1.5)
+#' check_numeric(c(1, 2, 3))
+#' # Throws error:
+#' try(check_numeric("1"))
+#' try(check_numeric(TRUE))
+check_numeric <- function(
+  x,
+  allow_null = TRUE,
+  arg_name = deparse(substitute(x))
+) {
+  if (allow_null && is.null(x)) {
+    return(invisible())
+  }
+
+  if (is.null(x)) {
+    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+  }
+
+  if (!is.numeric(x)) {
+    cli::cli_abort("{.var {arg_name}} must be numeric.")
+  }
+
+  invisible()
+} # /rtemis.core::check_numeric
 
 
 # %% check_logical ----
