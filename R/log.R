@@ -92,10 +92,11 @@ get_verbosity <- function(package = NULL) {
 #' @examples
 #' strip_ansi(fmt("hi", col = "red"))
 strip_ansi <- function(x) {
-  # Matches any CSI sequence ending in a letter (SGR color/style ends in `m`;
-  # cursor-control sequences end in K/H/J/etc.) so the function lives up to
-  # its name rather than only stripping color codes.
-  gsub("\033\\[[0-9;]*[A-Za-z]", "", x, perl = TRUE)
+  # Full ECMA-48 CSI grammar: ESC '[', parameter bytes (0x30-0x3F, includes
+  # digits, ';', and private-mode markers like '?'), intermediate bytes
+  # (0x20-0x2F), final byte (0x40-0x7E). Covers SGR colour codes,
+  # cursor-control sequences, and DEC private modes alike.
+  gsub("\033\\[[\x30-\x3F]*[\x20-\x2F]*[\x40-\x7E]", "", x, perl = TRUE)
 }
 
 
