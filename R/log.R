@@ -256,14 +256,31 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 
 #' Dual-channel error signal
 #'
-#' Signals a condition AND optionally writes a styled error message to the
-#' operator console. The condition's `message` field is **plain text** with
-#' all ANSI escapes stripped, so it is safe to serialize into JSON, HTML, or
-#' any other ANSI-unaware sink (e.g. browser-side error display).
+#' Signals a condition AND optionally writes a styled event line to the
+#' operator console. The two channels carry complementary information so
+#' nothing is duplicated:
+#'
+#' * **Console echo** (when verbosity allows): the most-specific condition
+#'   class plus the caller bracket - a structured "what failed, where"
+#'   line. Falls back to `"rtemis_error"` when `class = NULL` so the line
+#'   is always namespace-tagged and recognizable as ours.
+#' * **Condition `$message`**: the corrective human-readable text passed
+#'   via `...`. Plain text with all ANSI escapes stripped, so it is safe
+#'   to serialize into JSON, HTML, or any other ANSI-unaware sink (e.g.
+#'   browser-side error display), and is what `conditionMessage()` /
+#'   R's default error printer / `tryCatch(error = ...)` handlers see.
 #'
 #' Use `class` to add wire-protocol-specific condition classes that callers
 #' can catch via `tryCatch()`. The base classes `"rtemis_error"`, `"error"`,
 #' and `"condition"` are always added.
+#'
+#' The condition also carries `$trace` - a `pairlist` of `sys.calls()`
+#' captured at the abort site, with `abort()`'s own frame trimmed. Unlike
+#' base R's `traceback()` (which only sees `.Traceback`, populated only
+#' when an error reaches the top-level uncaught), `$trace` survives
+#' `tryCatch()` and travels with the condition - so server-side handlers
+#' can ship the stack to a browser-side debug pane, or callers can call
+#' [format_trace()] to print it.
 #'
 #' @param ... Message components, concatenated with no separator.
 #' @param class Character vector: Additional condition classes (prepended
@@ -295,17 +312,32 @@ abort <- function(
 ) {
   plain_text <- .compose_plain(list(...))
   v <- verbosity %||% get_verbosity(package)
+  user <- .find_user_frame()
+  # Capture the call stack at the abort site BEFORE stop() winds it back.
+  # Drop abort()'s own frame (always the last entry) - it adds no info.
+  # This snapshot rides on the condition so callers that catch the error
+  # still have access to the stack, unlike base R's `.Traceback` which is
+  # only populated for uncaught errors at the top level.
+  trace <- sys.calls()
+  if (length(trace) > 0L) {
+    trace <- trace[-length(trace)]
+  }
   if (v >= 1L) {
-    # Glyph is only on the operator console echo - the wire-bound
-    # `plain_text` (the condition's $message) stays bare so the browser
-    # error display doesn't carry a stray prefix character.
+    # Echo the most-specific class name as a structured event line.
+    # The corrective human message is left to R's default error printer
+    # (via the condition's $message field below) so the two channels
+    # carry complementary information without textual duplication.
+    # `class[1]` is the failure-mode class (e.g. "rtemis_type_error");
+    # fall back to "rtemis_error" so the line is always namespace-tagged
+    # and recognizable as ours.
+    echo_class <- if (length(class) > 0L) class[[1L]] else "rtemis_error"
     msg(
       glyph_error,
       " ",
-      plain_text,
+      echo_class,
       sep = "",
       format_fn = function(x) fmt(x, col = col_error, bold = TRUE),
-      caller_id = 2L,
+      caller = user$name %||% NA_character_,
       verbosity = 1L
     )
     if (!is.null(parent)) {
@@ -325,9 +357,132 @@ abort <- function(
   }
   cond <- structure(
     class = c(class, "rtemis_error", "error", "condition"),
-    list(message = plain_text, parent = parent, call = NULL)
+    list(
+      message = plain_text,
+      parent = parent,
+      call = user$call,
+      trace = trace
+    )
   )
   stop(cond)
+}
+
+
+# %% format_trace() --------------------------------------------------------------------------------
+
+#' Pretty-print a captured call trace
+#'
+#' Formats the `$trace` carried by an `rtemis_error` condition (see
+#' [abort()]) as a numbered, one-line-per-frame string. Most-recent frame
+#' at the bottom, matching base R's [traceback()] convention. Each frame is
+#' deparsed with a single-line cap so long calls stay readable; no styling
+#' is applied, so the output is safe for any sink (terminal, JSON, HTML).
+#'
+#' @param trace `pairlist` of calls, as captured by [abort()] on
+#'   `cond$trace`. Passing the condition itself also works - the trace is
+#'   extracted via `cond$trace`.
+#' @param max_width Integer: Max characters per deparsed line. Longer
+#'   calls are truncated with a trailing ellipsis.
+#'
+#' @return Character scalar with one frame per `\n`-separated line,
+#'   newest frame last. `""` if the trace is empty or NULL.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' cond <- tryCatch(
+#'   check_numeric("oops"),
+#'   error = identity
+#' )
+#' cat(format_trace(cond), "\n")
+#' }
+format_trace <- function(trace, max_width = 80L) {
+  if (inherits(trace, "condition")) {
+    trace <- trace$trace
+  }
+  if (is.null(trace) || length(trace) == 0L) {
+    return("")
+  }
+  lines <- vapply(
+    seq_along(trace),
+    function(i) {
+      txt <- paste(deparse(trace[[i]]), collapse = " ")
+      if (nchar(txt) > max_width) {
+        txt <- paste0(substr(txt, 1L, max_width - 3L), "...")
+      }
+      sprintf("%2d: %s", i, txt)
+    },
+    character(1L)
+  )
+  paste(lines, collapse = "\n")
+}
+
+
+# %% Caller resolution ----------------------------------------------------------------------------
+
+# Walk the call stack and return the deepest frame whose function does NOT
+# live in this package's namespace. Used by `abort()` to point the console
+# bracket AND the condition's `$call` at the user's code (or downstream
+# package code that called us), regardless of how many `check_*` / `clean_*`
+# wrappers sit between `abort()` and the original caller.
+#
+# rtemis.core frames are skipped so check_* / clean_* wrappers don't show
+# up. `base` is also skipped because that's where `tryCatch` / `doTryCatch`
+# / `withCallingHandlers` and friends live - they're error-handling
+# plumbing, never user code, and would otherwise pollute the bracket
+# whenever an error is being caught (which is most of the time in tests
+# and any server-side handler).
+#
+# A downstream package's public API (e.g. `rtemis.server::train_model`)
+# WILL appear in the bracket when that's the closest non-skipped frame,
+# which is what authors usually want. If a package needs to hide its own
+# internal wrappers too, that's a separate parameter we can add later.
+.find_user_frame <- function() {
+  pkg_env <- topenv()
+  calls <- sys.calls()
+  for (i in rev(seq_along(calls))) {
+    fn <- tryCatch(sys.function(i), error = function(e) NULL)
+    if (is.null(fn)) {
+      next
+    }
+    fn_env <- environment(fn)
+    if (is.null(fn_env)) {
+      next
+    } # primitive or detached closure
+    te <- topenv(fn_env)
+    if (identical(te, pkg_env)) {
+      next
+    }
+    if (isNamespace(te) && getNamespaceName(te) == "base") {
+      next
+    }
+    return(list(call = calls[[i]], name = .call_name(calls[[i]])))
+  }
+  list(call = NULL, name = NULL)
+}
+
+# Best-effort short name for a call's function head, for use in the
+# operator-console bracket. Handles bare names (`foo(...)`), namespaced
+# calls (`pkg::foo(...)` / `pkg:::foo(...)`), and falls back to a
+# single-line deparse for everything else (anonymous functions, complex
+# expressions). Never errors - returns NULL if nothing sensible exists.
+.call_name <- function(cl) {
+  if (is.null(cl)) {
+    return(NULL)
+  }
+  head <- cl[[1L]]
+  if (is.symbol(head)) {
+    return(as.character(head))
+  }
+  if (is.call(head) && length(head) == 3L) {
+    op <- as.character(head[[1L]])
+    if (op %in% c("::", ":::")) {
+      return(as.character(head[[3L]]))
+    }
+  }
+  deparse(head, nlines = 1L)
 }
 
 

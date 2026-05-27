@@ -26,15 +26,34 @@ signalled condition.}
 Does not return - always signals a condition via \code{stop()}.
 }
 \description{
-Signals a condition AND optionally writes a styled error message to the
-operator console. The condition's \code{message} field is \strong{plain text} with
-all ANSI escapes stripped, so it is safe to serialize into JSON, HTML, or
-any other ANSI-unaware sink (e.g. browser-side error display).
+Signals a condition AND optionally writes a styled event line to the
+operator console. The two channels carry complementary information so
+nothing is duplicated:
 }
 \details{
+\itemize{
+\item \strong{Console echo} (when verbosity allows): the most-specific condition
+class plus the caller bracket - a structured "what failed, where"
+line. Falls back to \code{"rtemis_error"} when \code{class = NULL} so the line
+is always namespace-tagged and recognizable as ours.
+\item \strong{Condition \verb{$message}}: the corrective human-readable text passed
+via \code{...}. Plain text with all ANSI escapes stripped, so it is safe
+to serialize into JSON, HTML, or any other ANSI-unaware sink (e.g.
+browser-side error display), and is what \code{conditionMessage()} /
+R's default error printer / \code{tryCatch(error = ...)} handlers see.
+}
+
 Use \code{class} to add wire-protocol-specific condition classes that callers
 can catch via \code{tryCatch()}. The base classes \code{"rtemis_error"}, \code{"error"},
 and \code{"condition"} are always added.
+
+The condition also carries \verb{$trace} - a \code{pairlist} of \code{sys.calls()}
+captured at the abort site, with \code{abort()}'s own frame trimmed. Unlike
+base R's \code{traceback()} (which only sees \code{.Traceback}, populated only
+when an error reaches the top-level uncaught), \verb{$trace} survives
+\code{tryCatch()} and travels with the condition - so server-side handlers
+can ship the stack to a browser-side debug pane, or callers can call
+\code{\link[=format_trace]{format_trace()}} to print it.
 }
 \examples{
 \dontrun{

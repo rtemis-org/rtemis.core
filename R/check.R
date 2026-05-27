@@ -1,7 +1,17 @@
 # 2024- EDG rtemis.org
 
-# check_* functions perform checks and throw error using cli::cli_abort if checks fail;
+# check_* functions perform checks and throw error using abort() if checks fail;
 # do not return a value.
+#
+# Error class scheme - all inherit from "rtemis_input_error", so callers can
+# catch any input failure broadly, or narrow to a specific failure mode:
+#   "rtemis_null_input"       - NULL where not allowed
+#   "rtemis_na_input"         - NAs present
+#   "rtemis_type_error"       - wrong R type
+#   "rtemis_length_error"     - wrong length (scalar expected, empty vector, etc.)
+#   "rtemis_range_error"      - out-of-bounds numeric value
+#   "rtemis_value_error"      - value not in allowed set
+#   "rtemis_dependency_error" - missing required package
 
 # TOC ----
 # General checks
@@ -81,12 +91,22 @@ check_inherits <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (!inherits(x, cl)) {
-    cli::cli_abort(
-      "{.var {arg_name}} must be of class {.cls {cl}}."
+    abort(
+      "`",
+      arg_name,
+      "` must be of class <",
+      paste(cl, collapse = "/"),
+      ">.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
 
@@ -132,11 +152,21 @@ check_numeric <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   invisible()
@@ -169,14 +199,29 @@ check_logical <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
   if (!is.logical(x)) {
-    cli::cli_abort("{.var {arg_name}} must be logical.")
+    abort(
+      "`",
+      arg_name,
+      "` must be logical.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   invisible()
@@ -209,14 +254,29 @@ check_character <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
   if (!is.character(x)) {
-    cli::cli_abort("{.var {arg_name}} must be character.")
+    abort(
+      "`",
+      arg_name,
+      "` must be character.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   invisible()
@@ -256,19 +316,39 @@ check_floatpos <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
 
   if (any(x <= 0)) {
-    cli::cli_abort("{.var {arg_name}} must be greater than 0.")
+    abort(
+      "`",
+      arg_name,
+      "` must be greater than 0.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
 
   invisible()
@@ -301,20 +381,38 @@ check_float01exc <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
 
   if (any(x <= 0 | x >= 1)) {
-    cli::cli_abort(
-      "{.var {arg_name}} must be between 0 and 1, exclusive."
+    abort(
+      "`",
+      arg_name,
+      "` must be between 0 and 1, exclusive.",
+      class = c("rtemis_range_error", "rtemis_input_error")
     )
   }
 
@@ -346,21 +444,41 @@ check_float01inc <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort(
-      "{.var {arg_name}} must be numeric. Received: {.val {x}} of class {class(x)}"
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric. Received value of class <",
+      paste(class(x), collapse = "/"),
+      ">.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
 
   if (any(x < 0 | x > 1)) {
-    cli::cli_abort("{.var {arg_name}} must be between 0 and 1, inclusive.")
+    abort(
+      "`",
+      arg_name,
+      "` must be between 0 and 1, inclusive.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
 
   invisible()
@@ -394,20 +512,38 @@ check_floatpos1 <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
 
   if (any(x <= 0) || any(x > 1)) {
-    cli::cli_abort(
-      "{.var {arg_name}} must be greater than 0 and less or equal to 1."
+    abort(
+      "`",
+      arg_name,
+      "` must be greater than 0 and less or equal to 1.",
+      class = c("rtemis_range_error", "rtemis_input_error")
     )
   }
 
@@ -446,19 +582,39 @@ check_float0pos <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
 
   if (any(x < 0)) {
-    cli::cli_abort("{.var {arg_name}} must be zero or greater.")
+    abort(
+      "`",
+      arg_name,
+      "` must be zero or greater.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
 
   invisible()
@@ -491,19 +647,39 @@ check_float_neg1_1 <- function(
   }
 
   if (is.null(x)) {
-    cli::cli_abort("{.var {arg_name}} cannot be NULL.")
+    abort(
+      "`",
+      arg_name,
+      "` cannot be NULL.",
+      class = c("rtemis_null_input", "rtemis_input_error")
+    )
   }
 
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
 
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
 
   if (any(x < -1 | x > 1)) {
-    cli::cli_abort("{.var {arg_name}} must be between -1 and 1, inclusive.")
+    abort(
+      "`",
+      arg_name,
+      "` must be between -1 and 1, inclusive.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
 
   invisible()
@@ -535,13 +711,12 @@ check_dependencies <- function(..., verbosity = 0L) {
   ns <- as.list(c(...))
   err <- !sapply(ns, \(i) requireNamespace(i, quietly = TRUE))
   if (any(err)) {
-    cli::cli_abort(
-      paste0(
-        "Please install the following ",
-        ngettext(sum(err), "dependency", "dependencies"),
-        ":\n",
-        pastels(ns[err], bullet = "    -")
-      )
+    abort(
+      "Please install the following ",
+      ngettext(sum(err), "dependency", "dependencies"),
+      ":\n",
+      pastels(ns[err], bullet = "    -"),
+      class = c("rtemis_dependency_error", "rtemis_input_error")
     )
   } else {
     if (verbosity > 0L) msg("Dependency check passed")
@@ -568,7 +743,12 @@ check_dependencies <- function(..., verbosity = 0L) {
 #' try(check_data.table(iris))
 check_data.table <- function(x, arg_name = deparse(substitute(x))) {
   if (!data.table::is.data.table(x)) {
-    cli::cli_abort("{.var {arg_name}} must be a data.table.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a data.table.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   invisible(x)
 } # /rtemis.core::check_data.table
@@ -594,8 +774,12 @@ check_data.table <- function(x, arg_name = deparse(substitute(x))) {
 #' try(check_tabular(matrix(1:10, ncol = 2)))
 check_tabular <- function(x) {
   if (!inherits(x, c("data.frame", "data.table", "tbl_df"))) {
-    cli::cli_abort(
-      "{.var {deparse(substitute(x))}} must be a data.frame, data.table, or tbl_df."
+    arg_name <- deparse(substitute(x))
+    abort(
+      "`",
+      arg_name,
+      "` must be a data.frame, data.table, or tbl_df.",
+      class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
   invisible(x)
@@ -623,8 +807,14 @@ check_tabular <- function(x) {
 #' try(check_enum("granola", c("croissant", "bagel", "scramble")))
 check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
   if (!x %in% allowed_values) {
-    cli::cli_abort(
-      "{.var {arg_name}} must be one of: {.val {allowed_values}}. Received: {.val {x}}"
+    abort(
+      "`",
+      arg_name,
+      "` must be one of: ",
+      paste(shQuote(allowed_values), collapse = ", "),
+      ". Received: ",
+      shQuote(as.character(x)),
+      class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
   invisible(x)
@@ -655,10 +845,20 @@ check_enum <- function(x, allowed_values, arg_name = deparse(substitute(x))) {
 #' try(check_character_scalar(c("a", "b")))
 check_character_scalar <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.character(x)) {
-    cli::cli_abort("{.var {arg_name}} must be a character string.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a character string.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (length(x) != 1L || is.na(x) || !nzchar(trimws(x))) {
-    cli::cli_abort("{.var {arg_name}} must be a single non-empty string.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a single non-empty string.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_character_scalar
@@ -712,10 +912,20 @@ check_optional_character_scalar <- function(
 #' try(check_double_scalar(c(1.0, 2.0)))
 check_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (length(x) != 1L || is.na(x)) {
-    cli::cli_abort("{.var {arg_name}} must be a single non-NA number.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a single non-NA number.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_double_scalar
@@ -769,13 +979,28 @@ check_optional_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' try(check_integer_scalar(NA_integer_))
 check_integer_scalar <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (length(x) != 1L || is.na(x) || !is.finite(x)) {
-    cli::cli_abort("{.var {arg_name}} must be a single finite non-NA number.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a single finite non-NA number.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   if (x != round(x)) {
-    cli::cli_abort("{.var {arg_name}} must be a whole number.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a whole number.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_integer_scalar
@@ -835,7 +1060,12 @@ check_optional_integer_scalar <- function(
 check_pos_integer_scalar <- function(x, arg_name = deparse(substitute(x))) {
   check_integer_scalar(x, arg_name = arg_name)
   if (x <= 0) {
-    cli::cli_abort("{.var {arg_name}} must be a whole number greater than 0.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a whole number greater than 0.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_pos_integer_scalar
@@ -890,10 +1120,20 @@ check_optional_pos_integer_scalar <- function(
 #' try(check_logical_scalar(c(TRUE, FALSE)))
 check_logical_scalar <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.logical(x)) {
-    cli::cli_abort("{.var {arg_name}} must be TRUE or FALSE.")
+    abort(
+      "`",
+      arg_name,
+      "` must be TRUE or FALSE.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (length(x) != 1L || is.na(x)) {
-    cli::cli_abort("{.var {arg_name}} must be a single TRUE or FALSE.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a single TRUE or FALSE.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_logical_scalar
@@ -948,7 +1188,12 @@ check_optional_logical_scalar <- function(
 check_prob_scalar <- function(x, arg_name = deparse(substitute(x))) {
   check_double_scalar(x, arg_name = arg_name)
   if (x < 0 || x > 1) {
-    cli::cli_abort("{.var {arg_name}} must be in [0, 1].")
+    abort(
+      "`",
+      arg_name,
+      "` must be in [0, 1].",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_prob_scalar
@@ -998,7 +1243,12 @@ check_optional_prob_scalar <- function(x, arg_name = deparse(substitute(x))) {
 check_unit_open_scalar <- function(x, arg_name = deparse(substitute(x))) {
   check_double_scalar(x, arg_name = arg_name)
   if (x <= 0 || x >= 1) {
-    cli::cli_abort("{.var {arg_name}} must be strictly in (0, 1).")
+    abort(
+      "`",
+      arg_name,
+      "` must be strictly in (0, 1).",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_unit_open_scalar
@@ -1025,7 +1275,12 @@ check_unit_open_scalar <- function(x, arg_name = deparse(substitute(x))) {
 check_pos_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
   check_double_scalar(x, arg_name = arg_name)
   if (!is.finite(x) || x <= 0) {
-    cli::cli_abort("{.var {arg_name}} must be a finite number greater than 0.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a finite number greater than 0.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_pos_double_scalar
@@ -1080,7 +1335,12 @@ check_optional_pos_double_scalar <- function(
 check_nonneg_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
   check_double_scalar(x, arg_name = arg_name)
   if (!is.finite(x) || x < 0) {
-    cli::cli_abort("{.var {arg_name}} must be a finite number >= 0.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a finite number >= 0.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_nonneg_double_scalar
@@ -1136,16 +1396,36 @@ check_optional_nonneg_double_scalar <- function(
 #' try(check_prob_vector(c(0.5, NA)))
 check_prob_vector <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (length(x) == 0L) {
-    cli::cli_abort("{.var {arg_name}} must be non-empty.")
+    abort(
+      "`",
+      arg_name,
+      "` must be non-empty.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
   if (any(x < 0) || any(x > 1)) {
-    cli::cli_abort("{.var {arg_name}} all elements must be in [0, 1].")
+    abort(
+      "`",
+      arg_name,
+      "` all elements must be in [0, 1].",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_prob_vector
@@ -1196,16 +1476,36 @@ check_optional_prob_vector <- function(x, arg_name = deparse(substitute(x))) {
 #' try(check_unit_open_vector(c(0.5, 1)))
 check_unit_open_vector <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (length(x) == 0L) {
-    cli::cli_abort("{.var {arg_name}} must be non-empty.")
+    abort(
+      "`",
+      arg_name,
+      "` must be non-empty.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
   if (any(x <= 0) || any(x >= 1)) {
-    cli::cli_abort("{.var {arg_name}} all elements must be strictly in (0, 1).")
+    abort(
+      "`",
+      arg_name,
+      "` all elements must be strictly in (0, 1).",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_unit_open_vector
@@ -1259,16 +1559,36 @@ check_optional_unit_open_vector <- function(
 #' try(check_pos_double_vector(c(1, Inf)))
 check_pos_double_vector <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (length(x) == 0L) {
-    cli::cli_abort("{.var {arg_name}} must be non-empty.")
+    abort(
+      "`",
+      arg_name,
+      "` must be non-empty.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
   if (!all(is.finite(x)) || any(x <= 0)) {
-    cli::cli_abort("{.var {arg_name}} all elements must be finite and > 0.")
+    abort(
+      "`",
+      arg_name,
+      "` all elements must be finite and > 0.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_pos_double_vector
@@ -1322,16 +1642,36 @@ check_optional_pos_double_vector <- function(
 #' try(check_nonneg_double_vector(c(1, Inf)))
 check_nonneg_double_vector <- function(x, arg_name = deparse(substitute(x))) {
   if (!is.numeric(x)) {
-    cli::cli_abort("{.var {arg_name}} must be numeric.")
+    abort(
+      "`",
+      arg_name,
+      "` must be numeric.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (length(x) == 0L) {
-    cli::cli_abort("{.var {arg_name}} must be non-empty.")
+    abort(
+      "`",
+      arg_name,
+      "` must be non-empty.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   if (anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   }
   if (!all(is.finite(x)) || any(x < 0)) {
-    cli::cli_abort("{.var {arg_name}} all elements must be finite and >= 0.")
+    abort(
+      "`",
+      arg_name,
+      "` all elements must be finite and >= 0.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_nonneg_double_vector
@@ -1388,7 +1728,12 @@ check_optional_nonneg_double_vector <- function(
 check_scalar_logical <- function(x, arg_name = deparse(substitute(x))) {
   check_logical(x, allow_null = FALSE, arg_name = arg_name)
   if (length(x) != 1L) {
-    cli::cli_abort("{.var {arg_name}} must be a single TRUE or FALSE value.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a single TRUE or FALSE value.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_scalar_logical
@@ -1413,7 +1758,12 @@ check_scalar_logical <- function(x, arg_name = deparse(substitute(x))) {
 check_scalar_character <- function(x, arg_name = deparse(substitute(x))) {
   check_character(x, allow_null = FALSE, arg_name = arg_name)
   if (length(x) != 1L) {
-    cli::cli_abort("{.var {arg_name}} must be a single string.")
+    abort(
+      "`",
+      arg_name,
+      "` must be a single string.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_scalar_character
@@ -1442,7 +1792,12 @@ check_optional_scalar_character <- function(
 ) {
   check_character(x, allow_null = TRUE, arg_name = arg_name)
   if (!is.null(x) && length(x) != 1L) {
-    cli::cli_abort("{.var {arg_name}} must be NULL or a single string.")
+    abort(
+      "`",
+      arg_name,
+      "` must be NULL or a single string.",
+      class = c("rtemis_length_error", "rtemis_input_error")
+    )
   }
   invisible()
 } # /rtemis.core::check_optional_scalar_character

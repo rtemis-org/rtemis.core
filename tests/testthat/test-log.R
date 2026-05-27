@@ -178,10 +178,17 @@ test_that("abort propagates parent condition", {
 })
 
 test_that("abort writes console output when verbosity >= 1", {
+  # The console echo carries the most-specific class name (or "rtemis_error"
+  # when class = NULL), NOT the human message - the human message is left
+  # to R's default error printer so the two channels don't duplicate.
   with_opts(list(rtemis.verbosity = 1L), {
     expect_message(
       expect_error(abort("loud boom")),
-      "loud boom"
+      "rtemis_error"
+    )
+    expect_message(
+      expect_error(abort("typed boom", class = "my_specific_error")),
+      "my_specific_error"
     )
   })
 })

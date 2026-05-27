@@ -33,12 +33,22 @@ clean_int <- function(x, arg_name = deparse(substitute(x))) {
       storage.mode(x) <- "integer"
       return(x)
     } else {
-      cli::cli_abort("{.var {arg_name}} must be integer.")
+      abort(
+        "`",
+        arg_name,
+        "` must be integer.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
     }
   } else if (is.null(x)) {
     return(NULL)
   }
-  cli::cli_abort("{.var {arg_name}} must be integer.")
+  abort(
+    "`",
+    arg_name,
+    "` must be integer.",
+    class = c("rtemis_type_error", "rtemis_input_error")
+  )
 }
 
 
@@ -67,13 +77,23 @@ clean_posint <- function(
   }
 
   if (!allow_na && anyNA(x)) {
-    cli::cli_abort("{.var {arg_name}} must not contain NAs.")
+    abort(
+      "`",
+      arg_name,
+      "` must not contain NAs.",
+      class = c("rtemis_na_input", "rtemis_input_error")
+    )
   } else {
     x <- x[!is.na(x)]
   }
 
   if (any(x <= 0)) {
-    cli::cli_abort("{.var {arg_name}} must contain only positive integers.")
+    abort(
+      "`",
+      arg_name,
+      "` must contain only positive integers.",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
   }
 
   clean_int(x, arg_name = arg_name)
