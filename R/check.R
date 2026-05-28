@@ -1801,3 +1801,30 @@ check_optional_scalar_character <- function(
   }
   invisible()
 } # /rtemis.core::check_optional_scalar_character
+
+
+# %% I/O -------------------------------------------------------------------------------------------
+#' Check file exists
+#'
+#' @param file Character: Path to file to check.
+#'
+#' @return Throws an error if checks fail. Returns the normalized file path invisibly if checks pass.
+#' @author EDG
+#' @export
+#' @examples
+#' \dontrun{
+#' check_file_exists("path/to/file.txt")
+#' }
+check_file_exists <- function(file) {
+  check_character_scalar(file, arg_name = deparse(substitute(file)))
+  file <- normalizePath(file, mustWork = FALSE)
+  if (!file.exists(file)) {
+    abort(
+      "File does not exist: `",
+      file,
+      "`.",
+      class = c("rtemis_file_not_found", "rtemis_io_error")
+    )
+  }
+  invisible(file)
+}
