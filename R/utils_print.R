@@ -688,12 +688,12 @@ pastels <- function(x, bullet = "  -") {
 #' collapse_head(98054:99890, maxlength = 5L)
 #' collapse_head(c("mango", "banana", "tangerine", "sugar", "ackee", "cocoa bean"), maxlength = 3L, format_fn = toupper)
 collapse_head <- function(x, maxlength = 6L, format_fn = identity) {
-  if (maxlength == -1L || length(x) < maxlength) {
+  if (maxlength == -1L || length(x) <= maxlength) {
     paste(format_fn(x), collapse = ", ")
   } else {
     paste0(
       paste(format_fn(head(as.vector(x), n = maxlength)), collapse = ", "),
-      "..."
+      ", ..."
     )
   }
 }
