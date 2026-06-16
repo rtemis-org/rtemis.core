@@ -41,7 +41,7 @@ is_common_struct <- function(x) {
 #' @param prefix Character: Optional prefix for names.
 #' @param pad Integer: Pad output with this many spaces.
 #' @param item_format Formatting function for list item names.
-#' @param maxlength Integer: Maximum length of items to show using `headdot()` before truncating with ellipsis.
+#' @param maxlength Integer: Maximum length of items to show using `collapse_head()` before truncating with ellipsis.
 #' @param center_title Logical: If TRUE, autopad title for centering, if present.
 #' @param title Character: Optional title to print before list.
 #' @param title_newline Logical: If TRUE, print title on new line.
@@ -235,7 +235,11 @@ printls <- function(
           if (print_class) {
             gray(paste0("<", abbreviate(classes_[[i]], abbrev_class_n), "> "))
           },
-          headdot(x[[i]], maxlength = maxlength, format_fn = format_fn_rhs),
+          collapse_head(
+            x[[i]],
+            maxlength = maxlength,
+            format_fn = format_fn_rhs
+          ),
           "\n"
         ))
       } else if (isS4(x[[i]])) {
@@ -279,7 +283,11 @@ printls <- function(
           if (print_class) {
             gray(paste0("<", abbreviate(classes_[[i]], abbrev_class_n), "> "))
           },
-          headdot(x[[i]], maxlength = maxlength, format_fn = format_fn_rhs),
+          collapse_head(
+            x[[i]],
+            maxlength = maxlength,
+            format_fn = format_fn_rhs
+          ),
           "\n"
         ))
       }
@@ -662,19 +670,24 @@ pastels <- function(x, bullet = "  -") {
 }
 
 
-#' Get first few elements of a vector with ellipsis
+#' Collapse head of vector with commas followed by ellipsis
 #'
 #' @details
 #' Used, for example, by `repr_ls`
 #'
-#' @return Character.
-#'
-#' @keywords internal
-#' @noRd
 #' @param x Vector: Input whose first elements are shown.
 #' @param maxlength Integer: Maximum number of elements to show before truncating with an ellipsis. Use -1 to show all.
 #' @param format_fn Function: Formatting function applied to each element.
-headdot <- function(x, maxlength = 6L, format_fn = identity) {
+#'
+#' @return Character.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' collapse_head(98054:99890, maxlength = 5L)
+#' collapse_head(c("mango", "banana", "tangerine", "sugar", "ackee", "cocoa bean"), maxlength = 3L, format_fn = toupper)
+collapse_head <- function(x, maxlength = 6L, format_fn = identity) {
   if (maxlength == -1L || length(x) < maxlength) {
     paste(format_fn(x), collapse = ", ")
   } else {
@@ -794,7 +807,7 @@ show_padded <- function(
 #' @param prefix Character: Optional prefix for names.
 #' @param pad Integer: Pad output with this many spaces.
 #' @param item_format Formatting function for items.
-#' @param maxlength Integer: Maximum length of items to show using `headdot()` before truncating with ellipsis.
+#' @param maxlength Integer: Maximum length of items to show using `collapse_head()` before truncating with ellipsis.
 #' @param center_title Logical: If TRUE, autopad title for centering, if present.
 #' @param title Character: Title to print before list.
 #' @param title_newline Logical: If TRUE, print title on new line.
@@ -1074,7 +1087,11 @@ repr_ls <- function(
           } else {
             ""
           },
-          headdot(x[[i]], maxlength = maxlength, format_fn = format_fn_rhs),
+          collapse_head(
+            x[[i]],
+            maxlength = maxlength,
+            format_fn = format_fn_rhs
+          ),
           "\n"
         )
         result <- paste0(result, item_text)
@@ -1159,7 +1176,11 @@ repr_ls <- function(
           } else {
             ""
           },
-          headdot(x[[i]], maxlength = maxlength, format_fn = format_fn_rhs),
+          collapse_head(
+            x[[i]],
+            maxlength = maxlength,
+            format_fn = format_fn_rhs
+          ),
           "\n"
         )
         result <- paste0(result, item_text)
