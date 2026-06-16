@@ -22,7 +22,9 @@ rtemis_colors <- c(
   dark_blue = "#375D86",
   red = "#EA384A",
   light_mauve = "#ECBDC3",
-  pink = "#F384FF"
+  pink = "#F384FF",
+  purple = "#7364F2",
+  dark_magenta = "#7D0830"
 )
 
 # Internal colors

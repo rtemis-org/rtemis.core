@@ -254,7 +254,10 @@ bold <- function(text, output_type = c("ansi", "html", "plain")) {
 #'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' message(italic("italic text"))
 italic <- function(text, output_type = c("ansi", "html", "plain")) {
   fmt(text, italic = TRUE, output_type = output_type)
 }
@@ -288,7 +291,10 @@ underline <- function(text, output_type = c("ansi", "html", "plain")) {
 #'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' message(thin("thin text"))
 thin <- function(text, output_type = c("ansi", "html", "plain")) {
   fmt(text, thin = TRUE, output_type = output_type)
 }
@@ -326,7 +332,10 @@ muted <- function(x, output_type = c("ansi", "html", "plain")) {
 #'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' message(gray("gray text"))
 gray <- function(x, output_type = c("ansi", "html", "plain")) {
   fmt(x, col = "#808080", output_type = output_type)
 }
