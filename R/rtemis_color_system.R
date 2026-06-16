@@ -16,7 +16,7 @@ rtemis_colors <- c(
   light_orange = "#FDB808",
   orange = "#F08904",
   magenta = "#BE2E5F",
-  green = "#00cc8f",
+  green = "#526551",
   light_blue = "#B3CFE8",
   blue = "#466D96",
   dark_blue = "#375D86",

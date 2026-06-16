@@ -32,7 +32,7 @@ repr_ls(
 
 \item{item_format}{Formatting function for items.}
 
-\item{maxlength}{Integer: Maximum length of items to show using \code{headdot()} before truncating with ellipsis.}
+\item{maxlength}{Integer: Maximum length of items to show using \code{collapse_head()} before truncating with ellipsis.}
 
 \item{center_title}{Logical: If TRUE, autopad title for centering, if present.}
 
