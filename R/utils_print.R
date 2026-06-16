@@ -1,5 +1,14 @@
 # 2016-23 EDG rtemis.org
 
+#' Test whether an object is a common data structure
+#'
+#' @param x Object to test.
+#'
+#' @return Logical: TRUE if `x` is a common atomic/tabular/list structure.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
 is_common_struct <- function(x) {
   class(x)[1] %in%
     c(
@@ -293,7 +302,8 @@ printls <- function(
 #' @author EDG
 #' @keywords internal
 #' @noRd
-
+#'
+#' @return `NULL` invisibly; prints the row to the console.
 printdf1 <- function(x, pad = 2) {
   x <- as.data.frame(x)
   # df <- data.frame(Parameter = c(names(x)), Value = unlist(x), row.names = NULL)
@@ -430,16 +440,20 @@ printdf <- function(
 #' formatting
 #' @param transpose Logical: If TRUE, transpose `x` before printing.
 #' @param justify Character: "right", "left".
-#' @param colnames Logical: If TRUE, print column names.
-#' @param rownames Logical: If TRUE, print row names.
 #' @param colnames_formatter Format function for printing column names.
 #' @param rownames_formatter Format function for printing row names.
-#' @param newline_pre Logical: If TRUE, print a new line before printing data frame.
-#' @param newline Logical: If TRUE, print a new line after printing data frame.
 #'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#' @param incl_colnames Logical: If TRUE, include column names.
+#' @param incl_rownames Logical: If TRUE, include row names.
+#' @param output_type Character: Output type ("ansi", "html", "plain").
+#'
+#' @return Character: Formatted string representation of the data.frame.
+#'
+#' @examples
+#' show_df(iris[1:3, ]) |> cat()
 show_df <- function(
   x,
   pad = 0L,
@@ -553,7 +567,16 @@ show_df <- function(
 #' @author EDG
 #'
 #' @keywords internal
-#' @noRd
+#' @export
+#' @param formatter Function: Formatting function applied to table values.
+#' @param output_type Character: Output type ("ansi", "html", "plain").
+#'
+#' @examples
+#' tbl <- table(
+#'   Predicted = c("a", "b", "a", "b", "a"),
+#'   Reference = c("a", "a", "b", "b", "a")
+#' )
+#' cat(show_table(tbl))
 show_table <- function(
   x,
   spacing = 2L,
@@ -625,9 +648,15 @@ show_table <- function(
   )
   out
 }
+#' Format a vector as a bulleted list
+#'
 
 #' @keywords internal
 #' @noRd
+#' @param x Vector: Items to format as a bulleted list.
+#' @param bullet Character: Bullet string prepended to each item.
+#'
+#' @return Character: Single string with one bulleted item per line.
 pastels <- function(x, bullet = "  -") {
   paste(paste(bullet, x, collapse = "\n"), "\n")
 }
@@ -642,6 +671,9 @@ pastels <- function(x, bullet = "  -") {
 #'
 #' @keywords internal
 #' @noRd
+#' @param x Vector: Input whose first elements are shown.
+#' @param maxlength Integer: Maximum number of elements to show before truncating with an ellipsis. Use -1 to show all.
+#' @param format_fn Function: Formatting function applied to each element.
 headdot <- function(x, maxlength = 6L, format_fn = identity) {
   if (maxlength == -1L || length(x) < maxlength) {
     paste(format_fn(x), collapse = ", ")
@@ -667,7 +699,7 @@ headdot <- function(x, maxlength = 6L, format_fn = identity) {
 #'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
 #'
 #' @examples
 #' catsize(iris)
@@ -701,11 +733,17 @@ catsize <- function(x, name = NULL, verbosity = 1L, newline = TRUE) {
     invisible(.nels)
   }
 }
-
+#' Convert a named list to a formatted text block
+#'
 
 #' @author EDG
 #' @keywords internal
 #' @noRd
+#' @param x List: Named list to format.
+#' @param sep Character: Separator between each name and value.
+#' @param line Character: Line terminator appended after each element.
+#'
+#' @return Character: Single string with one `name<sep>value` entry per line.
 list2text <- function(x, sep = ": ", line = "\n") {
   .names <- names(x)
   sapply(seq_along(x), \(i) {

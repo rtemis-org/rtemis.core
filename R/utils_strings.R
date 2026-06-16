@@ -1,6 +1,18 @@
 # 2022- EDG rtemis.org
 
-# General hilite function output bold + any color.
+#' Highlight text (bold + color)
+#'
+#' General highlight: outputs bold text in any color.
+#'
+#' @param ... Character: Text to highlight.
+#' @param col Color for the text.
+#' @param output_type Character: Output type ("ansi", "html", "plain").
+#'
+#' @return Character: Highlighted text.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
 hilite <- function(
   ...,
   col = col_highlight,
@@ -23,10 +35,18 @@ hilite <- function(
 }
 
 
+#' Highlight big numbers
+#'
 #' @param x Numeric: Input
 #'
 #' @keywords internal
-#' @noRd
+#' @export
+#' @param output_type Character: Output type ("ansi", "html", "plain").
+#'
+#' @return Character: Formatted number with thousands separators and highlighting.
+#'
+#' @examples
+#' message(highlightbig(1234567))
 highlightbig <- function(x, output_type = c("ansi", "html", "plain")) {
   highlight(
     format(x, scientific = FALSE, big.mark = ","),
@@ -37,9 +57,17 @@ highlightbig <- function(x, output_type = c("ansi", "html", "plain")) {
 
 #' Red
 #'
+#' @param ... Character: Text to colorize.
+#' @param bold Logical: If TRUE, make text bold.
+#'
+#' @return Character: Red-colored text.
+#'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' message(red("error"))
 red <- function(..., bold = FALSE) {
   fmt(
     paste(...),
@@ -58,6 +86,8 @@ red <- function(..., bold = FALSE) {
 #'
 #' @keywords internal
 #' @noRd
+#'
+#' @return Character: Green-colored text.
 green <- function(..., bold = FALSE) {
   fmt(
     paste(...),
@@ -72,6 +102,10 @@ green <- function(..., bold = FALSE) {
 #' @author EDG
 #' @keywords internal
 #' @noRd
+#' @param ... Character: Text to colorize.
+#' @param bold Logical: If TRUE, make text bold.
+#'
+#' @return Character: Blue-colored text.
 blue <- function(..., bold = FALSE) {
   fmt(
     paste(...),
@@ -118,9 +152,14 @@ rtcitation <- paste0(
 #' @param end Character: End character.
 #' @param pad Integer: Number of spaces to pad the message with.
 #'
+#' @return `NULL` invisibly; prints a success message to the console.
+#'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' yay("Operation complete")
 yay <- function(..., sep = " ", end = "\n", pad = 0) {
   message(
     strrep(" ", pad),
@@ -139,9 +178,14 @@ yay <- function(..., sep = " ", end = "\n", pad = 0) {
 #' @param end Character: End character.
 #' @param pad Integer: Number of spaces to pad the message with.
 #'
+#' @return `NULL` invisibly; prints a failure message to the console.
+#'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' nay("Operation failed")
 nay <- function(..., sep = " ", end = "\n", pad = 0) {
   message(
     strrep(" ", pad),
@@ -239,7 +283,10 @@ plain <- function(x) {
 #'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' oxfordcomma("a", "b", "c")
 oxfordcomma <- function(..., format_fn = identity) {
   x <- unlist(list(...))
   if (length(x) > 2) {
@@ -268,6 +315,8 @@ oxfordcomma <- function(..., format_fn = identity) {
 #' @author EDG
 #' @keywords internal
 #' @noRd
+#'
+#' @return `NULL` invisibly; prints the padded text to the console.
 padcat <- function(
   x,
   format_fn = I,
@@ -334,6 +383,10 @@ repr_S7name <- function(
   output_type = NULL
 ) {
   output_type <- get_output_type(output_type)
+  # Accept either an S7 object (extract its class name) or a character name.
+  if (S7_inherits(x)) {
+    x <- S7_class(x)@name
+  }
   paste0(
     strrep(" ", pad),
     fmt("<", col = col, output_type = output_type),
@@ -352,14 +405,17 @@ repr_S7name <- function(
 #' @param x Character: Object description
 #' @param col Character: Color code for the object name
 #' @param pad Integer: Number of spaces to pad the message with.
-#' @param verbosity Integer: Verbosity level. If > 1, adds package name to the output.
-#' @param type Character: Output type ("ansi", "html", "plain")
 #'
 #' @return NULL: Prints the formatted object description to the console.
 #'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#' @param prefix Optional Character: Prefix to add before the object name.
+#' @param output_type Character: Output type ("ansi", "html", "plain").
+#'
+#' @examples
+#' objcat("Supervised")
 objcat <- function(
   x,
   col = col_object,
@@ -391,10 +447,19 @@ objcat <- function(
 #'
 #' @author EDG
 #' @keywords internal
-#' @noRd
+#' @export
+#'
+#' @examples
+#' fn2label(\(x) -log10(x), "p-value")
 fn2label <- function(fn, varname) {
-  # Get function body
-  fn_body <- deparse(fn)[2]
-  # Replace "x" with variable name
-  sub("\\(x\\)", paste0("(", varname, ")"), fn_body)
+  # Deparse the function body directly (robust to single- vs multi-line definitions)
+  fn_body <- paste(deparse(body(fn)), collapse = " ")
+  # Replace the formal argument name with the variable name
+  arg <- names(formals(fn))[1L]
+  sub(
+    paste0("(", arg, ")"),
+    paste0("(", varname, ")"),
+    fn_body,
+    fixed = TRUE
+  )
 }
