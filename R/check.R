@@ -1826,5 +1826,13 @@ check_file_exists <- function(file) {
       class = c("rtemis_file_not_found", "rtemis_io_error")
     )
   }
+  if (dir.exists(file)) {
+    abort(
+      "Path is a directory, not a file: `",
+      file,
+      "`.",
+      class = c("rtemis_file_not_found", "rtemis_io_error")
+    )
+  }
   invisible(file)
 }

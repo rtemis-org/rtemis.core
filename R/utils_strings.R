@@ -450,10 +450,16 @@ objcat <- function(
 #' @export
 #'
 #' @examples
-#' fn2label(mean, "age")
+#' fn2label(\(x) -log10(x), "p-value")
 fn2label <- function(fn, varname) {
-  # Get function body
-  fn_body <- deparse(fn)[2]
-  # Replace "x" with variable name
-  sub("\\(x\\)", paste0("(", varname, ")"), fn_body)
+  # Deparse the function body directly (robust to single- vs multi-line definitions)
+  fn_body <- paste(deparse(body(fn)), collapse = " ")
+  # Replace the formal argument name with the variable name
+  arg <- names(formals(fn))[1L]
+  sub(
+    paste0("(", arg, ")"),
+    paste0("(", varname, ")"),
+    fn_body,
+    fixed = TRUE
+  )
 }

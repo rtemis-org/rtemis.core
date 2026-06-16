@@ -18,7 +18,7 @@ Character: Label.
 Create axis label from function definition and variable name
 }
 \examples{
-fn2label(mean, "age")
+fn2label(\(x) -log10(x), "p-value")
 }
 \author{
 EDG

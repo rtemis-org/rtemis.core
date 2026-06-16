@@ -314,10 +314,7 @@ pcat <- function(left, right, pad = 17, newline = TRUE) {
 #' pad_string("hi", target = 6L)
 pad_string <- function(x, target = 17, char = " ") {
   leftpad <- max(0, target - max(0, nchar(x)))
-  paste0(
-    paste(rep(char, leftpad), collapse = ""),
-    x
-  )
+  paste0(strrep(char, leftpad), x)
 }
 
 
