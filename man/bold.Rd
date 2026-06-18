@@ -4,12 +4,14 @@
 \alias{bold}
 \title{Make text bold}
 \usage{
-bold(text, output_type = c("ansi", "html", "plain"))
+bold(text, reset_code = "\\033[22m", output_type = c("ansi", "html", "plain"))
 }
 \arguments{
-\item{text}{Character: Text to make bold}
+\item{text}{Character: Text to make bold.}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain")}
+\item{reset_code}{Character: ANSI reset code to use after formatting.}
+
+\item{output_type}{Character: Output type ("ansi", "html", "plain").}
 }
 \value{
 Character: Formatted text with bold styling
