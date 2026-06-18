@@ -14,6 +14,7 @@ fmt(
   muted = FALSE,
   bg = NULL,
   pad = 0L,
+  reset_code = "\\033[0m",
   output_type = c("ansi", "html", "plain")
 )
 }
@@ -35,6 +36,8 @@ fmt(
 \item{bg}{Character: Background color (hex code, named color, or NULL).}
 
 \item{pad}{Integer: Number of spaces to pad before text.}
+
+\item{reset_code}{Character: ANSI reset code to use after formatting.}
 
 \item{output_type}{Character: Output type ("ansi", "html", "plain").}
 }

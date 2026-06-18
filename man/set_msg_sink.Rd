@@ -30,6 +30,20 @@ with fields
 (\code{msgstart}), or \code{"done"} (\code{msgdone}).
 }
 
+Producers may include \strong{additional} fields in the list, which sinks should
+ignore when not understood. In particular, \code{rtemis}'s training observability
+(see its \code{specs/observability.md}) emits execution-graph node events through
+the sink with these extra fields:
+\itemize{
+\item \code{node_id}: character. Unique id of the execution-graph node.
+\item \code{parent_id}: character or \code{NA}. Parent node id (for nesting).
+\item \code{kind}: character. Node kind (e.g. \code{"tune"}, \code{"grid_cell"}, \code{"train_alg"}).
+\item \code{status}: character. \code{"start"}, \code{"done"}, \code{"error"}, or \code{"aborted"}.
+\item \code{current}, \code{total}: integer or \code{NULL}. Progress counters.
+}
+
+These are additive; sinks that only read the base fields keep working.
+
 When a sink is set, the console output path is \strong{skipped} for affected
 calls. Errors thrown by the sink propagate to the caller of \code{msg()}.
 }

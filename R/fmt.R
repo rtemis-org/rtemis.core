@@ -51,6 +51,7 @@ get_output_type <- function(
 #' @param muted Logical: If TRUE, make text muted/dimmed.
 #' @param bg Character: Background color (hex code, named color, or NULL).
 #' @param pad Integer: Number of spaces to pad before text.
+#' @param reset_code Character: ANSI reset code to use after formatting.
 #' @param output_type Character: Output type ("ansi", "html", "plain").
 #'
 #' @return Character: Formatted text with specified styling.
@@ -85,6 +86,7 @@ fmt <- function(
   muted = FALSE,
   bg = NULL,
   pad = 0L,
+  reset_code = "\033[0m",
   output_type = c("ansi", "html", "plain")
 ) {
   output_type <- match.arg(output_type)
@@ -144,8 +146,11 @@ fmt <- function(
       }
 
       # Generate ANSI sequence
+      # if color was not changed, avoid adding 0m to preserve existing color
+      # if only bold was set, reset to normal weight using 22 instead of 0
+
       if (length(codes) > 0) {
-        paste0("\033[", paste(codes, collapse = ";"), "m", x, "\033[0m")
+        paste0("\033[", paste(codes, collapse = ";"), "m", x, reset_code)
       } else {
         x
       }
@@ -228,8 +233,9 @@ highlight <- function(
 #'
 #' A `fmt()` convenience wrapper for making text bold.
 #'
-#' @param text Character: Text to make bold
-#' @param output_type Character: Output type ("ansi", "html", "plain")
+#' @param text Character: Text to make bold.
+#' @param reset_code Character: ANSI reset code to use after formatting.
+#' @param output_type Character: Output type ("ansi", "html", "plain").
 #'
 #' @return Character: Formatted text with bold styling
 #'
@@ -238,8 +244,12 @@ highlight <- function(
 #'
 #' @examples
 #' message(bold("This is bold!"))
-bold <- function(text, output_type = c("ansi", "html", "plain")) {
-  fmt(text, bold = TRUE, output_type = output_type)
+bold <- function(
+  text,
+  reset_code = "\033[22m",
+  output_type = c("ansi", "html", "plain")
+) {
+  fmt(text, bold = TRUE, reset_code = reset_code, output_type = output_type)
 }
 
 
@@ -247,8 +257,9 @@ bold <- function(text, output_type = c("ansi", "html", "plain")) {
 #'
 #' A `fmt()` convenience wrapper for making text italic.
 #'
-#' @param text Character: Text to make italic
-#' @param output_type Character: Output type ("ansi", "html", "plain")
+#' @param text Character: Text to make italic.
+#' @param reset_code Character: ANSI reset code to use after formatting.
+#' @param output_type Character: Output type ("ansi", "html", "plain").
 #'
 #' @return Character: Formatted text with italic styling
 #'
@@ -258,8 +269,12 @@ bold <- function(text, output_type = c("ansi", "html", "plain")) {
 #'
 #' @examples
 #' message(italic("italic text"))
-italic <- function(text, output_type = c("ansi", "html", "plain")) {
-  fmt(text, italic = TRUE, output_type = output_type)
+italic <- function(
+  text,
+  reset_code = "\033[23m",
+  output_type = c("ansi", "html", "plain")
+) {
+  fmt(text, italic = TRUE, reset_code = reset_code, output_type = output_type)
 }
 
 
@@ -275,8 +290,17 @@ italic <- function(text, output_type = c("ansi", "html", "plain")) {
 #' @author EDG
 #' @keywords internal
 #' @noRd
-underline <- function(text, output_type = c("ansi", "html", "plain")) {
-  fmt(text, underline = TRUE, output_type = output_type)
+underline <- function(
+  text,
+  reset_code = "\033[24m",
+  output_type = c("ansi", "html", "plain")
+) {
+  fmt(
+    text,
+    underline = TRUE,
+    reset_code = reset_code,
+    output_type = output_type
+  )
 }
 
 

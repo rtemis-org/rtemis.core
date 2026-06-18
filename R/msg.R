@@ -397,6 +397,19 @@ msgdone <- function(caller = NULL, call_depth = 1, caller_id = 1, sep = " ") {
 #' - `level`: character. One of `"info"` (`msg`/`msg0`), `"start"`
 #'   (`msgstart`), or `"done"` (`msgdone`).
 #'
+#' Producers may include **additional** fields in the list, which sinks should
+#' ignore when not understood. In particular, `rtemis`'s training observability
+#' (see its `specs/observability.md`) emits execution-graph node events through
+#' the sink with these extra fields:
+#'
+#' - `node_id`: character. Unique id of the execution-graph node.
+#' - `parent_id`: character or `NA`. Parent node id (for nesting).
+#' - `kind`: character. Node kind (e.g. `"tune"`, `"grid_cell"`, `"train_alg"`).
+#' - `status`: character. `"start"`, `"done"`, `"error"`, or `"aborted"`.
+#' - `current`, `total`: integer or `NULL`. Progress counters.
+#'
+#' These are additive; sinks that only read the base fields keep working.
+#'
 #' When a sink is set, the console output path is **skipped** for affected
 #' calls. Errors thrown by the sink propagate to the caller of `msg()`.
 #'
