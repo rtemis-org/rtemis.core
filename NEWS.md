@@ -1,5 +1,11 @@
 # rtemis.core NEWS
 
+## Version 0.3.0
+
+- export remaining internals used by **rtemis**
+- migrated updated `msg()` with custom sink support from **rtemis**: allows for logging through **rtemis.server** to **rtemislive**
+- `headdot()` renamed to `collapse_head()`
+
 ## Version 0.2.0
 
 ### New features
