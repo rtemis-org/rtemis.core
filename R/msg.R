@@ -294,7 +294,7 @@ msg0 <- function(
 #' @keywords internal
 #' @noRd
 pcat <- function(left, right, pad = 17, newline = TRUE) {
-  cat(pad_string(left), right)
+  cat(pad_string(left, target = pad), right)
   if (newline) cat("\n")
 }
 
