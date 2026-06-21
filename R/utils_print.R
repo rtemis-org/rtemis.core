@@ -106,7 +106,10 @@ printls <- function(
     is_fn <- which(sapply(x, is.function))
     if (length(is_fn) > 0) {
       for (i in is_fn) {
-        x[[i]] <- paste0(as.character(head(deparse(x[[i]]), n = 1L)), "...")
+        x[[i]] <- paste0(
+          as.character(utils::head(deparse(x[[i]]), n = 1L)),
+          "..."
+        )
       }
     }
     # Remove NULLs
@@ -692,7 +695,10 @@ collapse_head <- function(x, maxlength = 6L, format_fn = identity) {
     paste(format_fn(x), collapse = ", ")
   } else {
     paste0(
-      paste(format_fn(head(as.vector(x), n = maxlength)), collapse = ", "),
+      paste(
+        format_fn(utils::head(as.vector(x), n = maxlength)),
+        collapse = ", "
+      ),
       ", ..."
     )
   }
@@ -900,7 +906,10 @@ repr_ls <- function(
     is_fn <- which(sapply(x, is.function))
     if (length(is_fn) > 0) {
       for (i in is_fn) {
-        x[[i]] <- paste0(as.character(head(deparse(x[[i]]), n = 1L)), "...")
+        x[[i]] <- paste0(
+          as.character(utils::head(deparse(x[[i]]), n = 1L)),
+          "..."
+        )
       }
     }
     # Set NULLs to "NULL"
