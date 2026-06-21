@@ -294,13 +294,13 @@ msg0 <- function(
 #' @keywords internal
 #' @noRd
 pcat <- function(left, right, pad = 17, newline = TRUE) {
-  lpad <- max(0, pad - 1 - max(0, nchar(left)))
-  cat(pad_string(left), right)
+  cat(pad_string(left, target = pad), right)
   if (newline) cat("\n")
 }
+
+
 #' Left-pad a string to a target width
 #'
-
 #' @author EDG
 #' @keywords internal
 #' @export
