@@ -7,6 +7,32 @@
 # training messages over a WebSocket. See `set_msg_sink()`.
 .rtemis_core_state <- new.env(parent = emptyenv())
 .rtemis_core_state[["msg_sink"]] <- NULL
+# `line_open` tracks whether the console cursor is parked mid-line by a
+# `msgstart()` that has not yet been closed. `msgdone()` closes such a line in
+# place (appending the checkmark); any other console writer (`msg()`, `msg0()`)
+# breaks to a fresh line first, so an error stamp emitted via `abort()` after a
+# `msgstart()` never collides with the pending text. Only the console path
+# touches this; the sink path leaves it FALSE.
+.rtemis_core_state[["line_open"]] <- FALSE
+
+
+#' Break a pending `msgstart()` line before writing
+#'
+#' If a `msgstart()` left the console cursor mid-line, emit a newline and clear
+#' the flag so the next message starts clean. No-op otherwise.
+#'
+#' @return NULL invisibly.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.close_open_line <- function() {
+  if (isTRUE(.rtemis_core_state[["line_open"]])) {
+    message("")
+    .rtemis_core_state[["line_open"]] <- FALSE
+  }
+  invisible(NULL)
+}
 
 #' Get current date and time
 #'
@@ -206,6 +232,7 @@ msg <- function(
     return(invisible(NULL))
   }
 
+  .close_open_line()
   if (newline_pre) {
     message("")
   }
@@ -259,6 +286,7 @@ msg0 <- function(
     return(invisible(NULL))
   }
 
+  .close_open_line()
   if (newline_pre) {
     message("")
   }
@@ -347,6 +375,7 @@ msgstart <- function(
   }
   msgdatetime()
   message(plain(text), appendLF = FALSE)
+  .rtemis_core_state[["line_open"]] <- TRUE
 }
 
 
@@ -375,6 +404,7 @@ msgdone <- function(caller = NULL, call_depth = 1, caller_id = 1, sep = " ") {
   message(" ", appendLF = FALSE)
   yay(end = "")
   message(gray(paste0("[", caller, "]\n")), appendLF = FALSE)
+  .rtemis_core_state[["line_open"]] <- FALSE
 }
 
 
