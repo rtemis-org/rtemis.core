@@ -97,7 +97,7 @@ printls <- function(
       "columns.\n"
     )
   } else if (!is_common_struct(x)) {
-    cat("object of class:", class(x), "\n")
+    cat("object of class '", class(x), "'\n")
   } else {
     x <- as.list(x)
     # Get class of each element
@@ -194,7 +194,7 @@ printls <- function(
             )
           } else {
             cat(
-              italic("object of class:", class(x[[i]])),
+              italic("object of class '", class(x[[i]]), "'"),
               "\n"
             )
           }
@@ -259,7 +259,7 @@ printls <- function(
           cat("\n")
           print(x[[i]])
         } else {
-          cat("(S4 object of class: '", class(x[[i]]), "')\n", sep = "")
+          cat("(S4 object of class '", class(x[[i]]), "')\n", sep = "")
         }
       } else if (!is_common_struct(x[[i]])) {
         cat(paste0(
@@ -272,7 +272,7 @@ printls <- function(
           if (print_class) {
             gray(paste0("<", abbreviate(classes_[[i]], abbrev_class_n), "> "))
           },
-          italic("object of class:", class(x[[i]])),
+          italic("object of class '", class(x[[i]]), "'"),
           "\n"
         ))
       } else {
@@ -894,9 +894,9 @@ repr_ls <- function(
   } else if (!is_common_struct(x)) {
     result <- paste0(
       result,
-      "object of class: ",
+      "object of class '",
       paste(class(x), collapse = ", "),
-      "\n"
+      "'\n"
     )
   } else {
     x <- as.list(x)
@@ -1017,9 +1017,10 @@ repr_ls <- function(
             result <- paste0(
               result,
               italic(
-                paste(
-                  "object of class:",
-                  paste(class(x[[i]]), collapse = ", ")
+                paste0(
+                  "object of class '",
+                  paste(class(x[[i]]), collapse = ", "),
+                  "'"
                 ),
                 output_type = output_type
               ),
@@ -1070,7 +1071,8 @@ repr_ls <- function(
           },
           error = function(e) {
             paste0(
-              "(S7 object of class: '",
+              strrep(" ", lhs + 2),
+              "(S7 object of class '",
               paste(class(x[[i]]), collapse = ", "),
               "')\n"
             )
@@ -1125,14 +1127,14 @@ repr_ls <- function(
           # This is complex, so for now we'll just show the class
           result <- paste0(
             result,
-            "(S4 object of class: '",
+            "(S4 object of class '",
             paste(class(x[[i]]), collapse = ", "),
             "')\n"
           )
         } else {
           result <- paste0(
             result,
-            "(S4 object of class: '",
+            "(S4 object of class '",
             paste(class(x[[i]]), collapse = ", "),
             "')\n"
           )
@@ -1157,9 +1159,10 @@ repr_ls <- function(
             ""
           },
           italic(
-            paste(
-              "object of class:",
-              paste(class(x[[i]]), collapse = ", ")
+            paste0(
+              "object of class '",
+              paste(class(x[[i]]), collapse = ", "),
+              "'"
             ),
             output_type = output_type
           ),
