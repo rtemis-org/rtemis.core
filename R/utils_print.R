@@ -87,7 +87,7 @@ printls <- function(
     }
     cat(strrep(" ", pad), "NULL", sep = "")
   } else if (length(x) == 0) {
-    cat(class(x), "of length 0.\n")
+    cat(class(x)[1], "of length 0.\n")
   } else if (is.data.frame(x) && !print_df) {
     cat(
       "data.frame with",
@@ -97,7 +97,7 @@ printls <- function(
       "columns.\n"
     )
   } else if (!is_common_struct(x)) {
-    cat("object of class '", class(x), "'\n")
+    cat("object of class '", class(x)[1], "'\n")
   } else {
     x <- as.list(x)
     # Get class of each element
@@ -194,7 +194,7 @@ printls <- function(
             )
           } else {
             cat(
-              italic("object of class '", class(x[[i]]), "'"),
+              italic("object of class '", class(x[[i]])[1], "'"),
               "\n"
             )
           }
@@ -895,7 +895,7 @@ repr_ls <- function(
     result <- paste0(
       result,
       "object of class '",
-      paste(class(x), collapse = ", "),
+      class(x)[1],
       "'\n"
     )
   } else {
