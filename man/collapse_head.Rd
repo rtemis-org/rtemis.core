@@ -24,7 +24,10 @@ Used, for example, by \code{repr_ls}
 }
 \examples{
 collapse_head(98054:99890, maxlength = 5L)
-collapse_head(c("mango", "banana", "tangerine", "sugar", "ackee", "cocoa bean"), maxlength = 3L, format_fn = toupper)
+collapse_head(
+  c("mango", "banana", "tangerine", "sugar", "ackee", "cocoa bean"),
+  maxlength = 3L, format_fn = toupper
+)
 }
 \author{
 EDG
