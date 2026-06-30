@@ -1,5 +1,16 @@
 # rtemis.core NEWS
 
+## Version 0.3.1
+
+- `msg()`/`msg0()` now close a pending `msgstart()` line before writing, so
+  log lines and error stamps no longer collide with unfinished progress text
+  (new internal `line_open` state).
+- `pcat()`: `pad` argument support.
+- Color updates: `green` is now teal; the previous green moved to new
+  `juniper`; added `terracotta`; adjusted `light_mauve` and success color.
+- `printls()`/`repr_ls()` print class names single-quoted and use the primary
+  class only, for consistent `object of class '...'` output.
+
 ## Version 0.3.0
 
 - export remaining internals used by **rtemis**
