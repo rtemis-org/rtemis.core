@@ -5,7 +5,7 @@
 ^specs$
 ^AGENTS\.md$
 ^CLAUDE\.md$
-^Makefile$
+^justfile$
 ^SKILL\.md$
 ^rhub$
 ^cran-comments\.md$
