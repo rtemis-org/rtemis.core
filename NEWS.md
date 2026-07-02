@@ -1,5 +1,13 @@
 # rtemis.core NEWS
 
+## Version 0.4.1
+
+- `abort()` gains a `data` argument: a named list of structured fields
+  attached to the signalled condition (e.g.
+  `data = list(status_code = 429L, provider = "anthropic")`), retrievable by
+  handlers via `condition$<name>`. Names may not collide with the built-in
+  condition fields (`message`, `parent`, `call`, `trace`).
+
 ## Version 0.4.0
 
 - New nested progress subsystem (`R/progress.R`) replacing the last remaining
