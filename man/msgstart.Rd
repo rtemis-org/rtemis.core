@@ -19,6 +19,12 @@ NULL invisibly
 \description{
 msgstart
 }
+\details{
+Avoid \code{msgstart()}/\code{msgdone()} pairs that span \code{\link[=progress_update]{progress_update()}} calls:
+a progress redraw closes the pending line, so the checkmark printed by
+\code{msgdone()} lands on a fresh line instead of completing the original one.
+Prefer \code{msg()} for messages emitted inside progress loops.
+}
 \examples{
 msgstart("Starting process...")
 msgdone("Process complete.")

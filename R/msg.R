@@ -14,6 +14,48 @@
 # `msgstart()` never collides with the pending text. Only the console path
 # touches this; the sink path leaves it FALSE.
 .rtemis_core_state[["line_open"]] <- FALSE
+# Progress state (see `R/progress.R`). `progress_stack` holds the active
+# progress handles outermost-first; `progress_visible`/`progress_last_width`
+# track whether a `\r`-rewritten status line is currently on screen and how
+# wide it was (so it can be cleared by overprinting - `\033[K` is unreliable
+# in the RStudio console); `progress_last_draw` is the wall-clock time of the
+# last console draw (throttling); `progress_id_counter` feeds auto-generated
+# handle ids; `progress_spinner_frame` advances once per actual draw.
+.rtemis_core_state[["progress_stack"]] <- list()
+.rtemis_core_state[["progress_visible"]] <- FALSE
+.rtemis_core_state[["progress_last_width"]] <- 0L
+.rtemis_core_state[["progress_last_draw"]] <- 0
+.rtemis_core_state[["progress_id_counter"]] <- 0L
+.rtemis_core_state[["progress_spinner_frame"]] <- 0L
+
+
+#' Clear a visible progress status line before writing
+#'
+#' If a progress status line is on screen (see `.progress_draw()`), overprint
+#' it with spaces and return the cursor to column 1 so the next console write
+#' starts on a clean line. The status line reappears on the next
+#' `progress_update()`. No-op otherwise.
+#'
+#' @return NULL invisibly.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.clear_progress_line <- function() {
+  if (isTRUE(.rtemis_core_state[["progress_visible"]])) {
+    message(
+      paste0(
+        "\r",
+        strrep(" ", .rtemis_core_state[["progress_last_width"]]),
+        "\r"
+      ),
+      appendLF = FALSE
+    )
+    .rtemis_core_state[["progress_visible"]] <- FALSE
+    .rtemis_core_state[["progress_last_width"]] <- 0L
+  }
+  invisible(NULL)
+}
 
 
 #' Break a pending `msgstart()` line before writing
@@ -63,19 +105,21 @@ datetime <- function(datetime_format = "%Y-%m-%d %H:%M:%S") {
 #' @param text Character: the formatted message text (no datetime prefix).
 #' @param caller Character or NA: calling function name from `format_caller()`.
 #' @param ts Character: formatted timestamp from `datetime()`.
-#' @param level Character: one of `"info"`, `"start"`, `"done"`.
+#' @param level Character: one of `"info"`, `"start"`, `"done"`, `"progress"`.
+#' @param fields List: additional fields appended to the envelope (e.g. the
+#'   progress fields `node_id`/`parent_id`/`kind`/`status`/`current`/`total`).
 #'
 #' @return Logical scalar.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-.msg_to_sink <- function(text, caller, ts, level) {
+.msg_to_sink <- function(text, caller, ts, level, fields = list()) {
   sink <- .rtemis_core_state[["msg_sink"]]
   if (is.null(sink)) {
     return(FALSE)
   }
-  sink(list(text = text, caller = caller, ts = ts, level = level))
+  sink(c(list(text = text, caller = caller, ts = ts, level = level), fields))
   TRUE
 }
 
@@ -98,6 +142,7 @@ msgdatetime <- function(datetime_format = "%Y-%m-%d %H:%M:%S") {
 suggest <- function(..., output_type = NULL) {
   message <- paste(...)
   output_type <- get_output_type(output_type)
+  .clear_progress_line()
   cat(fmt(
     paste0("Suggestion: ", message, "\n"),
     col = col_suggest,
@@ -232,6 +277,7 @@ msg <- function(
     return(invisible(NULL))
   }
 
+  .clear_progress_line()
   .close_open_line()
   if (newline_pre) {
     message("")
@@ -286,6 +332,7 @@ msg0 <- function(
     return(invisible(NULL))
   }
 
+  .clear_progress_line()
   .close_open_line()
   if (newline_pre) {
     message("")
@@ -350,6 +397,12 @@ pad_string <- function(x, target = 17, char = " ") {
 #'
 #' @inheritParams msg
 #'
+#' @details
+#' Avoid `msgstart()`/`msgdone()` pairs that span [progress_update()] calls:
+#' a progress redraw closes the pending line, so the checkmark printed by
+#' `msgdone()` lands on a fresh line instead of completing the original one.
+#' Prefer `msg()` for messages emitted inside progress loops.
+#'
 #' @return NULL invisibly
 #'
 #' @author EDG
@@ -370,6 +423,7 @@ msgstart <- function(
     return(invisible(NULL))
   }
 
+  .clear_progress_line()
   if (newline_pre) {
     message()
   }
@@ -401,6 +455,7 @@ msgdone <- function(caller = NULL, call_depth = 1, caller_id = 1, sep = " ") {
     return(invisible(NULL))
   }
 
+  .clear_progress_line()
   message(" ", appendLF = FALSE)
   yay(end = "")
   message(gray(paste0("[", caller, "]\n")), appendLF = FALSE)
@@ -425,20 +480,25 @@ msgdone <- function(caller = NULL, call_depth = 1, caller_id = 1, sep = " ") {
 #'   `format_caller()`.
 #' - `ts`: character. Formatted timestamp (`"%Y-%m-%d %H:%M:%S"`).
 #' - `level`: character. One of `"info"` (`msg`/`msg0`), `"start"`
-#'   (`msgstart`), or `"done"` (`msgdone`).
+#'   (`msgstart`), `"done"` (`msgdone`), or `"progress"`
+#'   ([progress_begin()] / [progress_update()] / [progress_end()]).
 #'
 #' Producers may include **additional** fields in the list, which sinks should
-#' ignore when not understood. In particular, `rtemis`'s training observability
-#' (see its `specs/observability.md`) emits execution-graph node events through
-#' the sink with these extra fields:
+#' ignore when not understood. In particular, the progress API in this package
+#' and `rtemis`'s training observability (see its `specs/observability.md`)
+#' emit execution-graph node events through the sink with these extra fields:
 #'
 #' - `node_id`: character. Unique id of the execution-graph node.
 #' - `parent_id`: character or `NA`. Parent node id (for nesting).
 #' - `kind`: character. Node kind (e.g. `"tune"`, `"grid_cell"`, `"train_alg"`).
-#' - `status`: character. `"start"`, `"done"`, `"error"`, or `"aborted"`.
-#' - `current`, `total`: integer or `NULL`. Progress counters.
+#' - `status`: character. `"start"`, `"update"`, `"done"`, `"error"`, or
+#'   `"aborted"`.
+#' - `current`, `total`: integer or `NA`. Progress counters.
 #'
 #' These are additive; sinks that only read the base fields keep working.
+#' Progress events fire regardless of verbosity (verbosity gates only the
+#' console renderer), and `"update"` events are throttled via
+#' `getOption("rtemis.progress_throttle")` - see [progress_begin()].
 #'
 #' When a sink is set, the console output path is **skipped** for affected
 #' calls. Errors thrown by the sink propagate to the caller of `msg()`.

@@ -1,5 +1,27 @@
 # rtemis.core NEWS
 
+## Version 0.4.0
+
+- New nested progress subsystem (`R/progress.R`) replacing the last remaining
+  use of cli (`cli::cli_progress_along`) in the ecosystem: `progress_begin()`
+  / `progress_update()` / `progress_end()` handle API plus a
+  `progress_lapply()` near-drop-in wrapper.
+- Console rendering: single status line rewritten in place with a
+  color-pulsing spinner (yellow-to-orange ping-pong ramp; designs selectable
+  via `options(rtemis.progress_spinner = )`: `"dots"`, `"dot"`, `"blocks"`)
+  and a breadcrumb of all nested levels (`Outer 2/5 > Tuning 7/30 ETA 0:41`).
+  Non-interactive/plain output prints one begin and one completion line
+  instead. Redraws throttled via `options(rtemis.progress_throttle = )`.
+- Message-sink integration: progress events are forwarded through the
+  `set_msg_sink()` envelope with `level = "progress"` and node fields
+  (`node_id`, `parent_id`, `kind`, `status`, `current`, `total`),
+  implementing the rtemis.core side of rtemis `specs/observability.md`.
+  Sink events fire regardless of verbosity; verbosity gates only the console
+  renderer. `"update"` events honor the throttle.
+- `msg()`/`msg0()`/`msgstart()`/`msgdone()`/`suggest()` clear a visible
+  progress status line before writing, so log output never collides with an
+  in-place progress redraw.
+
 ## Version 0.3.1
 
 - `msg()`/`msg0()` now close a pending `msgstart()` line before writing, so
