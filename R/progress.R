@@ -402,8 +402,10 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
     )
   }
   if (status == "done") {
-    glyph <- glyph_success
-    col <- col_success
+    # glyph <- glyph_success
+    glyph <- checkmark(col = NULL)
+    # col <- col_success
+    col <- NULL
     verb <- "done in"
   } else {
     glyph <- glyph_error
