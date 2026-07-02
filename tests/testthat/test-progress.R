@@ -394,6 +394,45 @@ test_that("progress_begin() validates inputs", {
   reset_progress_state()
 })
 
+test_that("progress_update() validates inputs", {
+  reset_progress_state()
+  h <- progress_begin(3L, label = "V", verbosity = 0L, output_type = "plain")
+  expect_error(progress_update(h, label = 1L), class = "rtemis_type_error")
+  expect_error(
+    progress_update(h, label = c("a", "b")),
+    class = "rtemis_type_error"
+  )
+  expect_error(progress_update(h, current = "x"), class = "rtemis_type_error")
+  expect_error(
+    progress_update(h, current = c(1L, 2L)),
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    progress_update(h, current = NA_integer_),
+    class = "rtemis_type_error"
+  )
+  expect_error(progress_update(h, add = NA), class = "rtemis_type_error")
+  expect_error(progress_update(h, add = c(1L, 2L)), class = "rtemis_type_error")
+  # Valid updates still work after rejected ones.
+  progress_update(h, current = 2L)
+  expect_equal(h[["current"]], 2L)
+  progress_end(h)
+  reset_progress_state()
+})
+
+test_that("plain completion line uses an unformatted glyph", {
+  reset_progress_state()
+  msgs <- capture_messages({
+    h <- progress_begin(2L, label = "Plain", output_type = "plain")
+    progress_update(h, current = 2L)
+    progress_end(h)
+  })
+  raw <- paste(msgs, collapse = "")
+  # The success glyph must carry no ANSI codes of its own: it must sit
+  # directly against the label in the raw (unstripped) output.
+  expect_match(raw, "✔ Plain 2/2 done in", fixed = TRUE)
+})
+
 test_that("update clamps to [0, total] and no-ops on closed handles", {
   reset_progress_state()
   h <- progress_begin(
