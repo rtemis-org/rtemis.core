@@ -5,8 +5,8 @@
 \title{\code{lapply} with progress}
 \usage{
 progress_lapply(
-  x,
-  fn,
+  X,
+  FUN,
   ...,
   label = "Processing",
   kind = "progress",
@@ -16,11 +16,13 @@ progress_lapply(
 )
 }
 \arguments{
-\item{x}{Vector or list: Elements to iterate over, as in \code{\link[=lapply]{lapply()}}.}
+\item{X}{Vector or list: Elements to iterate over, as in \code{\link[=lapply]{lapply()}}.}
 
-\item{fn}{Function: Applied to each element of \code{x}.}
+\item{FUN}{Function: Applied to each element of \code{X}. Named \code{X}/\code{FUN} to
+match \code{\link[=lapply]{lapply()}}, so arguments forwarded through \code{...} (commonly \code{x})
+never collide with the wrapper's own parameters.}
 
-\item{...}{Additional arguments passed to \code{fn}.}
+\item{...}{Additional arguments passed to \code{FUN}.}
 
 \item{label}{Character: Display label for the progress node.}
 
@@ -36,7 +38,7 @@ lookup.}
 resolved via \code{\link[=get_output_type]{get_output_type()}} when NULL.}
 }
 \value{
-List: Exactly what \code{lapply(x, fn, ...)} returns.
+List: Exactly what \code{lapply(X, FUN, ...)} returns.
 }
 \description{
 Drop-in replacement for \code{\link[=lapply]{lapply()}} that reports progress after each

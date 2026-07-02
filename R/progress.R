@@ -768,9 +768,11 @@ progress_end <- function(handle, status = c("done", "error", "aborted")) {
 #' third-party verbose output lands on a clean line. Direct stdout writes
 #' (`cat()`, `print()`) cannot be intercepted; see [progress_clear()].
 #'
-#' @param x Vector or list: Elements to iterate over, as in [lapply()].
-#' @param fn Function: Applied to each element of `x`.
-#' @param ... Additional arguments passed to `fn`.
+#' @param X Vector or list: Elements to iterate over, as in [lapply()].
+#' @param FUN Function: Applied to each element of `X`. Named `X`/`FUN` to
+#'   match [lapply()], so arguments forwarded through `...` (commonly `x`)
+#'   never collide with the wrapper's own parameters.
+#' @param ... Additional arguments passed to `FUN`.
 #' @param label Character: Display label for the progress node.
 #' @param kind Character: Node kind forwarded in the sink envelope.
 #' @param verbosity Integer or NULL: Overrides `get_verbosity()` when
@@ -780,7 +782,7 @@ progress_end <- function(handle, status = c("done", "error", "aborted")) {
 #' @param output_type Character or NULL: `"ansi"`, `"html"`, or `"plain"`;
 #'   resolved via [get_output_type()] when NULL.
 #'
-#' @return List: Exactly what `lapply(x, fn, ...)` returns.
+#' @return List: Exactly what `lapply(X, FUN, ...)` returns.
 #'
 #' @author EDG
 #' @family progress
@@ -794,8 +796,8 @@ progress_end <- function(handle, status = c("done", "error", "aborted")) {
 #'   output_type = "plain"
 #' )
 progress_lapply <- function(
-  x,
-  fn,
+  X,
+  FUN,
   ...,
   label = "Processing",
   kind = "progress",
@@ -803,9 +805,9 @@ progress_lapply <- function(
   package = NULL,
   output_type = NULL
 ) {
-  fn <- match.fun(fn)
+  FUN <- match.fun(FUN)
   handle <- progress_begin(
-    length(x),
+    length(X),
     label = label,
     kind = kind,
     verbosity = verbosity,
@@ -820,15 +822,15 @@ progress_lapply <- function(
     add = TRUE
   )
   out <- lapply(
-    x,
+    X,
     function(el, ...) {
-      # Foreign output guard: if `fn` (or anything it calls) signals a
+      # Foreign output guard: if `FUN` (or anything it calls) signals a
       # message or warning, clear the status line first so the text lands
       # on a clean line instead of being appended to the frame. Our own
       # frame writes are marked via `progress_drawing` and skipped. The
       # handler does not touch the condition, so normal handling proceeds.
       res <- withCallingHandlers(
-        fn(el, ...),
+        FUN(el, ...),
         message = .progress_foreign_output,
         warning = .progress_foreign_output
       )

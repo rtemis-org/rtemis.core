@@ -5,7 +5,9 @@
 - New nested progress subsystem (`R/progress.R`) replacing the last remaining
   use of cli (`cli::cli_progress_along`) in the ecosystem: `progress_begin()`
   / `progress_update()` / `progress_end()` handle API plus a
-  `progress_lapply()` near-drop-in wrapper.
+  `progress_lapply()` near-drop-in wrapper (lapply-style `X`/`FUN`
+  arguments, so `...` forwarding never collides with the wrapper's own
+  parameters).
 - Console rendering: single status line rewritten in place with a
   color-pulsing spinner (light-orange-to-red ping-pong ramp over the rtemis
   palette; designs selectable
