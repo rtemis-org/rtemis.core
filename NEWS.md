@@ -7,7 +7,8 @@
   / `progress_update()` / `progress_end()` handle API plus a
   `progress_lapply()` near-drop-in wrapper.
 - Console rendering: single status line rewritten in place with a
-  color-pulsing spinner (yellow-to-orange ping-pong ramp; designs selectable
+  color-pulsing spinner (light-orange-to-red ping-pong ramp over the rtemis
+  palette; designs selectable
   via `options(rtemis.progress_spinner = )`: `"dots"`, `"dot"`, `"blocks"`)
   and a breadcrumb of all nested levels (`Outer 2/5 > Tuning 7/30 ETA 0:41`).
   Non-interactive/plain output prints one begin and one completion line
@@ -18,9 +19,19 @@
   implementing the rtemis.core side of rtemis `specs/observability.md`.
   Sink events fire regardless of verbosity; verbosity gates only the console
   renderer. `"update"` events honor the throttle.
+- Completion lines report uniformly completed nested loops as a
+  multiplication chain (`Outer 2/2 x Tuning 24/24 done in 0:41`), recursively
+  for deeper nesting. A nested level is included only when all of its runs
+  completed fully with identical label and total; otherwise the chain is
+  omitted rather than misleading.
 - `msg()`/`msg0()`/`msgstart()`/`msgdone()`/`suggest()` clear a visible
   progress status line before writing, so log output never collides with an
   in-place progress redraw.
+- `progress_lapply()` intercepts `message()`/`warning()` conditions raised
+  by user code (or third-party packages it calls) and clears the status line
+  before they print, so verbose foreign output lands on a clean line. Direct
+  stdout writes (`cat()`, `print()`) cannot be intercepted; new exported
+  `progress_clear()` provides an escape hatch for those.
 
 ## Version 0.3.1
 

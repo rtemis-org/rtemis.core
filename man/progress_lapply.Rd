@@ -46,6 +46,13 @@ node. Nested calls produce a nested breadcrumb on the console (and
 \code{status = "error"} before the condition propagates, so nested wrappers
 unwind cleanly.
 }
+\details{
+\code{message()} and \code{warning()} conditions signalled by \code{fn} (or anything it
+calls) are intercepted by a calling handler that clears the status line
+before the text is printed, then lets normal handling proceed - so
+third-party verbose output lands on a clean line. Direct stdout writes
+(\code{cat()}, \code{print()}) cannot be intercepted; see \code{\link[=progress_clear]{progress_clear()}}.
+}
 \examples{
 sqrts <- progress_lapply(
   1:4,
@@ -57,6 +64,7 @@ sqrts <- progress_lapply(
 \seealso{
 Other progress:
 \code{\link[=progress_begin]{progress_begin()}},
+\code{\link[=progress_clear]{progress_clear()}},
 \code{\link[=progress_end]{progress_end()}},
 \code{\link[=progress_update]{progress_update()}}
 }

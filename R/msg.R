@@ -20,13 +20,40 @@
 # wide it was (so it can be cleared by overprinting - `\033[K` is unreliable
 # in the RStudio console); `progress_last_draw` is the wall-clock time of the
 # last console draw (throttling); `progress_id_counter` feeds auto-generated
-# handle ids; `progress_spinner_frame` advances once per actual draw.
+# handle ids; `progress_spinner_frame` advances once per actual draw;
+# `progress_drawing` marks that the message currently being signalled is our
+# own frame/clear write, so the foreign-output handler installed by
+# `progress_lapply()` does not react to it.
 .rtemis_core_state[["progress_stack"]] <- list()
 .rtemis_core_state[["progress_visible"]] <- FALSE
 .rtemis_core_state[["progress_last_width"]] <- 0L
 .rtemis_core_state[["progress_last_draw"]] <- 0
 .rtemis_core_state[["progress_id_counter"]] <- 0L
 .rtemis_core_state[["progress_spinner_frame"]] <- 0L
+.rtemis_core_state[["progress_drawing"]] <- FALSE
+
+
+#' Write a progress frame or clear sequence to the console
+#'
+#' Wraps `message(appendLF = FALSE)` with the `progress_drawing` flag set, so
+#' the message condition it signals is recognizable as our own output by the
+#' foreign-output handler in `progress_lapply()` (which must not clear the
+#' line in response to the very write that draws it).
+#'
+#' @param text Character: Raw text to write (may contain `\r` and ANSI codes).
+#'
+#' @return NULL invisibly.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.progress_write <- function(text) {
+  old <- .rtemis_core_state[["progress_drawing"]]
+  .rtemis_core_state[["progress_drawing"]] <- TRUE
+  on.exit(.rtemis_core_state[["progress_drawing"]] <- old, add = TRUE)
+  message(text, appendLF = FALSE)
+  invisible(NULL)
+}
 
 
 #' Clear a visible progress status line before writing
@@ -36,6 +63,10 @@
 #' starts on a clean line. The status line reappears on the next
 #' `progress_update()`. No-op otherwise.
 #'
+#' State is reset before writing so a message handler that calls back into
+#' this function (see `progress_lapply()`'s foreign-output handler) finds
+#' `progress_visible` already FALSE and no-ops instead of recursing.
+#'
 #' @return NULL invisibly.
 #'
 #' @author EDG
@@ -43,16 +74,10 @@
 #' @noRd
 .clear_progress_line <- function() {
   if (isTRUE(.rtemis_core_state[["progress_visible"]])) {
-    message(
-      paste0(
-        "\r",
-        strrep(" ", .rtemis_core_state[["progress_last_width"]]),
-        "\r"
-      ),
-      appendLF = FALSE
-    )
+    width <- .rtemis_core_state[["progress_last_width"]]
     .rtemis_core_state[["progress_visible"]] <- FALSE
     .rtemis_core_state[["progress_last_width"]] <- 0L
+    .progress_write(paste0("\r", strrep(" ", width), "\r"))
   }
   invisible(NULL)
 }

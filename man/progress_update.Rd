@@ -37,6 +37,7 @@ progress_end(h)
 \seealso{
 Other progress:
 \code{\link[=progress_begin]{progress_begin()}},
+\code{\link[=progress_clear]{progress_clear()}},
 \code{\link[=progress_end]{progress_end()}},
 \code{\link[=progress_lapply]{progress_lapply()}}
 }

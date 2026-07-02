@@ -59,11 +59,21 @@ sink \code{"update"} events (default \code{0.1}). Begin/end events always fire;
 set to \code{0} to emit every tick.
 \item \code{rtemis.progress_spinner}: Spinner design - one of \code{"dots"} (braille
 dots, default), \code{"dot"} (static dot, color-only animation), or
-\code{"blocks"} (quadrant blocks). All designs pulse yellow to orange.
+\code{"blocks"} (quadrant blocks). All designs share the palette color pulse
+(\code{light_orange} to \code{red}).
 }
 
 Sink events fire regardless of verbosity; verbosity gates only the
 console renderer.
+
+\strong{Known limitation}: output written directly to stdout by code running
+inside a progress loop (\code{cat()}, \code{print()}, verbose third-party
+routines) is not intercepted and will collide with the status line.
+Output through \code{msg()} and the other rtemis writers clears the line
+automatically, and \code{\link[=progress_lapply]{progress_lapply()}} additionally clears it for any
+\code{message()}/\code{warning()} condition raised by user code. For raw stdout
+writes, call \code{\link[=progress_clear]{progress_clear()}} first or silence the routine
+(\code{capture.output()}, \code{verbose = 0}).
 }
 \examples{
 h <- progress_begin(3L, label = "Fitting", output_type = "plain")
@@ -72,6 +82,7 @@ progress_end(h)
 }
 \seealso{
 Other progress:
+\code{\link[=progress_clear]{progress_clear()}},
 \code{\link[=progress_end]{progress_end()}},
 \code{\link[=progress_lapply]{progress_lapply()}},
 \code{\link[=progress_update]{progress_update()}}

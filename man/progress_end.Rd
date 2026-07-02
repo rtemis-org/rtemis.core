@@ -26,6 +26,13 @@ In \code{"ansi"} mode, only the outermost end prints a permanent completion
 line (\verb{label n/total done in 0:41}); inner-level ends just redraw the
 remaining breadcrumb, so tight nested loops don't spam the console.
 Non-\code{"ansi"} output prints a completion line per handle.
+
+When nested loops complete uniformly, the completion line reports them as
+a multiplication chain, e.g. \verb{Outer 2/2 x Tuning 24/24 done in 0:41}. A
+nested level is included only when every one of its runs completed with
+\code{status = "done"}, reached its total, and had the same label and total as
+its sibling runs; otherwise the chain is omitted rather than reporting a
+misleading count. Deeper nesting chains recursively.
 }
 \examples{
 h <- progress_begin(2L, label = "Fitting", output_type = "plain")
@@ -35,6 +42,7 @@ progress_end(h)
 \seealso{
 Other progress:
 \code{\link[=progress_begin]{progress_begin()}},
+\code{\link[=progress_clear]{progress_clear()}},
 \code{\link[=progress_lapply]{progress_lapply()}},
 \code{\link[=progress_update]{progress_update()}}
 }

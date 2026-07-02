@@ -24,6 +24,7 @@ glyph_dots1 <- "\u280B" # first braille frame
 glyph_dot <- "\u25CF" # static dot
 sep <- "\u203A"
 ellipsis <- "\u2026"
+times <- "\u00D7"
 
 
 # .format_hms ----
@@ -48,9 +49,15 @@ test_that(".progress_spinners registry has frames and pulse colors", {
   for (design in .progress_spinners) {
     expect_true(length(design[["frames"]]) >= 1L)
     expect_length(design[["colors"]], 8L)
-    # Ping-pong ramp: yellow endpoint first, orange endpoint mid-cycle.
-    expect_equal(toupper(design[["colors"]][[1L]]), "#FFD858")
-    expect_equal(toupper(design[["colors"]][[5L]]), "#F08904")
+    # Ping-pong ramp: light_orange endpoint first, red endpoint mid-cycle.
+    expect_equal(
+      toupper(design[["colors"]][[1L]]),
+      toupper(rtemis_colors[["light_orange"]])
+    )
+    expect_equal(
+      toupper(design[["colors"]][[5L]]),
+      toupper(rtemis_colors[["red"]])
+    )
   }
   expect_length(.progress_spinners[["dots"]][["frames"]], 10L)
   expect_length(.progress_spinners[["dot"]][["frames"]], 1L)
@@ -113,11 +120,11 @@ test_that(".progress_render() cycles spinner glyphs and pulse colors", {
   # Glyphs cycle with period 10 (plain output isolates the glyph).
   expect_false(identical(render_at(0L), render_at(1L)))
   expect_identical(render_at(0L), render_at(10L))
-  # Colors cycle with period 8: #FFD858 = rgb(255, 216, 88) at frame 0,
-  # #F08904 = rgb(240, 137, 4) at frame 4 (ansi output carries the color).
-  expect_match(render_at(0L, "ansi"), "38;2;255;216;88", fixed = TRUE)
-  expect_match(render_at(4L, "ansi"), "38;2;240;137;4", fixed = TRUE)
-  expect_match(render_at(8L, "ansi"), "38;2;255;216;88", fixed = TRUE)
+  # Colors cycle with period 8: light_orange #FDB808 = rgb(253, 184, 8) at
+  # frame 0, red #EA384A = rgb(234, 56, 74) at frame 4 (ansi carries color).
+  expect_match(render_at(0L, "ansi"), "38;2;253;184;8", fixed = TRUE)
+  expect_match(render_at(4L, "ansi"), "38;2;234;56;74", fixed = TRUE)
+  expect_match(render_at(8L, "ansi"), "38;2;253;184;8", fixed = TRUE)
 })
 
 test_that("rtemis.progress_spinner option selects the design", {
@@ -522,6 +529,202 @@ test_that("nested progress_lapply() chains parent ids", {
   expect_true(is.na(starts[[1L]][["parent_id"]]))
   expect_equal(starts[[2L]][["parent_id"]], outer_id)
   expect_equal(starts[[3L]][["parent_id"]], outer_id)
+})
+
+
+# Completed-children chain ----
+test_that("completion line chains uniformly completed nested loops", {
+  reset_progress_state()
+  msgs <- capture_messages(
+    progress_lapply(
+      1:2,
+      function(i) {
+        progress_lapply(1:3, identity, label = "Inner", output_type = "plain")
+      },
+      label = "Outer",
+      output_type = "plain"
+    )
+  )
+  stripped <- strip_ansi(paste(msgs, collapse = ""))
+  expect_match(
+    stripped,
+    paste0("Outer 2/2 ", times, " Inner 3/3 done in"),
+    fixed = TRUE
+  )
+})
+
+test_that("completion chain extends recursively to deeper nesting", {
+  reset_progress_state()
+  msgs <- capture_messages(
+    progress_lapply(
+      1:2,
+      function(i) {
+        progress_lapply(
+          1:2,
+          function(j) {
+            progress_lapply(
+              1:3,
+              identity,
+              label = "C",
+              output_type = "plain"
+            )
+          },
+          label = "B",
+          output_type = "plain"
+        )
+      },
+      label = "A",
+      output_type = "plain"
+    )
+  )
+  stripped <- strip_ansi(paste(msgs, collapse = ""))
+  expect_match(
+    stripped,
+    paste0("A 2/2 ", times, " B 2/2 ", times, " C 3/3 done in"),
+    fixed = TRUE
+  )
+})
+
+test_that("completion chain is omitted when inner totals vary", {
+  reset_progress_state()
+  msgs <- capture_messages(
+    progress_lapply(
+      1:2,
+      function(i) {
+        progress_lapply(
+          seq_len(2L + i),
+          identity,
+          label = "Inner",
+          output_type = "plain"
+        )
+      },
+      label = "Outer",
+      output_type = "plain"
+    )
+  )
+  stripped <- strip_ansi(paste(msgs, collapse = ""))
+  expect_match(stripped, "Outer 2/2 done in", fixed = TRUE)
+  expect_false(grepl(
+    paste0("Outer 2/2 ", times),
+    stripped,
+    fixed = TRUE
+  ))
+})
+
+test_that("completion chain is omitted when a child does not complete", {
+  reset_progress_state()
+  msgs <- capture_messages({
+    outer <- progress_begin(1L, label = "Outer", output_type = "plain")
+    inner <- progress_begin(3L, label = "Inner", output_type = "plain")
+    progress_update(inner)
+    progress_end(inner) # done at 1/3 - not a full run
+    progress_update(outer)
+    progress_end(outer)
+  })
+  stripped <- strip_ansi(paste(msgs, collapse = ""))
+  expect_match(stripped, "Outer 1/1 done in", fixed = TRUE)
+  expect_false(grepl(times, stripped, fixed = TRUE))
+})
+
+test_that("completion chain is omitted when a child errors or aborts", {
+  reset_progress_state()
+  msgs <- capture_messages({
+    outer <- progress_begin(1L, label = "Outer", output_type = "plain")
+    inner <- progress_begin(2L, label = "Inner", output_type = "plain")
+    progress_update(inner)
+    progress_update(inner)
+    progress_end(inner, status = "error")
+    progress_update(outer)
+    progress_end(outer)
+  })
+  stripped <- strip_ansi(paste(msgs, collapse = ""))
+  expect_match(stripped, "Outer 1/1 done in", fixed = TRUE)
+  expect_false(grepl(times, stripped, fixed = TRUE))
+})
+
+test_that("completion chain is omitted for heterogeneous sibling labels", {
+  reset_progress_state()
+  msgs <- capture_messages({
+    outer <- progress_begin(1L, label = "Outer", output_type = "plain")
+    a <- progress_begin(2L, label = "Prep", output_type = "plain")
+    progress_update(a, current = 2L)
+    progress_end(a)
+    b <- progress_begin(2L, label = "Tuning", output_type = "plain")
+    progress_update(b, current = 2L)
+    progress_end(b)
+    progress_update(outer)
+    progress_end(outer)
+  })
+  stripped <- strip_ansi(paste(msgs, collapse = ""))
+  expect_match(stripped, "Outer 1/1 done in", fixed = TRUE)
+  expect_false(grepl(times, stripped, fixed = TRUE))
+})
+
+
+# Foreign output during progress_lapply ----
+test_that("message() from fn clears the status line and prints intact", {
+  reset_progress_state()
+  op <- options(rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
+  msgs <- capture_messages(
+    progress_lapply(
+      1:2,
+      function(i) {
+        if (i == 2L) {
+          message("foreign chatter")
+        }
+        i
+      },
+      label = "Work",
+      output_type = "ansi"
+    )
+  )
+  clear_idx <- which(grepl("^\r +\r$", msgs))
+  note_idx <- which(grepl("foreign chatter", msgs, fixed = TRUE))
+  expect_length(note_idx, 1L)
+  # The foreign message is immediately preceded by a clear frame.
+  expect_true((note_idx - 1L) %in% clear_idx)
+  # Exactly two clears: one for the foreign message, one at progress_end -
+  # the handler must not react to our own frame writes.
+  expect_length(clear_idx, 2L)
+  stripped <- strip_ansi(paste(msgs, collapse = ""))
+  expect_match(stripped, "Work 2/2 done in", fixed = TRUE)
+})
+
+test_that("warning() from fn clears the status line", {
+  reset_progress_state()
+  op <- options(rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
+  msgs <- capture_messages(suppressWarnings(
+    progress_lapply(
+      1:2,
+      function(i) {
+        if (i == 2L) {
+          warning("careful")
+        }
+        i
+      },
+      label = "Work",
+      output_type = "ansi"
+    )
+  ))
+  expect_length(which(grepl("^\r +\r$", msgs)), 2L)
+})
+
+test_that("progress_clear() clears a visible line and no-ops otherwise", {
+  reset_progress_state()
+  expect_silent(progress_clear())
+  op <- options(rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
+  msgs <- capture_messages({
+    h <- progress_begin(2L, label = "Work", output_type = "ansi")
+    progress_update(h)
+    progress_clear()
+    progress_end(h)
+  })
+  expect_true(any(grepl("^\r +\r$", msgs)))
+  expect_false(.state[["progress_visible"]])
+  reset_progress_state()
 })
 
 

@@ -21,13 +21,17 @@
 
 glyph_progress_sep <- "\u203A" # single right-pointing angle quote
 glyph_ellipsis <- "\u2026" # horizontal ellipsis
+glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 
-# Shared pulse: a yellow -> orange ping-pong ramp advanced one step per
+# Shared pulse: a light_orange -> red ping-pong ramp advanced one step per
 # actual (post-throttle) draw. Ping-pong (not sawtooth) so it reads as
-# pulsing, not blinking. The orange endpoint is rtemis_colors[["orange"]],
-# hardcoded because this file is collated before `rtemis_color_system.R`.
+# pulsing, not blinking. `rtemis_colors` is available at collation time
+# because the palette lives in `0_rtemis_color_system.R`, which sorts first.
 .progress_pulse_colors <- local({
-  ramp <- colorRampPalette(c("#FFD858", "#F08904"))(5L)
+  ramp <- colorRampPalette(c(
+    rtemis_colors[["light_orange"]],
+    rtemis_colors[["red"]]
+  ))(5L)
   c(ramp, rev(ramp)[-c(1L, 5L)])
 })
 
@@ -282,7 +286,7 @@ glyph_ellipsis <- "\u2026" # horizontal ellipsis
   )
   new_width <- nchar(strip_ansi(line), type = "width")
   pad <- max(0L, .rtemis_core_state[["progress_last_width"]] - new_width)
-  message(paste0("\r", line, strrep(" ", pad)), appendLF = FALSE)
+  .progress_write(paste0("\r", line, strrep(" ", pad)))
   .rtemis_core_state[["progress_spinner_frame"]] <- frame + 1L
   .rtemis_core_state[["progress_visible"]] <- TRUE
   .rtemis_core_state[["progress_last_width"]] <- new_width
@@ -291,7 +295,77 @@ glyph_ellipsis <- "\u2026" # horizontal ellipsis
 }
 
 
+#' Summary segments a completed handle contributes to its parent
+#'
+#' The completion line of a parent can report fully completed nested loops as
+#' a multiplication chain (`Outer 2/2 x Tuning 4/4`). A handle contributes its
+#' own `label total/total` segment - but only when it is determinate and ran
+#' to completion - followed by the (already validated) segments of its own
+#' children, so deeper nesting chains recursively.
+#'
+#' @param handle `rtemis_progress` handle, ending with `status = "done"`.
+#'
+#' @return List of `list(label, total)` segments, or NULL when the handle
+#'   cannot be summarized honestly (indeterminate or incomplete).
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.progress_segments <- function(handle) {
+  if (
+    is.na(handle[["total"]]) ||
+      handle[["total"]] <= 0L ||
+      handle[["current"]] != handle[["total"]]
+  ) {
+    return(NULL)
+  }
+  segments <- list(list(label = handle[["label"]], total = handle[["total"]]))
+  cs <- handle[["child_summary"]]
+  if (is.list(cs) && isTRUE(cs[["valid"]])) {
+    segments <- c(segments, cs[["segments"]])
+  }
+  segments
+}
+
+
+#' Record a completed child on its parent handle
+#'
+#' Called from `progress_end()` when the ending handle's parent is still on
+#' the stack. The parent keeps a single `child_summary`: the segments of the
+#' first completed child, kept only while every subsequent child run
+#' reports identical segments (same label, same total, same nested chain).
+#' Any inconsistency - varying totals, sibling labels, indeterminate or
+#' partially completed children, non-`"done"` ends - invalidates the summary,
+#' so the parent's completion line never claims a multiplication that did not
+#' happen.
+#'
+#' @param parent `rtemis_progress` handle still on the stack.
+#' @param child `rtemis_progress` handle being ended.
+#' @param status Character: The child's end status.
+#'
+#' @return NULL invisibly.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.progress_record_child <- function(parent, child, status) {
+  segments <- if (status == "done") .progress_segments(child) else NULL
+  cs <- parent[["child_summary"]]
+  if (is.null(segments)) {
+    parent[["child_summary"]] <- list(valid = FALSE)
+  } else if (is.null(cs)) {
+    parent[["child_summary"]] <- list(valid = TRUE, segments = segments)
+  } else if (isTRUE(cs[["valid"]]) && !identical(cs[["segments"]], segments)) {
+    parent[["child_summary"]] <- list(valid = FALSE)
+  }
+  invisible(NULL)
+}
+
+
 #' Print the permanent completion line for a finished handle
+#'
+#' Appends the completed-children chain (`x Tuning 4/4`) when the handle's
+#' `child_summary` is valid - see `.progress_record_child()`.
 #'
 #' @param handle `rtemis_progress` handle (already closed).
 #' @param status Character: `"done"`, `"error"`, or `"aborted"`.
@@ -304,6 +378,29 @@ glyph_ellipsis <- "\u2026" # horizontal ellipsis
 .progress_completion_line <- function(handle, status) {
   elapsed <- proc.time()[["elapsed"]] - handle[["t_start"]]
   counts <- .progress_counts(handle[["current"]], handle[["total"]])
+  chain <- ""
+  cs <- handle[["child_summary"]]
+  if (status == "done" && is.list(cs) && isTRUE(cs[["valid"]])) {
+    chain <- paste(
+      vapply(
+        cs[["segments"]],
+        function(s) {
+          paste0(
+            " ",
+            glyph_times,
+            " ",
+            s[["label"]],
+            " ",
+            s[["total"]],
+            "/",
+            s[["total"]]
+          )
+        },
+        character(1L)
+      ),
+      collapse = ""
+    )
+  }
   if (status == "done") {
     glyph <- glyph_success
     col <- col_success
@@ -319,6 +416,7 @@ glyph_ellipsis <- "\u2026" # horizontal ellipsis
     handle[["label"]],
     " ",
     counts,
+    chain,
     " ",
     verb,
     " ",
@@ -354,10 +452,20 @@ glyph_ellipsis <- "\u2026" # horizontal ellipsis
 #'   set to `0` to emit every tick.
 #' - `rtemis.progress_spinner`: Spinner design - one of `"dots"` (braille
 #'   dots, default), `"dot"` (static dot, color-only animation), or
-#'   `"blocks"` (quadrant blocks). All designs pulse yellow to orange.
+#'   `"blocks"` (quadrant blocks). All designs share the palette color pulse
+#'   (`light_orange` to `red`).
 #'
 #' Sink events fire regardless of verbosity; verbosity gates only the
 #' console renderer.
+#'
+#' **Known limitation**: output written directly to stdout by code running
+#' inside a progress loop (`cat()`, `print()`, verbose third-party
+#' routines) is not intercepted and will collide with the status line.
+#' Output through `msg()` and the other rtemis writers clears the line
+#' automatically, and [progress_lapply()] additionally clears it for any
+#' `message()`/`warning()` condition raised by user code. For raw stdout
+#' writes, call [progress_clear()] first or silence the routine
+#' (`capture.output()`, `verbose = 0`).
 #'
 #' @param total Integer: Total number of steps, or `NA` for indeterminate
 #'   progress. Must be non-negative.
@@ -441,6 +549,7 @@ progress_begin <- function(
   handle[["current"]] <- 0L
   handle[["t_start"]] <- proc.time()[["elapsed"]]
   handle[["t_last_sink"]] <- handle[["t_start"]]
+  handle[["child_summary"]] <- NULL
   handle[["closed"]] <- FALSE
   handle[["v"]] <- verbosity %||% get_verbosity(package)
   handle[["output_type"]] <- get_output_type(output_type)
@@ -566,6 +675,13 @@ progress_update <- function(
 #' remaining breadcrumb, so tight nested loops don't spam the console.
 #' Non-`"ansi"` output prints a completion line per handle.
 #'
+#' When nested loops complete uniformly, the completion line reports them as
+#' a multiplication chain, e.g. `Outer 2/2 x Tuning 24/24 done in 0:41`. A
+#' nested level is included only when every one of its runs completed with
+#' `status = "done"`, reached its total, and had the same label and total as
+#' its sibling runs; otherwise the chain is omitted rather than reporting a
+#' misleading count. Deeper nesting chains recursively.
+#'
 #' @param handle `rtemis_progress` handle from [progress_begin()].
 #' @param status Character: `"done"`, `"error"`, or `"aborted"`.
 #'
@@ -608,6 +724,14 @@ progress_end <- function(handle, status = c("done", "error", "aborted")) {
   if (!is.na(pos)) {
     .rtemis_core_state[["progress_stack"]] <- stack[-pos]
   }
+  # Report this run to the parent for its completed-children chain.
+  stack <- .rtemis_core_state[["progress_stack"]]
+  if (length(stack) > 0L) {
+    parent <- stack[[length(stack)]]
+    if (identical(parent[["id"]], handle[["parent_id"]])) {
+      .progress_record_child(parent, handle, status)
+    }
+  }
   if (.progress_to_sink(handle, status)) {
     return(invisible(NULL))
   }
@@ -637,6 +761,12 @@ progress_end <- function(handle, status = c("done", "error", "aborted")) {
 #' `parent_id`-chained sink events). If `fn` throws, the node is ended with
 #' `status = "error"` before the condition propagates, so nested wrappers
 #' unwind cleanly.
+#'
+#' `message()` and `warning()` conditions signalled by `fn` (or anything it
+#' calls) are intercepted by a calling handler that clears the status line
+#' before the text is printed, then lets normal handling proceed - so
+#' third-party verbose output lands on a clean line. Direct stdout writes
+#' (`cat()`, `print()`) cannot be intercepted; see [progress_clear()].
 #'
 #' @param x Vector or list: Elements to iterate over, as in [lapply()].
 #' @param fn Function: Applied to each element of `x`.
@@ -692,7 +822,16 @@ progress_lapply <- function(
   out <- lapply(
     x,
     function(el, ...) {
-      res <- fn(el, ...)
+      # Foreign output guard: if `fn` (or anything it calls) signals a
+      # message or warning, clear the status line first so the text lands
+      # on a clean line instead of being appended to the frame. Our own
+      # frame writes are marked via `progress_drawing` and skipped. The
+      # handler does not touch the condition, so normal handling proceeds.
+      res <- withCallingHandlers(
+        fn(el, ...),
+        message = .progress_foreign_output,
+        warning = .progress_foreign_output
+      )
       progress_update(handle)
       res
     },
@@ -701,4 +840,55 @@ progress_lapply <- function(
   completed <- TRUE
   progress_end(handle, status = "done")
   out
+}
+
+
+#' Calling handler for foreign output during `progress_lapply()`
+#'
+#' Clears the visible status line when user code signals a message or
+#' warning, unless the condition is one of our own frame/clear writes
+#' (marked by the `progress_drawing` state flag). Never touches the
+#' condition itself - default handling proceeds after the line is cleared.
+#'
+#' @param cond Condition object (ignored beyond its role as a signal).
+#'
+#' @return NULL invisibly.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.progress_foreign_output <- function(cond) {
+  if (!isTRUE(.rtemis_core_state[["progress_drawing"]])) {
+    .clear_progress_line()
+  }
+  invisible(NULL)
+}
+
+
+# %% progress_clear() -------------------------------------------------------------------------------
+
+#' Clear the visible progress status line
+#'
+#' Escape hatch for code that is about to write raw console output (e.g.
+#' `cat()`, `print()`, or a verbose third-party routine) while a progress
+#' status line is on screen: clears the line so the output starts clean.
+#' The status line reappears on the next [progress_update()]. No-op when
+#' nothing is displayed.
+#'
+#' Not needed for output that goes through `msg()` and the other rtemis
+#' writers (they clear automatically), nor for `message()`/`warning()`
+#' conditions raised inside [progress_lapply()] (a calling handler clears
+#' for those). This exists for the one gap that cannot be intercepted:
+#' direct writes to stdout.
+#'
+#' @return NULL invisibly.
+#'
+#' @author EDG
+#' @family progress
+#' @export
+#'
+#' @examples
+#' progress_clear() # no-op when no status line is visible
+progress_clear <- function() {
+  .clear_progress_line()
 }
