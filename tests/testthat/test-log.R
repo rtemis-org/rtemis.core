@@ -38,7 +38,7 @@ test_that("get_verbosity falls back to global when no package override", {
 
 # strip_ansi ----
 test_that("strip_ansi removes SGR escapes", {
-  styled <- fmt("hello", col = "red")
+  styled <- fmt("hello", col = "red", output_type = "ansi")
   expect_true(grepl("\033\\[", styled))
   expect_identical(strip_ansi(styled), "hello")
 })
@@ -156,7 +156,7 @@ test_that("abort message is plain when caller wraps a parent with ANSI", {
   # ANSI only matters for the *console echo* (handled in a separate test).
   inner <- structure(
     class = c("error", "condition"),
-    list(message = fmt("inner", col = "red"), call = NULL)
+    list(message = fmt("inner", col = "red", output_type = "ansi"), call = NULL)
   )
   cond <- tryCatch(
     abort("outer", parent = inner, verbosity = 0L),
@@ -197,6 +197,74 @@ test_that("abort suppresses console output at verbosity 0", {
   with_opts(list(rtemis.verbosity = 0L), {
     expect_no_message(expect_error(abort("quiet boom")))
   })
+})
+
+test_that("abort attaches data fields to the condition", {
+  cond <- tryCatch(
+    abort(
+      "rate limited",
+      class = "my_api_error",
+      data = list(status_code = 429L, provider = "anthropic"),
+      verbosity = 0L
+    ),
+    condition = function(e) e
+  )
+  expect_identical(cond$status_code, 429L)
+  expect_identical(cond$provider, "anthropic")
+  # Data fields must not leak into the human-readable message.
+  expect_identical(conditionMessage(cond), "rate limited")
+})
+
+test_that("abort data fields are visible to selective handlers", {
+  status <- tryCatch(
+    abort(
+      "boom",
+      class = "my_api_error",
+      data = list(status_code = 503L),
+      verbosity = 0L
+    ),
+    my_api_error = function(e) e$status_code
+  )
+  expect_identical(status, 503L)
+})
+
+test_that("abort rejects unnamed or partially named data", {
+  expect_error(
+    abort("boom", data = list(1L), verbosity = 0L),
+    "fully named list"
+  )
+  expect_error(
+    abort("boom", data = list(a = 1L, 2L), verbosity = 0L),
+    "fully named list"
+  )
+  expect_error(
+    abort("boom", data = c(a = 1L), verbosity = 0L),
+    "fully named list"
+  )
+})
+
+test_that("abort rejects data names that collide with condition fields", {
+  expect_error(
+    abort("boom", data = list(message = "clobber"), verbosity = 0L),
+    "collide"
+  )
+  expect_error(
+    abort("boom", data = list(trace = "clobber", ok = 1L), verbosity = 0L),
+    "collide"
+  )
+})
+
+test_that("abort accepts NULL and empty-list data", {
+  cond <- tryCatch(
+    abort("boom", data = list(), verbosity = 0L),
+    condition = function(e) e
+  )
+  expect_identical(conditionMessage(cond), "boom")
+  cond <- tryCatch(
+    abort("boom", data = NULL, verbosity = 0L),
+    condition = function(e) e
+  )
+  expect_identical(conditionMessage(cond), "boom")
 })
 
 

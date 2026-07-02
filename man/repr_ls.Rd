@@ -20,7 +20,7 @@ repr_ls(
   print_df = FALSE,
   print_S4 = FALSE,
   limit = 12L,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 )
 }
 \arguments{
@@ -54,7 +54,8 @@ repr_ls(
 
 \item{limit}{Integer: Maximum number of items to show.}
 
-\item{output_type}{Character: Output type for mformat ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type for mformat. If
+NULL, resolved via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted string that can be printed with cat()

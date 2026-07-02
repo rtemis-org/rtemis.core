@@ -1,5 +1,66 @@
 # rtemis.core NEWS
 
+## Version 0.4.1
+
+- `abort()` gains a `data` argument: a named list of structured fields
+  attached to the signalled condition (e.g.
+  `data = list(status_code = 429L, provider = "anthropic")`), retrievable by
+  handlers via `condition$<name>`. Names may not collide with the built-in
+  condition fields (`message`, `parent`, `call`, `trace`).
+- `fmt()` and all its wrappers (`highlight()`, `bold()`, `italic()`, `thin()`,
+  `gray()`, `checkmark()`, `crossmark()`, `col256()`, `fmt_gradient()`, etc.)
+  as well as the `show_df()`/`show_table()`/`repr_ls()` printers now default to
+  `output_type = NULL`, resolved via `get_output_type()`: "ansi" in interactive
+  sessions, "plain" otherwise. Previously they defaulted to "ansi"
+  unconditionally, emitting raw ANSI escape codes in non-interactive contexts
+  (scripts, knitr, tests). Explicitly passing "ansi", "html", or "plain"
+  behaves as before; `NULL` can now be forwarded safely through the whole
+  formatting stack, so callers that only pass `output_type` through to
+  formatting functions no longer need to resolve it themselves.
+- `get_output_type()` called with no arguments is now environment-aware
+  (previously it returned "ansi" unconditionally because its default skipped
+  the NULL branch).
+- The progress completion line's success glyph now follows the handle's
+  resolved `output_type`, so handles created with `output_type = "plain"` no
+  longer emit an ANSI-bold checkmark in interactive sessions.
+- `progress_update()` now validates `label`, `current`, and `add` (scalar,
+  type, non-missing) with the same condition classes as `progress_begin()`.
+
+## Version 0.4.0
+
+- New nested progress subsystem (`R/progress.R`) replacing the last remaining
+  use of cli (`cli::cli_progress_along`) in the ecosystem: `progress_begin()`
+  / `progress_update()` / `progress_end()` handle API plus a
+  `progress_lapply()` near-drop-in wrapper (lapply-style `X`/`FUN`
+  arguments, so `...` forwarding never collides with the wrapper's own
+  parameters).
+- Console rendering: single status line rewritten in place with a
+  color-pulsing spinner (light-orange-to-red ping-pong ramp over the rtemis
+  palette; designs selectable
+  via `options(rtemis.progress_spinner = )`: `"dots"`, `"dot"`, `"blocks"`)
+  and a breadcrumb of all nested levels (`Outer 2/5 > Tuning 7/30 ETA 0:41`).
+  Non-interactive/plain output prints one begin and one completion line
+  instead. Redraws throttled via `options(rtemis.progress_throttle = )`.
+- Message-sink integration: progress events are forwarded through the
+  `set_msg_sink()` envelope with `level = "progress"` and node fields
+  (`node_id`, `parent_id`, `kind`, `status`, `current`, `total`),
+  implementing the rtemis.core side of rtemis `specs/observability.md`.
+  Sink events fire regardless of verbosity; verbosity gates only the console
+  renderer. `"update"` events honor the throttle.
+- Completion lines report uniformly completed nested loops as a
+  multiplication chain (`Outer 2/2 x Tuning 24/24 done in 0:41`), recursively
+  for deeper nesting. A nested level is included only when all of its runs
+  completed fully with identical label and total; otherwise the chain is
+  omitted rather than misleading.
+- `msg()`/`msg0()`/`msgstart()`/`msgdone()`/`suggest()` clear a visible
+  progress status line before writing, so log output never collides with an
+  in-place progress redraw.
+- `progress_lapply()` intercepts `message()`/`warning()` conditions raised
+  by user code (or third-party packages it calls) and clears the status line
+  before they print, so verbose foreign output lands on a clean line. Direct
+  stdout writes (`cat()`, `print()`) cannot be intercepted; new exported
+  `progress_clear()` provides an escape hatch for those.
+
 ## Version 0.3.1
 
 - `msg()`/`msg0()` now close a pending `msgstart()` line before writing, so

@@ -15,7 +15,7 @@ fmt(
   bg = NULL,
   pad = 0L,
   reset_code = "\\033[0m",
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 )
 }
 \arguments{
@@ -39,7 +39,8 @@ fmt(
 
 \item{reset_code}{Character: ANSI reset code to use after formatting.}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted text with specified styling.

@@ -27,22 +27,27 @@ with fields
 \code{format_caller()}.
 \item \code{ts}: character. Formatted timestamp (\code{"\%Y-\%m-\%d \%H:\%M:\%S"}).
 \item \code{level}: character. One of \code{"info"} (\code{msg}/\code{msg0}), \code{"start"}
-(\code{msgstart}), or \code{"done"} (\code{msgdone}).
+(\code{msgstart}), \code{"done"} (\code{msgdone}), or \code{"progress"}
+(\code{\link[=progress_begin]{progress_begin()}} / \code{\link[=progress_update]{progress_update()}} / \code{\link[=progress_end]{progress_end()}}).
 }
 
 Producers may include \strong{additional} fields in the list, which sinks should
-ignore when not understood. In particular, \code{rtemis}'s training observability
-(see its \code{specs/observability.md}) emits execution-graph node events through
-the sink with these extra fields:
+ignore when not understood. In particular, the progress API in this package
+and \code{rtemis}'s training observability (see its \code{specs/observability.md})
+emit execution-graph node events through the sink with these extra fields:
 \itemize{
 \item \code{node_id}: character. Unique id of the execution-graph node.
 \item \code{parent_id}: character or \code{NA}. Parent node id (for nesting).
 \item \code{kind}: character. Node kind (e.g. \code{"tune"}, \code{"grid_cell"}, \code{"train_alg"}).
-\item \code{status}: character. \code{"start"}, \code{"done"}, \code{"error"}, or \code{"aborted"}.
-\item \code{current}, \code{total}: integer or \code{NULL}. Progress counters.
+\item \code{status}: character. \code{"start"}, \code{"update"}, \code{"done"}, \code{"error"}, or
+\code{"aborted"}.
+\item \code{current}, \code{total}: integer or \code{NA}. Progress counters.
 }
 
 These are additive; sinks that only read the base fields keep working.
+Progress events fire regardless of verbosity (verbosity gates only the
+console renderer), and \code{"update"} events are throttled via
+\code{getOption("rtemis.progress_throttle")} - see \code{\link[=progress_begin]{progress_begin()}}.
 
 When a sink is set, the console output path is \strong{skipped} for affected
 calls. Errors thrown by the sink propagate to the caller of \code{msg()}.

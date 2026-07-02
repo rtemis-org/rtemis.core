@@ -15,7 +15,8 @@ repr_S7name(x, col = col_object, pad = 0L, prefix = NULL, output_type = NULL)
 
 \item{prefix}{Character: Prefix to add to the object name.}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted string that can be printed with cat().

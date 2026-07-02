@@ -4,21 +4,26 @@
 \alias{get_output_type}
 \title{Get output type}
 \usage{
-get_output_type(output_type = c("ansi", "html", "plain"), filename = NULL)
+get_output_type(output_type = NULL, filename = NULL)
 }
 \arguments{
-\item{output_type}{Character vector of output types.}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+by environment: "ansi" in interactive sessions, "plain" otherwise.}
 
-\item{filename}{Optional Character: Filename for output.}
+\item{filename}{Optional Character: Filename for output. If not NULL, forces "plain".}
 }
 \value{
 Character with selected output type.
 }
 \description{
-Get output type for printing text.
+Resolve the output type for printing text.
 }
 \details{
-Exported as internal function for use by other rtemis packages.
+Exported as internal function for use by other rtemis packages. \code{fmt()} and its wrappers
+resolve their \code{output_type} argument through this function, so callers that only forward
+\code{output_type} to formatting functions do not need to call it themselves. Call it directly when
+the resolved value drives logic other than text formatting (e.g. whether to draw a spinner) or
+when output may be redirected to a file.
 }
 \examples{
 get_output_type()

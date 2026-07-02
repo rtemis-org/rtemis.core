@@ -459,7 +459,8 @@ printdf <- function(
 #' @export
 #' @param incl_colnames Logical: If TRUE, include column names.
 #' @param incl_rownames Logical: If TRUE, include row names.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted string representation of the data.frame.
 #'
@@ -476,10 +477,8 @@ show_df <- function(
   incl_rownames = TRUE,
   colnames_formatter = highlight,
   rownames_formatter = gray,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
-  output_type <- match.arg(output_type)
-
   if (transpose) {
     x <- as.data.frame(t(x))
   }
@@ -580,7 +579,8 @@ show_df <- function(
 #' @keywords internal
 #' @export
 #' @param formatter Function: Formatting function applied to table values.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @examples
 #' tbl <- table(
@@ -593,10 +593,8 @@ show_table <- function(
   spacing = 2L,
   pad = 2L,
   formatter = highlight,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
-  output_type <- match.arg(output_type)
-
   dim_names <- names(attr(x, "dimnames"))
   class_names <- attr(x, "dimnames")[["Reference"]]
   n_classes <- NCOL(x)
@@ -827,7 +825,8 @@ show_padded <- function(
 #' @param print_df Logical: If TRUE, print data frame contents, otherwise print n rows and columns.
 #' @param print_S4 Logical: If TRUE, print S4 object contents, otherwise print class name.
 #' @param limit Integer: Maximum number of items to show.
-#' @param output_type Character: Output type for mformat ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type for mformat. If
+#' NULL, resolved via [get_output_type()].
 #'
 #' @return Character: Formatted string that can be printed with cat()
 #'
@@ -863,10 +862,8 @@ repr_ls <- function(
   print_df = FALSE,
   print_S4 = FALSE,
   limit = 12L,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
-  output_type <- match.arg(output_type)
-
   # Initialize output string
   result <- ""
 

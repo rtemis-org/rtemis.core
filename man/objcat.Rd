@@ -4,13 +4,7 @@
 \alias{objcat}
 \title{Cat object}
 \usage{
-objcat(
-  x,
-  col = col_object,
-  pad = 0L,
-  prefix = NULL,
-  output_type = c("ansi", "html", "plain")
-)
+objcat(x, col = col_object, pad = 0L, prefix = NULL, output_type = NULL)
 }
 \arguments{
 \item{x}{Character: Object description}
@@ -21,7 +15,8 @@ objcat(
 
 \item{prefix}{Optional Character: Prefix to add before the object name.}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 NULL: Prints the formatted object description to the console.

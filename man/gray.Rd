@@ -4,12 +4,13 @@
 \alias{gray}
 \title{Gray text}
 \usage{
-gray(x, output_type = c("ansi", "html", "plain"))
+gray(x, output_type = NULL)
 }
 \arguments{
 \item{x}{Character: Text to format}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain")}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted text with gray styling

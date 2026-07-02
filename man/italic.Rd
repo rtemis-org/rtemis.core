@@ -4,18 +4,15 @@
 \alias{italic}
 \title{Make text italic}
 \usage{
-italic(
-  text,
-  reset_code = "\\033[23m",
-  output_type = c("ansi", "html", "plain")
-)
+italic(text, reset_code = "\\033[23m", output_type = NULL)
 }
 \arguments{
 \item{text}{Character: Text to make italic.}
 
 \item{reset_code}{Character: ANSI reset code to use after formatting.}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted text with italic styling

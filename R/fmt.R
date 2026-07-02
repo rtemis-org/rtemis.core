@@ -2,13 +2,18 @@
 
 #' Get output type
 #'
-#' Get output type for printing text.
+#' Resolve the output type for printing text.
 #'
-#' @param output_type Character vector of output types.
-#' @param filename Optional Character: Filename for output.
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' by environment: "ansi" in interactive sessions, "plain" otherwise.
+#' @param filename Optional Character: Filename for output. If not NULL, forces "plain".
 #'
 #' @details
-#' Exported as internal function for use by other rtemis packages.
+#' Exported as internal function for use by other rtemis packages. `fmt()` and its wrappers
+#' resolve their `output_type` argument through this function, so callers that only forward
+#' `output_type` to formatting functions do not need to call it themselves. Call it directly when
+#' the resolved value drives logic other than text formatting (e.g. whether to draw a spinner) or
+#' when output may be redirected to a file.
 #'
 #' @return Character with selected output type.
 #'
@@ -18,7 +23,7 @@
 #' @examples
 #' get_output_type()
 get_output_type <- function(
-  output_type = c("ansi", "html", "plain"),
+  output_type = NULL,
   filename = NULL
 ) {
   if (!is.null(filename)) {
@@ -33,7 +38,7 @@ get_output_type <- function(
     }
   }
 
-  match.arg(output_type)
+  match.arg(output_type, c("ansi", "html", "plain"))
 }
 
 
@@ -52,7 +57,8 @@ get_output_type <- function(
 #' @param bg Character: Background color (hex code, named color, or NULL).
 #' @param pad Integer: Number of spaces to pad before text.
 #' @param reset_code Character: ANSI reset code to use after formatting.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with specified styling.
 #'
@@ -87,9 +93,9 @@ fmt <- function(
   bg = NULL,
   pad = 0L,
   reset_code = "\033[0m",
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
-  output_type <- match.arg(output_type)
+  output_type <- get_output_type(output_type)
 
   out <- switch(
     output_type,
@@ -211,7 +217,8 @@ fmt <- function(
 #'
 #' @param x Character: Text to highlight.
 #' @param pad Integer: Number of spaces to pad before text.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with highlight.
 #'
@@ -223,7 +230,7 @@ fmt <- function(
 highlight <- function(
   x,
   pad = 0L,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
   fmt(x, col = col_highlight, bold = TRUE, pad = pad, output_type = output_type)
 }
@@ -235,7 +242,8 @@ highlight <- function(
 #'
 #' @param text Character: Text to make bold.
 #' @param reset_code Character: ANSI reset code to use after formatting.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with bold styling
 #'
@@ -247,7 +255,7 @@ highlight <- function(
 bold <- function(
   text,
   reset_code = "\033[22m",
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
   fmt(text, bold = TRUE, reset_code = reset_code, output_type = output_type)
 }
@@ -259,7 +267,8 @@ bold <- function(
 #'
 #' @param text Character: Text to make italic.
 #' @param reset_code Character: ANSI reset code to use after formatting.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with italic styling
 #'
@@ -272,7 +281,7 @@ bold <- function(
 italic <- function(
   text,
   reset_code = "\033[23m",
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
   fmt(text, italic = TRUE, reset_code = reset_code, output_type = output_type)
 }
@@ -283,7 +292,8 @@ italic <- function(
 #' A `fmt()` convenience wrapper for making text underlined.
 #'
 #' @param text Character: Text to underline
-#' @param output_type Character: Output type ("ansi", "html", "plain")
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with underline styling
 #'
@@ -293,7 +303,7 @@ italic <- function(
 underline <- function(
   text,
   reset_code = "\033[24m",
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
   fmt(
     text,
@@ -309,7 +319,8 @@ underline <- function(
 #' A `fmt()` convenience wrapper for making text thin/light.
 #'
 #' @param text Character: Text to make thin
-#' @param output_type Character: Output type ("ansi", "html", "plain")
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with thin/light styling
 #'
@@ -319,7 +330,7 @@ underline <- function(
 #'
 #' @examples
 #' message(thin("thin text"))
-thin <- function(text, output_type = c("ansi", "html", "plain")) {
+thin <- function(text, output_type = NULL) {
   fmt(text, thin = TRUE, output_type = output_type)
 }
 
@@ -329,14 +340,15 @@ thin <- function(text, output_type = c("ansi", "html", "plain")) {
 #' A `fmt()` convenience wrapper for making text muted.
 #'
 #' @param x Character: Text to format
-#' @param output_type Character: Output type ("ansi", "html", "plain")
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with muted styling
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-muted <- function(x, output_type = c("ansi", "html", "plain")) {
+muted <- function(x, output_type = NULL) {
   fmt(x, muted = TRUE, output_type = output_type)
 }
 
@@ -346,7 +358,8 @@ muted <- function(x, output_type = c("ansi", "html", "plain")) {
 #' A `fmt()` convenience wrapper for making text gray.
 #'
 #' @param x Character: Text to format
-#' @param output_type Character: Output type ("ansi", "html", "plain")
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with gray styling
 #'
@@ -360,7 +373,7 @@ muted <- function(x, output_type = c("ansi", "html", "plain")) {
 #'
 #' @examples
 #' message(gray("gray text"))
-gray <- function(x, output_type = c("ansi", "html", "plain")) {
+gray <- function(x, output_type = NULL) {
   fmt(x, col = "#808080", output_type = output_type)
 }
 
@@ -370,7 +383,8 @@ gray <- function(x, output_type = c("ansi", "html", "plain")) {
 #' @param text Character: Text to color
 #' @param col Character or numeric: Color (ANSI 256-color code, hex for HTML)
 #' @param bg Logical: If TRUE, apply as background color
-#' @param output_type Character: Output type ("ansi", "html", "plain")
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted text with 256-color styling
 #'
@@ -383,9 +397,9 @@ col256 <- function(
   text,
   col = "79",
   bg = FALSE,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
-  output_type <- match.arg(output_type)
+  output_type <- get_output_type(output_type)
 
   switch(
     output_type,
@@ -492,7 +506,8 @@ ansi256_to_hex <- function(code) {
 #' @param x Character: Text to colorize.
 #' @param colors Character vector: Colors to use for the gradient.
 #' @param bold Logical: If TRUE, make text bold.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Text with gradient color applied.
 #'
@@ -505,9 +520,9 @@ fmt_gradient <- function(
   x,
   colors,
   bold = FALSE,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
-  output_type <- match.arg(output_type)
+  output_type <- get_output_type(output_type)
 
   if (output_type == "plain") {
     return(x)

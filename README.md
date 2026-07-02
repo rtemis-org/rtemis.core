@@ -27,7 +27,7 @@ install.packages("rtemis.core")
 ### Latest version from `r-universe`
 
 ```r
-pak::repo_add(myuniverse = "https://rtemis-org.r-universe.dev")
+pak::repo_add(rtemis = "https://rtemis-org.r-universe.dev")
 pak::pak("rtemis.core")
 ```
 
