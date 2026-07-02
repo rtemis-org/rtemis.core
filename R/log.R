@@ -151,6 +151,7 @@ info <- function(..., verbosity = NULL, package = NULL) {
 #' @param ... Message components, concatenated with no separator.
 #' @param use_warning Logical: If TRUE, signal an R `warning` condition
 #'   instead of (or in addition to) writing a styled message.
+#' @param bold Logical: If TRUE, apply bold styling to the message.
 #' @param verbosity Integer or NULL: Overrides `get_verbosity()` when supplied.
 #' @param package Character or NULL: Package name for verbosity override.
 #'
@@ -161,7 +162,13 @@ info <- function(..., verbosity = NULL, package = NULL) {
 #'
 #' @examples
 #' warn("Disk usage at ", 92L, "%")
-warn <- function(..., use_warning = FALSE, verbosity = NULL, package = NULL) {
+warn <- function(
+  ...,
+  use_warning = FALSE,
+  bold = FALSE,
+  verbosity = NULL,
+  package = NULL
+) {
   v <- verbosity %||% get_verbosity(package)
   if (use_warning) {
     # Emit a real warning() so handlers can catch it. Use the plain text
@@ -173,7 +180,7 @@ warn <- function(..., use_warning = FALSE, verbosity = NULL, package = NULL) {
       " ",
       ...,
       sep = "",
-      format_fn = function(x) fmt(x, col = col_warn, bold = TRUE),
+      format_fn = function(x) fmt(x, col = col_warn, bold = bold),
       caller_id = 2L,
       verbosity = 1L
     )
