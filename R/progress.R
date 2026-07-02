@@ -403,7 +403,7 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
   }
   if (status == "done") {
     # glyph <- glyph_success
-    glyph <- checkmark(col = NULL)
+    glyph <- checkmark(col = NULL, output_type = handle[["output_type"]])
     # col <- col_success
     col <- NULL
     verb <- "done in"
@@ -623,6 +623,27 @@ progress_update <- function(
   }
   if (isTRUE(handle[["closed"]])) {
     return(invisible(handle))
+  }
+  if (!is.null(label) && (!is.character(label) || length(label) != 1L)) {
+    abort(
+      "`label` must be a single character string or NULL.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  if (
+    !is.null(current) &&
+      (!is.numeric(current) || length(current) != 1L || is.na(current))
+  ) {
+    abort(
+      "`current` must be a single non-missing number or NULL.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  if (!is.numeric(add) || length(add) != 1L || is.na(add)) {
+    abort(
+      "`add` must be a single non-missing number.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
   }
   if (!is.null(label)) {
     handle[["label"]] <- label

@@ -38,7 +38,7 @@ test_that("get_verbosity falls back to global when no package override", {
 
 # strip_ansi ----
 test_that("strip_ansi removes SGR escapes", {
-  styled <- fmt("hello", col = "red")
+  styled <- fmt("hello", col = "red", output_type = "ansi")
   expect_true(grepl("\033\\[", styled))
   expect_identical(strip_ansi(styled), "hello")
 })
@@ -156,7 +156,7 @@ test_that("abort message is plain when caller wraps a parent with ANSI", {
   # ANSI only matters for the *console echo* (handled in a separate test).
   inner <- structure(
     class = c("error", "condition"),
-    list(message = fmt("inner", col = "red"), call = NULL)
+    list(message = fmt("inner", col = "red", output_type = "ansi"), call = NULL)
   )
   cond <- tryCatch(
     abort("outer", parent = inner, verbosity = 0L),

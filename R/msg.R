@@ -166,7 +166,6 @@ msgdatetime <- function(datetime_format = "%Y-%m-%d %H:%M:%S") {
 
 suggest <- function(..., output_type = NULL) {
   message <- paste(...)
-  output_type <- get_output_type(output_type)
   .clear_progress_line()
   cat(fmt(
     paste0("Suggestion: ", message, "\n"),

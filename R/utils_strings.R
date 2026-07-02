@@ -6,7 +6,8 @@
 #'
 #' @param ... Character: Text to highlight.
 #' @param col Color for the text.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Highlighted text.
 #'
@@ -16,9 +17,9 @@
 hilite <- function(
   ...,
   col = col_highlight,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
-  output_type <- match.arg(output_type)
+  output_type <- get_output_type(output_type)
   if (output_type == "ansi") {
     paste0("\033[1;38;5;", col, "m", paste(...), "\033[0m")
   } else if (output_type == "html") {
@@ -41,13 +42,14 @@ hilite <- function(
 #'
 #' @keywords internal
 #' @export
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted number with thousands separators and highlighting.
 #'
 #' @examples
 #' message(highlightbig(1234567))
-highlightbig <- function(x, output_type = c("ansi", "html", "plain")) {
+highlightbig <- function(x, output_type = NULL) {
   highlight(
     format(x, scientific = FALSE, big.mark = ","),
     output_type = output_type
@@ -365,7 +367,8 @@ pastebox <- function(x, pad = 0) {
 #' @param col Color: Color code for the object name.
 #' @param pad Integer: Number of spaces to pad the message with.
 #' @param prefix Character: Prefix to add to the object name.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted string that can be printed with cat().
 #'
@@ -382,7 +385,6 @@ repr_S7name <- function(
   prefix = NULL,
   output_type = NULL
 ) {
-  output_type <- get_output_type(output_type)
   # Accept either an S7 object (extract its class name) or a character name.
   if (S7_inherits(x)) {
     x <- S7_class(x)@name
@@ -412,7 +414,8 @@ repr_S7name <- function(
 #' @keywords internal
 #' @export
 #' @param prefix Optional Character: Prefix to add before the object name.
-#' @param output_type Character: Output type ("ansi", "html", "plain").
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @examples
 #' objcat("Supervised")
@@ -421,10 +424,8 @@ objcat <- function(
   col = col_object,
   pad = 0L,
   prefix = NULL,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
-  output_type <- match.arg(output_type)
-
   out <- repr_S7name(
     x,
     col = col,
@@ -470,7 +471,8 @@ fn2label <- function(fn, varname) {
 #' Prints a checkmark symbol with optional color and formatting.
 #'
 #' @param col Color for the checkmark symbol.
-#' @param output_type Character \{"ansi", "html", "plain"\}: Output type for formatting.
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #'
 #' @return Character: Formatted checkmark symbol.
 #' @author EDG
@@ -479,7 +481,7 @@ fn2label <- function(fn, varname) {
 #' checkmark()
 checkmark <- function(
   col = col_success,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
   fmt("\u2714", col = col, bold = TRUE, output_type = output_type)
 }
@@ -489,7 +491,8 @@ checkmark <- function(
 #' Prints a cross mark symbol with optional color and formatting.
 #'
 #' @param col Color for the cross mark symbol.
-#' @param output_type Character \{"ansi", "html", "plain"\}: Output type for formatting.
+#' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+#' via [get_output_type()].
 #' @return Character: Formatted cross mark symbol.
 #' @author EDG
 #' @export
@@ -497,7 +500,7 @@ checkmark <- function(
 #' crossmark()
 crossmark <- function(
   col = rtemis_colors[["red"]],
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 ) {
   fmt(
     "\u2715",
