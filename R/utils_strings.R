@@ -463,3 +463,43 @@ fn2label <- function(fn, varname) {
     fixed = TRUE
   )
 }
+
+
+#' Checkmark
+#'
+#' Prints a checkmark symbol with optional color and formatting.
+#'
+#' @param col Color for the checkmark symbol.
+#' @param output_type Character \{"ansi", "html", "plain"\}: Output type for formatting.
+#'
+#' @return Character: Formatted checkmark symbol.
+#' @author EDG
+#' @export
+#' @examples
+#' checkmark()
+checkmark <- function(
+  col = col_success,
+  output_type = c("ansi", "html", "plain")
+) {
+  fmt("\u2714", col = col, bold = TRUE, output_type = output_type)
+}
+
+#' Cross mark
+#'
+#' Prints a cross mark symbol with optional color and formatting.
+#'
+#' @param col Color for the cross mark symbol.
+#' @param output_type Character \{"ansi", "html", "plain"\}: Output type for formatting.
+#' @return Character: Formatted cross mark symbol.
+#' @author EDG
+#' @export
+#' @examples
+#' crossmark()
+crossmark <- function(output_type = c("ansi", "html", "plain")) {
+  fmt(
+    "\u2715",
+    col = rtemis_colors[["red"]],
+    bold = TRUE,
+    output_type = output_type
+  )
+}
