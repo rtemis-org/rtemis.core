@@ -4,7 +4,7 @@
 \alias{col256}
 \title{Apply 256-color formatting}
 \usage{
-col256(text, col = "79", bg = FALSE, output_type = c("ansi", "html", "plain"))
+col256(text, col = "79", bg = FALSE, output_type = NULL)
 }
 \arguments{
 \item{text}{Character: Text to color}
@@ -13,7 +13,8 @@ col256(text, col = "79", bg = FALSE, output_type = c("ansi", "html", "plain"))
 
 \item{bg}{Logical: If TRUE, apply as background color}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain")}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted text with 256-color styling

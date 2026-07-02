@@ -4,12 +4,13 @@
 \alias{thin}
 \title{Make text thin/light}
 \usage{
-thin(text, output_type = c("ansi", "html", "plain"))
+thin(text, output_type = NULL)
 }
 \arguments{
 \item{text}{Character: Text to make thin}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain")}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted text with thin/light styling

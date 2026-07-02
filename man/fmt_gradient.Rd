@@ -4,7 +4,7 @@
 \alias{fmt_gradient}
 \title{Gradient text}
 \usage{
-fmt_gradient(x, colors, bold = FALSE, output_type = c("ansi", "html", "plain"))
+fmt_gradient(x, colors, bold = FALSE, output_type = NULL)
 }
 \arguments{
 \item{x}{Character: Text to colorize.}
@@ -13,7 +13,8 @@ fmt_gradient(x, colors, bold = FALSE, output_type = c("ansi", "html", "plain"))
 
 \item{bold}{Logical: If TRUE, make text bold.}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Text with gradient color applied.

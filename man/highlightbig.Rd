@@ -4,12 +4,13 @@
 \alias{highlightbig}
 \title{Highlight big numbers}
 \usage{
-highlightbig(x, output_type = c("ansi", "html", "plain"))
+highlightbig(x, output_type = NULL)
 }
 \arguments{
 \item{x}{Numeric: Input}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted number with thousands separators and highlighting.

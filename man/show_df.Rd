@@ -15,7 +15,7 @@ show_df(
   incl_rownames = TRUE,
   colnames_formatter = highlight,
   rownames_formatter = gray,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 )
 }
 \arguments{
@@ -40,7 +40,8 @@ formatting}
 
 \item{rownames_formatter}{Format function for printing row names.}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted string representation of the data.frame.

@@ -4,12 +4,13 @@
 \alias{checkmark}
 \title{Checkmark}
 \usage{
-checkmark(col = col_success, output_type = c("ansi", "html", "plain"))
+checkmark(col = col_success, output_type = NULL)
 }
 \arguments{
 \item{col}{Color for the checkmark symbol.}
 
-\item{output_type}{Character \{"ansi", "html", "plain"\}: Output type for formatting.}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: Formatted checkmark symbol.

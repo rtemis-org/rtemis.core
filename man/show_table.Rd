@@ -9,7 +9,7 @@ show_table(
   spacing = 2L,
   pad = 2L,
   formatter = highlight,
-  output_type = c("ansi", "html", "plain")
+  output_type = NULL
 )
 }
 \arguments{
@@ -21,7 +21,8 @@ show_table(
 
 \item{formatter}{Function: Formatting function applied to table values.}
 
-\item{output_type}{Character: Output type ("ansi", "html", "plain").}
+\item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
+via \code{\link[=get_output_type]{get_output_type()}}.}
 }
 \value{
 Character: formatted string.

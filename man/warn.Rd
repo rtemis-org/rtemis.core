@@ -4,13 +4,15 @@
 \alias{warn}
 \title{Warning log message}
 \usage{
-warn(..., use_warning = FALSE, verbosity = NULL, package = NULL)
+warn(..., use_warning = FALSE, bold = FALSE, verbosity = NULL, package = NULL)
 }
 \arguments{
 \item{...}{Message components, concatenated with no separator.}
 
 \item{use_warning}{Logical: If TRUE, signal an R \code{warning} condition
 instead of (or in addition to) writing a styled message.}
+
+\item{bold}{Logical: If TRUE, apply bold styling to the message.}
 
 \item{verbosity}{Integer or NULL: Overrides \code{get_verbosity()} when supplied.}
 
