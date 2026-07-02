@@ -7,6 +7,24 @@
   `data = list(status_code = 429L, provider = "anthropic")`), retrievable by
   handlers via `condition$<name>`. Names may not collide with the built-in
   condition fields (`message`, `parent`, `call`, `trace`).
+- `fmt()` and all its wrappers (`highlight()`, `bold()`, `italic()`, `thin()`,
+  `gray()`, `checkmark()`, `crossmark()`, `col256()`, `fmt_gradient()`, etc.)
+  as well as the `show_df()`/`show_table()`/`repr_ls()` printers now default to
+  `output_type = NULL`, resolved via `get_output_type()`: "ansi" in interactive
+  sessions, "plain" otherwise. Previously they defaulted to "ansi"
+  unconditionally, emitting raw ANSI escape codes in non-interactive contexts
+  (scripts, knitr, tests). Explicitly passing "ansi", "html", or "plain"
+  behaves as before; `NULL` can now be forwarded safely through the whole
+  formatting stack, so callers that only pass `output_type` through to
+  formatting functions no longer need to resolve it themselves.
+- `get_output_type()` called with no arguments is now environment-aware
+  (previously it returned "ansi" unconditionally because its default skipped
+  the NULL branch).
+- The progress completion line's success glyph now follows the handle's
+  resolved `output_type`, so handles created with `output_type = "plain"` no
+  longer emit an ANSI-bold checkmark in interactive sessions.
+- `progress_update()` now validates `label`, `current`, and `add` (scalar,
+  type, non-missing) with the same condition classes as `progress_begin()`.
 
 ## Version 0.4.0
 
