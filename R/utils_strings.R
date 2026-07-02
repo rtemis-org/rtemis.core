@@ -495,10 +495,13 @@ checkmark <- function(
 #' @export
 #' @examples
 #' crossmark()
-crossmark <- function(output_type = c("ansi", "html", "plain")) {
+crossmark <- function(
+  col = rtemis_colors[["red"]],
+  output_type = c("ansi", "html", "plain")
+) {
   fmt(
     "\u2715",
-    col = rtemis_colors[["red"]],
+    col = col,
     bold = TRUE,
     output_type = output_type
   )

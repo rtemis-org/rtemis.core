@@ -4,12 +4,15 @@
 \alias{crossmark}
 \title{Cross mark}
 \usage{
-crossmark(output_type = c("ansi", "html", "plain"))
+crossmark(
+  col = rtemis_colors[["red"]],
+  output_type = c("ansi", "html", "plain")
+)
 }
 \arguments{
-\item{output_type}{Character \{"ansi", "html", "plain"\}: Output type for formatting.}
-
 \item{col}{Color for the cross mark symbol.}
+
+\item{output_type}{Character \{"ansi", "html", "plain"\}: Output type for formatting.}
 }
 \value{
 Character: Formatted cross mark symbol.
