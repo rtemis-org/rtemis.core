@@ -289,6 +289,12 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 #' @param ... Message components, concatenated with no separator.
 #' @param class Character vector: Additional condition classes (prepended
 #'   to the base `c("rtemis_error", "error", "condition")`).
+#' @param data Named list or NULL: Structured fields attached to the
+#'   signalled condition, retrievable by handlers via `condition$<name>`
+#'   (e.g. `data = list(status_code = 429L, provider = "anthropic")`).
+#'   Fields ride on the condition only - they are not echoed to the
+#'   console or appended to the message. Names must not collide with the
+#'   built-in condition fields `message`, `parent`, `call`, `trace`.
 #' @param parent Condition or NULL: Wrapped parent condition. Its message is
 #'   echoed to the console (when verbosity allows) and stored on the
 #'   signalled condition as `$parent`.
@@ -310,10 +316,24 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 abort <- function(
   ...,
   class = NULL,
+  data = NULL,
   parent = NULL,
   verbosity = NULL,
   package = NULL
 ) {
+  if (length(data) > 0L) {
+    if (!is.list(data) || is.null(names(data)) || !all(nzchar(names(data)))) {
+      stop("`data` must be a fully named list.", call. = FALSE)
+    }
+    reserved <- intersect(names(data), c("message", "parent", "call", "trace"))
+    if (length(reserved) > 0L) {
+      stop(
+        "`data` names collide with built-in condition fields: ",
+        paste(reserved, collapse = ", "),
+        call. = FALSE
+      )
+    }
+  }
   plain_text <- .compose_plain(list(...))
   v <- verbosity %||% get_verbosity(package)
   user <- .find_user_frame()
@@ -361,11 +381,14 @@ abort <- function(
   }
   cond <- structure(
     class = c(class, "rtemis_error", "error", "condition"),
-    list(
-      message = plain_text,
-      parent = parent,
-      call = user$call,
-      trace = trace
+    c(
+      list(
+        message = plain_text,
+        parent = parent,
+        call = user$call,
+        trace = trace
+      ),
+      data
     )
   )
   stop(cond)

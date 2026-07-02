@@ -4,13 +4,27 @@
 \alias{abort}
 \title{Dual-channel error signal}
 \usage{
-abort(..., class = NULL, parent = NULL, verbosity = NULL, package = NULL)
+abort(
+  ...,
+  class = NULL,
+  data = NULL,
+  parent = NULL,
+  verbosity = NULL,
+  package = NULL
+)
 }
 \arguments{
 \item{...}{Message components, concatenated with no separator.}
 
 \item{class}{Character vector: Additional condition classes (prepended
 to the base \code{c("rtemis_error", "error", "condition")}).}
+
+\item{data}{Named list or NULL: Structured fields attached to the
+signalled condition, retrievable by handlers via \verb{condition$<name>}
+(e.g. \code{data = list(status_code = 429L, provider = "anthropic")}).
+Fields ride on the condition only - they are not echoed to the
+console or appended to the message. Names must not collide with the
+built-in condition fields \code{message}, \code{parent}, \code{call}, \code{trace}.}
 
 \item{parent}{Condition or NULL: Wrapped parent condition. Its message is
 echoed to the console (when verbosity allows) and stored on the

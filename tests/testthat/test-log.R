@@ -199,6 +199,74 @@ test_that("abort suppresses console output at verbosity 0", {
   })
 })
 
+test_that("abort attaches data fields to the condition", {
+  cond <- tryCatch(
+    abort(
+      "rate limited",
+      class = "my_api_error",
+      data = list(status_code = 429L, provider = "anthropic"),
+      verbosity = 0L
+    ),
+    condition = function(e) e
+  )
+  expect_identical(cond$status_code, 429L)
+  expect_identical(cond$provider, "anthropic")
+  # Data fields must not leak into the human-readable message.
+  expect_identical(conditionMessage(cond), "rate limited")
+})
+
+test_that("abort data fields are visible to selective handlers", {
+  status <- tryCatch(
+    abort(
+      "boom",
+      class = "my_api_error",
+      data = list(status_code = 503L),
+      verbosity = 0L
+    ),
+    my_api_error = function(e) e$status_code
+  )
+  expect_identical(status, 503L)
+})
+
+test_that("abort rejects unnamed or partially named data", {
+  expect_error(
+    abort("boom", data = list(1L), verbosity = 0L),
+    "fully named list"
+  )
+  expect_error(
+    abort("boom", data = list(a = 1L, 2L), verbosity = 0L),
+    "fully named list"
+  )
+  expect_error(
+    abort("boom", data = c(a = 1L), verbosity = 0L),
+    "fully named list"
+  )
+})
+
+test_that("abort rejects data names that collide with condition fields", {
+  expect_error(
+    abort("boom", data = list(message = "clobber"), verbosity = 0L),
+    "collide"
+  )
+  expect_error(
+    abort("boom", data = list(trace = "clobber", ok = 1L), verbosity = 0L),
+    "collide"
+  )
+})
+
+test_that("abort accepts NULL and empty-list data", {
+  cond <- tryCatch(
+    abort("boom", data = list(), verbosity = 0L),
+    condition = function(e) e
+  )
+  expect_identical(conditionMessage(cond), "boom")
+  cond <- tryCatch(
+    abort("boom", data = NULL, verbosity = 0L),
+    condition = function(e) e
+  )
+  expect_identical(conditionMessage(cond), "boom")
+})
+
 
 # format_trace ----
 test_that("format_trace returns empty string for NULL or empty trace", {
