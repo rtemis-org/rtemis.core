@@ -1,6 +1,6 @@
 # 2026- EDG rtemis.org
 
-# Nested progress for the rtemis ecosystem - replaces cli::cli_progress_along.
+# Nested progress for the rtemis ecosystem.
 #
 # Design:
 #   * Explicit handle API (`progress_begin()` / `progress_update()` /
@@ -554,6 +554,13 @@ progress_begin <- function(
   handle[["child_summary"]] <- NULL
   handle[["closed"]] <- FALSE
   handle[["v"]] <- verbosity %||% get_verbosity(package)
+  # A nested node shares the parent's single status line rather than adding
+  # output, so it inherits console visibility from the node it nests under:
+  # callers routinely decrement verbosity for inner code paths (e.g. per-fold
+  # train()), and that must not blank the breadcrumb of a visible display.
+  if (length(stack) > 0L) {
+    handle[["v"]] <- max(handle[["v"]], stack[[length(stack)]][["v"]])
+  }
   handle[["output_type"]] <- get_output_type(output_type)
   class(handle) <- "rtemis_progress"
   .rtemis_core_state[["progress_stack"]] <- c(stack, list(handle))
