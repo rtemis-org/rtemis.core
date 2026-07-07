@@ -2,8 +2,8 @@
 
 # Logging and dual-channel error signaling for the rtemis ecosystem.
 #
-# Built on top of `msg()` and `fmt()` - zero external dependencies (no cli,
-# no rlang, no logger). Two design goals:
+# Built on top of `msg()` and `fmt()` - no external dependencies.
+# Two design goals:
 #
 #   1. Operator-side log output goes through `msg()` so it picks up the
 #      shared datetime + caller prefix, ANSI styling, and verbosity gate.
@@ -26,7 +26,7 @@
 
 glyph_info <- "\u2139" # info ('i' in a circle)
 glyph_success <- "\u2714" # heavy check mark
-glyph_warn <- "!" # plain ASCII bang (single-cell, unambiguous)
+glyph_warn <- "!"
 glyph_error <- "\u2716" # heavy multiplication x
 glyph_debug <- "\u203A" # single right-pointing angle quote
 

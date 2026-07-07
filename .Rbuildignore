@@ -11,3 +11,4 @@
 ^rhub$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
+^\.lintr$

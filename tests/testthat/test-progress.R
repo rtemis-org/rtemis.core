@@ -287,6 +287,70 @@ test_that("verbosity 0 silences console output", {
 })
 
 
+# Verbosity inheritance ----
+test_that("nested node inherits console visibility from a visible parent", {
+  # Callers routinely decrement verbosity for inner code paths (e.g.
+  # per-fold train()); the nested node must still enrich the breadcrumb.
+  reset_progress_state()
+  op <- options(rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
+  msgs <- capture_messages({
+    outer <- progress_begin(
+      2L,
+      label = "Outer",
+      verbosity = 1L,
+      output_type = "ansi"
+    )
+    inner <- progress_begin(
+      2L,
+      label = "Inner",
+      verbosity = 0L,
+      output_type = "ansi"
+    )
+    progress_update(inner)
+    progress_end(inner)
+    progress_update(outer, current = 2L)
+    progress_end(outer)
+  })
+  stripped <- strip_ansi(paste(msgs, collapse = ""))
+  expect_match(
+    stripped,
+    paste0("Outer 0/2 ", sep, " Inner 1/2"),
+    fixed = TRUE
+  )
+  expect_match(stripped, "Outer 2/2", fixed = TRUE)
+})
+
+test_that("nested node stays silent under a silenced root", {
+  # A silenced root never clears the status line nor prints a completion
+  # line, so a nested node must not draw even if its own verbosity resolves
+  # higher - otherwise it would resurrect silenced output and leave a stale
+  # status line behind.
+  reset_progress_state()
+  op <- options(rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
+  expect_silent({
+    outer <- progress_begin(
+      2L,
+      label = "Outer",
+      verbosity = 0L,
+      output_type = "ansi"
+    )
+    inner <- progress_begin(
+      2L,
+      label = "Inner",
+      verbosity = 1L,
+      output_type = "ansi"
+    )
+    progress_update(inner, force = TRUE)
+    progress_end(inner)
+    progress_update(outer, force = TRUE)
+    progress_end(outer)
+  })
+  reset_progress_state()
+})
+
+
 # Sink envelopes ----
 test_that("progress events emit enriched sink envelopes with parent chaining", {
   reset_progress_state()
