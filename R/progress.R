@@ -555,11 +555,14 @@ progress_begin <- function(
   handle[["closed"]] <- FALSE
   handle[["v"]] <- verbosity %||% get_verbosity(package)
   # A nested node shares the parent's single status line rather than adding
-  # output, so it inherits console visibility from the node it nests under:
-  # callers routinely decrement verbosity for inner code paths (e.g. per-fold
-  # train()), and that must not blank the breadcrumb of a visible display.
+  # output, so console visibility is decided by the node it nests under
+  # (and thus, by the root of the stack): callers routinely decrement
+  # verbosity for inner code paths (e.g. per-fold train()), and that must
+  # not blank the breadcrumb of a visible display - while a node under a
+  # silenced root must stay silent even if its own verbosity resolves
+  # higher, so it never redraws a line the root will never clear.
   if (length(stack) > 0L) {
-    handle[["v"]] <- max(handle[["v"]], stack[[length(stack)]][["v"]])
+    handle[["v"]] <- stack[[length(stack)]][["v"]]
   }
   handle[["output_type"]] <- get_output_type(output_type)
   class(handle) <- "rtemis_progress"
