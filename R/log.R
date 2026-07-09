@@ -392,7 +392,10 @@ abort <- function(
       list(
         message = plain_text,
         parent = parent,
-        call = user$call,
+        # Display an argument-free call (`foo()`): base R's error printer
+        # crops long deparsed calls mid-argument with no ellipsis. The full
+        # argument-bearing calls remain available on `$trace`.
+        call = if (is.null(user$call)) NULL else user$call[1L],
         trace = trace
       ),
       data
