@@ -85,6 +85,20 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 }
 
 
+# The 1-based step a live handle is currently working on. `current` counts
+# completed steps (that's what ETA and sink events use), so when `current`
+# steps are done, the handle is working on step `current + 1`. This is capped
+# at `total` so the display shows `n/n` (not `n+1/n`) between the last tick
+# and `progress_end()`. For indeterminate handles, `current` is shown as-is.
+.progress_in_flight <- function(current, total) {
+  if (!is.na(total) && total > 0L) {
+    min(current + 1L, total)
+  } else {
+    current
+  }
+}
+
+
 # %% .format_hms() ----------------------------------------------------------------------------------
 
 #' Format seconds as `M:SS` / `H:MM:SS`
@@ -153,9 +167,12 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 #' Render the progress status line
 #'
 #' Pure function (unit-testable): composes the single status line for the
-#' given stack of handles - spinner glyph, breadcrumb of `label current/total`
-#' per level, ETA for the innermost level. Degrades under `width` in tiers:
-#' drop ETA, then truncate the breadcrumb from the left with an ellipsis.
+#' given stack of handles - spinner glyph, breadcrumb of `label step/total`
+#' per level (the step in flight, i.e. `current + 1` clamped to `total`, so
+#' a fresh loop reads `1/n` and a finished one `n/n`), ETA for the innermost
+#' level (computed from the completed count). Degrades under `width` in
+#' tiers: drop ETA, then truncate the breadcrumb from the left with an
+#' ellipsis.
 #'
 #' @param stack List of `rtemis_progress` handles, outermost first.
 #' @param frame Integer: Spinner frame counter (indexes glyphs and colors
@@ -182,7 +199,12 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
   levels <- vapply(
     stack,
     function(h) {
-      counts <- .progress_counts(h[["current"]], h[["total"]])
+      # The status line shows the step in flight (1-based), not the
+      # completed count - see `.progress_in_flight()`.
+      counts <- .progress_counts(
+        .progress_in_flight(h[["current"]], h[["total"]]),
+        h[["total"]]
+      )
       paste0(
         h[["label"]],
         " ",
@@ -445,7 +467,9 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 #' @details
 #' The console renderer writes a single status line rewritten in place, with
 #' a color-pulsing spinner and a breadcrumb of all active levels, e.g.
-#' `Outer resamples 2/5 > Tuning 7/30 ETA 0:41`. Non-`"ansi"` output gets one
+#' `Outer resamples 2/5 > Tuning 7/30 ETA 0:41`. Each level shows the step
+#' currently in flight (1-based), so a loop counts `1/n` through `n/n`;
+#' the ETA is computed from completed steps. Non-`"ansi"` output gets one
 #' begin line and one completion line instead (no line rewriting). Two
 #' options control rendering:
 #'
