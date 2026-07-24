@@ -1,5 +1,22 @@
 # rtemis.core NEWS
 
+## Version 0.4.2
+
+- `get_output_type()` can now be overridden, so ANSI output is available in
+  non-interactive sessions (scripts, `Rscript`, the `rtemis` CLI's R backend),
+  which previously always resolved to "plain". With `output_type = NULL` the
+  resolution order is now: `filename` (forces "plain"), the new
+  `rtemis.output_type` option, the new `RTEMIS_OUTPUT_TYPE` environment
+  variable, `NO_COLOR` (forces "plain"), then as before "ansi" when
+  interactive and "plain" otherwise. The option suits `.Rprofile`; the
+  environment variable lets a parent process decide per invocation.
+  Unrecognized values in either are ignored rather than raising, so a typo
+  falls through to the next rule instead of aborting a running job. Since the
+  resolved type also selects the progress display, forcing "ansi" where output
+  is captured to a file yields carriage-return-rewritten lines, not just
+  escape codes.
+- Use updated rtemis schemas
+
 ## Version 0.4.1
 
 - `abort()` gains a `data` argument: a named list of structured fields

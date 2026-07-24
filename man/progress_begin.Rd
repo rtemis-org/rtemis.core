@@ -50,7 +50,9 @@ the console status line otherwise.
 \details{
 The console renderer writes a single status line rewritten in place, with
 a color-pulsing spinner and a breadcrumb of all active levels, e.g.
-\verb{Outer resamples 2/5 > Tuning 7/30 ETA 0:41}. Non-\code{"ansi"} output gets one
+\verb{Outer resamples 2/5 > Tuning 7/30 ETA 0:41}. Each level shows the step
+currently in flight (1-based), so a loop counts \code{1/n} through \code{n/n};
+the ETA is computed from completed steps. Non-\code{"ansi"} output gets one
 begin line and one completion line instead (no line rewriting). Two
 options control rendering:
 \itemize{

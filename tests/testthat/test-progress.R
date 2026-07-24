@@ -77,11 +77,27 @@ test_that(".progress_render() composes a nested breadcrumb with ETA", {
     output_type = "plain",
     now = 10
   )
-  # elapsed 10s over 7/30 steps -> ETA 10 / 7 * 23 = 32.86 -> 0:33
+  # Breadcrumb shows the step in flight (completed + 1); ETA uses the
+  # completed count: elapsed 10s over 7/30 steps -> 10 / 7 * 23 = 32.86 -> 0:33
   expect_equal(
     line,
-    paste0(glyph_dots1, " Outer 2/5 ", sep, " Tuning 7/30 ETA 0:33")
+    paste0(glyph_dots1, " Outer 3/5 ", sep, " Tuning 8/30 ETA 0:33")
   )
+})
+
+
+test_that(".progress_render() clamps the in-flight step to total", {
+  # Between the last tick (current = total) and progress_end() the line
+  # must read n/n, not n+1/n.
+  stack <- list(fake_handle("Outer", 5L, 5L))
+  line <- .progress_render(
+    stack,
+    frame = 0L,
+    width = 100L,
+    output_type = "plain",
+    now = 10
+  )
+  expect_equal(line, paste0(glyph_dots1, " Outer 5/5"))
 })
 
 test_that(".progress_render() renders indeterminate totals with elapsed time", {
@@ -185,7 +201,7 @@ test_that(".progress_render() degrades under narrow widths", {
   )
   expect_false(grepl("Outer", truncated, fixed = TRUE))
   expect_match(truncated, ellipsis, fixed = TRUE)
-  expect_match(truncated, "Tuning 7/30", fixed = TRUE)
+  expect_match(truncated, "Tuning 8/30", fixed = TRUE)
   # Last resort: hard truncation to width.
   tiny <- .progress_render(
     stack,
@@ -233,10 +249,10 @@ test_that("inner progress_end() does not print a completion line in ansi mode", 
     progress_end(outer)
   })
   stripped <- strip_ansi(paste(msgs, collapse = ""))
-  # Nested breadcrumb was drawn.
+  # Nested breadcrumb was drawn (in-flight steps: outer on 1/2, inner on 1/2).
   expect_match(
     stripped,
-    paste0("Outer 0/2 ", sep, " Inner 1/2"),
+    paste0("Outer 1/2 ", sep, " Inner 1/2"),
     fixed = TRUE
   )
   # Only the outermost end prints "done in".
@@ -315,7 +331,7 @@ test_that("nested node inherits console visibility from a visible parent", {
   stripped <- strip_ansi(paste(msgs, collapse = ""))
   expect_match(
     stripped,
-    paste0("Outer 0/2 ", sep, " Inner 1/2"),
+    paste0("Outer 1/2 ", sep, " Inner 1/2"),
     fixed = TRUE
   )
   expect_match(stripped, "Outer 2/2", fixed = TRUE)
