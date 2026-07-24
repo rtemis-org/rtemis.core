@@ -1,11 +1,33 @@
 # 2025- EDG rtemis.org
 
+#' Validate an output type from an option or environment variable
+#'
+#' Returns `x` when it is one of the three known output types, `NULL` otherwise.
+#' Unlike the `check_*` functions, this never throws: a typo in an exported
+#' environment variable must degrade to the default, not abort a running job.
+#'
+#' @param x Any: Candidate output type.
+#'
+#' @return Character or `NULL`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+.valid_output_type <- function(x) {
+  if (is.character(x) && length(x) == 1L && x %in% c("ansi", "html", "plain")) {
+    x
+  } else {
+    NULL
+  }
+}
+
+
 #' Get output type
 #'
 #' Resolve the output type for printing text.
 #'
 #' @param output_type Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
-#' by environment: "ansi" in interactive sessions, "plain" otherwise.
+#' by environment, see Details.
 #' @param filename Optional Character: Filename for output. If not NULL, forces "plain".
 #'
 #' @details
@@ -14,6 +36,24 @@
 #' `output_type` to formatting functions do not need to call it themselves. Call it directly when
 #' the resolved value drives logic other than text formatting (e.g. whether to draw a spinner) or
 #' when output may be redirected to a file.
+#'
+#' When `output_type` is NULL, the type is resolved in this order, first match winning:
+#'
+#' 1. `filename` is not NULL: "plain".
+#' 2. `getOption("rtemis.output_type")`, e.g. `options(rtemis.output_type = "ansi")` in
+#'    `.Rprofile`.
+#' 3. The `RTEMIS_OUTPUT_TYPE` environment variable, which lets a parent process (the `rtemis`
+#'    CLI, a scheduler job script) decide per invocation.
+#' 4. `NO_COLOR` set to a non-empty value (<https://no-color.org>): "plain".
+#' 5. "ansi" in interactive sessions, "plain" otherwise.
+#'
+#' Unrecognized values in 2 and 3 are ignored rather than raising, so a typo falls through to
+#' the next rule.
+#'
+#' Note that "ansi" means more than color: [progress_begin()] and friends render a
+#' carriage-return-rewritten status line when it is in effect, and plain `msg0()` lines
+#' otherwise. Forcing "ansi" where output is captured to a file therefore produces overwritten
+#' lines, not just escape codes.
 #'
 #' @return Character with selected output type.
 #'
@@ -30,15 +70,25 @@ get_output_type <- function(
     return("plain")
   }
 
-  if (is.null(output_type)) {
-    if (interactive()) {
-      return("ansi")
-    } else {
-      return("plain")
-    }
+  if (!is.null(output_type)) {
+    return(match.arg(output_type, c("ansi", "html", "plain")))
   }
 
-  match.arg(output_type, c("ansi", "html", "plain"))
+  from_option <- .valid_output_type(getOption("rtemis.output_type"))
+  if (!is.null(from_option)) {
+    return(from_option)
+  }
+
+  from_env <- .valid_output_type(Sys.getenv("RTEMIS_OUTPUT_TYPE", unset = ""))
+  if (!is.null(from_env)) {
+    return(from_env)
+  }
+
+  if (nzchar(Sys.getenv("NO_COLOR"))) {
+    return("plain")
+  }
+
+  if (interactive()) "ansi" else "plain"
 }
 
 

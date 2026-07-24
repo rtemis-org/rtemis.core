@@ -8,7 +8,7 @@ get_output_type(output_type = NULL, filename = NULL)
 }
 \arguments{
 \item{output_type}{Character ("ansi", "html", "plain") or NULL: Output type. If NULL, resolved
-by environment: "ansi" in interactive sessions, "plain" otherwise.}
+by environment, see Details.}
 
 \item{filename}{Optional Character: Filename for output. If not NULL, forces "plain".}
 }
@@ -24,6 +24,25 @@ resolve their \code{output_type} argument through this function, so callers that
 \code{output_type} to formatting functions do not need to call it themselves. Call it directly when
 the resolved value drives logic other than text formatting (e.g. whether to draw a spinner) or
 when output may be redirected to a file.
+
+When \code{output_type} is NULL, the type is resolved in this order, first match winning:
+\enumerate{
+\item \code{filename} is not NULL: "plain".
+\item \code{getOption("rtemis.output_type")}, e.g. \code{options(rtemis.output_type = "ansi")} in
+\code{.Rprofile}.
+\item The \code{RTEMIS_OUTPUT_TYPE} environment variable, which lets a parent process (the \code{rtemis}
+CLI, a scheduler job script) decide per invocation.
+\item \code{NO_COLOR} set to a non-empty value (\url{https://no-color.org}): "plain".
+\item "ansi" in interactive sessions, "plain" otherwise.
+}
+
+Unrecognized values in 2 and 3 are ignored rather than raising, so a typo falls through to
+the next rule.
+
+Note that "ansi" means more than color: \code{\link[=progress_begin]{progress_begin()}} and friends render a
+carriage-return-rewritten status line when it is in effect, and plain \code{msg0()} lines
+otherwise. Forcing "ansi" where output is captured to a file therefore produces overwritten
+lines, not just escape codes.
 }
 \examples{
 get_output_type()
