@@ -249,7 +249,7 @@ test_that("abort rejects data names that collide with condition fields", {
     "collide"
   )
   expect_error(
-    abort("boom", data = list(trace = "clobber", ok = 1L), verbosity = 0L),
+    abort("boom", data = list(calls = "clobber", ok = 1L), verbosity = 0L),
     "collide"
   )
 })
@@ -268,13 +268,27 @@ test_that("abort accepts NULL and empty-list data", {
 })
 
 
+test_that("abort does not claim the `trace` condition field", {
+  # rlang and testthat treat `$trace` as an `rlang::trace_back()` object and
+  # call `nrow()` on it. A `pairlist` there returns NULL, so testthat's
+  # `format.expectation()` errors on `NA` and takes the whole reporter down --
+  # every rtemis error in a failing test becomes unreadable. Leaving the name
+  # unclaimed also lets testthat show its own backtrace, pruned to user frames.
+  cond <- tryCatch(abort("boom", verbosity = 0L), condition = function(e) e)
+  expect_false("trace" %in% names(cond))
+  expect_null(cond[["trace"]])
+  expect_true(length(cond[["calls"]]) > 0L)
+  expect_true(all(vapply(cond[["calls"]], is.call, logical(1L))))
+})
+
+
 # format_trace ----
 test_that("format_trace returns empty string for NULL or empty trace", {
   expect_identical(format_trace(NULL), "")
   expect_identical(format_trace(list()), "")
 })
 
-test_that("format_trace accepts a condition and extracts $trace", {
+test_that("format_trace accepts a condition and extracts $calls", {
   cond <- tryCatch(
     abort("boom", verbosity = 0L),
     condition = function(e) e

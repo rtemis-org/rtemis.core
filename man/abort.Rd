@@ -24,7 +24,7 @@ signalled condition, retrievable by handlers via \verb{condition$<name>}
 (e.g. \code{data = list(status_code = 429L, provider = "anthropic")}).
 Fields ride on the condition only - they are not echoed to the
 console or appended to the message. Names must not collide with the
-built-in condition fields \code{message}, \code{parent}, \code{call}, \code{trace}.}
+built-in condition fields \code{message}, \code{parent}, \code{call}, \code{calls}.}
 
 \item{parent}{Condition or NULL: Wrapped parent condition. Its message is
 echoed to the console (when verbosity allows) and stored on the
@@ -61,13 +61,19 @@ Use \code{class} to add wire-protocol-specific condition classes that callers
 can catch via \code{tryCatch()}. The base classes \code{"rtemis_error"}, \code{"error"},
 and \code{"condition"} are always added.
 
-The condition also carries \verb{$trace} - a \code{pairlist} of \code{sys.calls()}
+The condition also carries \verb{$calls} - a \code{pairlist} of \code{sys.calls()}
 captured at the abort site, with \code{abort()}'s own frame trimmed. Unlike
 base R's \code{traceback()} (which only sees \code{.Traceback}, populated only
-when an error reaches the top-level uncaught), \verb{$trace} survives
+when an error reaches the top-level uncaught), \verb{$calls} survives
 \code{tryCatch()} and travels with the condition - so server-side handlers
 can ship the stack to a browser-side debug pane, or callers can call
 \code{\link[=format_trace]{format_trace()}} to print it.
+
+The field is deliberately not named \code{trace}: rlang and testthat treat
+that name as an \code{rlang::trace_back()} object and call \code{nrow()} on it, so
+a \code{pairlist} there makes \code{testthat}'s reporter fail while formatting the
+error. Leaving the name unclaimed also lets testthat show its own
+backtrace, which is pruned to user frames where this one is not.
 }
 \examples{
 \dontrun{

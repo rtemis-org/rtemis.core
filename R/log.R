@@ -285,13 +285,19 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 #' can catch via `tryCatch()`. The base classes `"rtemis_error"`, `"error"`,
 #' and `"condition"` are always added.
 #'
-#' The condition also carries `$trace` - a `pairlist` of `sys.calls()`
+#' The condition also carries `$calls` - a `pairlist` of `sys.calls()`
 #' captured at the abort site, with `abort()`'s own frame trimmed. Unlike
 #' base R's `traceback()` (which only sees `.Traceback`, populated only
-#' when an error reaches the top-level uncaught), `$trace` survives
+#' when an error reaches the top-level uncaught), `$calls` survives
 #' `tryCatch()` and travels with the condition - so server-side handlers
 #' can ship the stack to a browser-side debug pane, or callers can call
 #' [format_trace()] to print it.
+#'
+#' The field is deliberately not named `trace`: rlang and testthat treat
+#' that name as an `rlang::trace_back()` object and call `nrow()` on it, so
+#' a `pairlist` there makes `testthat`'s reporter fail while formatting the
+#' error. Leaving the name unclaimed also lets testthat show its own
+#' backtrace, which is pruned to user frames where this one is not.
 #'
 #' @param ... Message components, concatenated with no separator.
 #' @param class Character vector: Additional condition classes (prepended
@@ -301,7 +307,7 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 #'   (e.g. `data = list(status_code = 429L, provider = "anthropic")`).
 #'   Fields ride on the condition only - they are not echoed to the
 #'   console or appended to the message. Names must not collide with the
-#'   built-in condition fields `message`, `parent`, `call`, `trace`.
+#'   built-in condition fields `message`, `parent`, `call`, `calls`.
 #' @param parent Condition or NULL: Wrapped parent condition. Its message is
 #'   echoed to the console (when verbosity allows) and stored on the
 #'   signalled condition as `$parent`.
@@ -332,7 +338,7 @@ abort <- function(
     if (!is.list(data) || is.null(names(data)) || !all(nzchar(names(data)))) {
       stop("`data` must be a fully named list.", call. = FALSE)
     }
-    reserved <- intersect(names(data), c("message", "parent", "call", "trace"))
+    reserved <- intersect(names(data), c("message", "parent", "call", "calls"))
     if (length(reserved) > 0L) {
       stop(
         "`data` names collide with built-in condition fields: ",
@@ -394,9 +400,9 @@ abort <- function(
         parent = parent,
         # Display an argument-free call (`foo()`): base R's error printer
         # crops long deparsed calls mid-argument with no ellipsis. The full
-        # argument-bearing calls remain available on `$trace`.
+        # argument-bearing calls remain available on `$calls`.
         call = if (is.null(user$call)) NULL else user$call[1L],
-        trace = trace
+        calls = trace
       ),
       data
     )
@@ -409,15 +415,15 @@ abort <- function(
 
 #' Pretty-print a captured call trace
 #'
-#' Formats the `$trace` carried by an `rtemis_error` condition (see
+#' Formats the `$calls` carried by an `rtemis_error` condition (see
 #' [abort()]) as a numbered, one-line-per-frame string. Most-recent frame
 #' at the bottom, matching base R's [traceback()] convention. Each frame is
 #' deparsed with a single-line cap so long calls stay readable; no styling
 #' is applied, so the output is safe for any sink (terminal, JSON, HTML).
 #'
 #' @param trace `pairlist` of calls, as captured by [abort()] on
-#'   `cond$trace`. Passing the condition itself also works - the trace is
-#'   extracted via `cond$trace`.
+#'   `cond$calls`. Passing the condition itself also works - the calls are
+#'   extracted via `cond[["calls"]]`.
 #' @param max_width Integer: Max characters per deparsed line. Longer
 #'   calls are truncated with a trailing ellipsis.
 #'
@@ -437,7 +443,7 @@ abort <- function(
 #' }
 format_trace <- function(trace, max_width = 80L) {
   if (inherits(trace, "condition")) {
-    trace <- trace$trace
+    trace <- trace[["calls"]]
   }
   if (is.null(trace) || length(trace) == 0L) {
     return("")

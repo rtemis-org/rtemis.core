@@ -8,8 +8,8 @@ format_trace(trace, max_width = 80L)
 }
 \arguments{
 \item{trace}{\code{pairlist} of calls, as captured by \code{\link[=abort]{abort()}} on
-\code{cond$trace}. Passing the condition itself also works - the trace is
-extracted via \code{cond$trace}.}
+\code{cond$calls}. Passing the condition itself also works - the calls are
+extracted via \code{cond[["calls"]]}.}
 
 \item{max_width}{Integer: Max characters per deparsed line. Longer
 calls are truncated with a trailing ellipsis.}
@@ -19,7 +19,7 @@ Character scalar with one frame per \verb{\\n}-separated line,
 newest frame last. \code{""} if the trace is empty or NULL.
 }
 \description{
-Formats the \verb{$trace} carried by an \code{rtemis_error} condition (see
+Formats the \verb{$calls} carried by an \code{rtemis_error} condition (see
 \code{\link[=abort]{abort()}}) as a numbered, one-line-per-frame string. Most-recent frame
 at the bottom, matching base R's \code{\link[=traceback]{traceback()}} convention. Each frame is
 deparsed with a single-line cap so long calls stay readable; no styling
