@@ -254,6 +254,20 @@ test_that("abort rejects data names that collide with condition fields", {
   )
 })
 
+test_that("abort rejects a `trace` field in data", {
+  # `trace` is not a field abort() sets, so this is not a clobber check: it
+  # stops a caller from reintroducing the testthat/rlang reporter crash that
+  # naming the stack `$calls` was meant to avoid.
+  expect_error(
+    abort("boom", data = list(trace = "clobber"), verbosity = 0L),
+    "must not set `trace`"
+  )
+  expect_error(
+    abort("boom", data = list(trace = sys.calls(), ok = 1L), verbosity = 0L),
+    "must not set `trace`"
+  )
+})
+
 test_that("abort accepts NULL and empty-list data", {
   cond <- tryCatch(
     abort("boom", data = list(), verbosity = 0L),

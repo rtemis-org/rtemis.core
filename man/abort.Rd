@@ -24,7 +24,10 @@ signalled condition, retrievable by handlers via \verb{condition$<name>}
 (e.g. \code{data = list(status_code = 429L, provider = "anthropic")}).
 Fields ride on the condition only - they are not echoed to the
 console or appended to the message. Names must not collide with the
-built-in condition fields \code{message}, \code{parent}, \code{call}, \code{calls}.}
+built-in condition fields \code{message}, \code{parent}, \code{call}, \code{calls}.
+\code{trace} is rejected too - not because \code{abort()} sets it, but because
+rlang and testthat read that field as an \code{rlang::trace_back()} object
+(see details).}
 
 \item{parent}{Condition or NULL: Wrapped parent condition. Its message is
 echoed to the console (when verbosity allows) and stored on the
@@ -73,7 +76,9 @@ The field is deliberately not named \code{trace}: rlang and testthat treat
 that name as an \code{rlang::trace_back()} object and call \code{nrow()} on it, so
 a \code{pairlist} there makes \code{testthat}'s reporter fail while formatting the
 error. Leaving the name unclaimed also lets testthat show its own
-backtrace, which is pruned to user frames where this one is not.
+backtrace, which is pruned to user frames where this one is not. For the
+same reason \code{abort()} rejects \code{data$trace}, so a caller cannot put the
+crash back by another route.
 }
 \examples{
 \dontrun{

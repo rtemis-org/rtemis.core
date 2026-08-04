@@ -297,7 +297,9 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 #' that name as an `rlang::trace_back()` object and call `nrow()` on it, so
 #' a `pairlist` there makes `testthat`'s reporter fail while formatting the
 #' error. Leaving the name unclaimed also lets testthat show its own
-#' backtrace, which is pruned to user frames where this one is not.
+#' backtrace, which is pruned to user frames where this one is not. For the
+#' same reason `abort()` rejects `data$trace`, so a caller cannot put the
+#' crash back by another route.
 #'
 #' @param ... Message components, concatenated with no separator.
 #' @param class Character vector: Additional condition classes (prepended
@@ -308,6 +310,9 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 #'   Fields ride on the condition only - they are not echoed to the
 #'   console or appended to the message. Names must not collide with the
 #'   built-in condition fields `message`, `parent`, `call`, `calls`.
+#'   `trace` is rejected too - not because `abort()` sets it, but because
+#'   rlang and testthat read that field as an `rlang::trace_back()` object
+#'   (see details).
 #' @param parent Condition or NULL: Wrapped parent condition. Its message is
 #'   echoed to the console (when verbosity allows) and stored on the
 #'   signalled condition as `$parent`.
@@ -343,6 +348,17 @@ abort <- function(
       stop(
         "`data` names collide with built-in condition fields: ",
         paste(reserved, collapse = ", "),
+        call. = FALSE
+      )
+    }
+    # Not a field abort() sets - a field nothing should set. rlang and testthat
+    # read `$trace` as an `rlang::trace_back()` object and call `nrow()` on it;
+    # anything else there breaks testthat's reporter mid-format. See the
+    # `$calls` note in the details above.
+    if ("trace" %in% names(data)) {
+      stop(
+        "`data` must not set `trace`: rlang and testthat read that field as ",
+        "an `rlang::trace_back()` object. Use `calls` for a captured stack.",
         call. = FALSE
       )
     }
