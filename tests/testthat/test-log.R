@@ -330,3 +330,34 @@ test_that("format_trace truncates lines longer than max_width", {
   expect_identical(nchar(body), 40L)
   expect_true(endsWith(body, "..."))
 })
+
+test_that("format_trace renders an rlang trace via rlang's formatter", {
+  # Packages built on `rlang::abort()` put their stack on `$trace` as an
+  # rlang trace object, not on `$calls`. Deparsing that would walk the
+  # underlying data.frame's columns, so it is handed to rlang to format.
+  skip_if_not_installed("rlang")
+  cond <- tryCatch(rlang::abort("upstream boom"), condition = function(e) e)
+  expect_null(cond[["calls"]])
+  out <- format_trace(cond)
+  expect_type(out, "character")
+  expect_length(out, 1L)
+  expect_true(nchar(out) > 0L)
+  # rlang's tree layout, not our "%2d: " numbering, and no column garbage.
+  expect_no_match(out, "^c\\(0L, 1L", fixed = FALSE)
+  expect_match(out, "abort")
+})
+
+test_that("format_trace ignores a $trace that is not an rlang trace", {
+  # The class gate means a bogus `$trace` is skipped rather than mangled.
+  cond <- structure(
+    class = c("rtemis_error", "error", "condition"),
+    list(message = "boom", trace = list(quote(f()), quote(g())))
+  )
+  expect_identical(format_trace(cond), "")
+  # `$calls` still wins when both are present.
+  cond2 <- structure(
+    class = c("rtemis_error", "error", "condition"),
+    list(message = "boom", calls = list(quote(h())), trace = "junk")
+  )
+  expect_match(format_trace(cond2), "h\\(\\)")
+})

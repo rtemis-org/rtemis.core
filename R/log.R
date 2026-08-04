@@ -265,6 +265,12 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 
 # %% abort() ---------------------------------------------------------------------------------------
 
+# Names `data` may not use. The first four are fields abort() sets itself and
+# would be clobbered by; `trace` is rejected for a different reason - rlang and
+# testthat read it as an `rlang::trace_back()` object and call `nrow()` on it,
+# so anything else there breaks testthat's reporter mid-format.
+.abort_rejected <- c("message", "parent", "call", "calls", "trace")
+
 #' Dual-channel error signal
 #'
 #' Signals a condition AND optionally writes a styled event line to the
@@ -331,12 +337,6 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 #' abort("Could not parse ", "hyperparameters", ".",
 #'       class = "rtemislive_invalid_params")
 #' }
-# Names `data` may not use. The first four are fields abort() sets itself and
-# would be clobbered by; `trace` is rejected for a different reason - rlang and
-# testthat read it as an `rlang::trace_back()` object and call `nrow()` on it,
-# so anything else there breaks testthat's reporter mid-format.
-.abort_rejected <- c("message", "parent", "call", "calls", "trace")
-
 abort <- function(
   ...,
   class = NULL,
@@ -444,11 +444,18 @@ abort <- function(
 #' deparsed with a single-line cap so long calls stay readable; no styling
 #' is applied, so the output is safe for any sink (terminal, JSON, HTML).
 #'
+#' Conditions from packages built on `rlang::abort()` carry their stack as
+#' an rlang trace object on `$trace` rather than on `$calls`. Those are
+#' passed to rlang's own formatter, so the result is rlang's tree layout
+#' and `max_width` does not apply; any ANSI styling is stripped.
+#'
 #' @param trace `pairlist` of calls, as captured by [abort()] on
 #'   `cond$calls`. Passing the condition itself also works - the calls are
-#'   extracted via `cond[["calls"]]`.
+#'   extracted via `cond[["calls"]]`, falling back to an rlang trace on
+#'   `cond[["trace"]]`.
 #' @param max_width Integer: Max characters per deparsed line. Longer
-#'   calls are truncated with a trailing ellipsis.
+#'   calls are truncated with a trailing ellipsis. Ignored for rlang
+#'   traces, which rlang formats itself.
 #'
 #' @return Character scalar with one frame per `\n`-separated line,
 #'   newest frame last. `""` if the trace is empty or NULL.
@@ -466,7 +473,17 @@ abort <- function(
 #' }
 format_trace <- function(trace, max_width = 80L) {
   if (inherits(trace, "condition")) {
-    trace <- trace[["calls"]]
+    cond <- trace
+    trace <- cond[["calls"]]
+    # Conditions from packages that use `rlang::abort()` carry their stack on
+    # `$trace` as an rlang trace object instead. Hand those to rlang's own
+    # formatter: the object is a data.frame underneath, so deparsing it below
+    # would walk its columns and print nonsense. Class-gated, so a `$trace` of
+    # any other shape is ignored rather than mangled, and dispatch-based, so
+    # this needs no dependency on rlang.
+    if (is.null(trace) && inherits(cond[["trace"]], "rlib_trace")) {
+      return(strip_ansi(paste(format(cond[["trace"]]), collapse = "\n")))
+    }
   }
   if (is.null(trace) || length(trace) == 0L) {
     return("")
