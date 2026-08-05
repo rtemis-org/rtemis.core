@@ -249,8 +249,22 @@ test_that("abort rejects data names that collide with condition fields", {
     "collide"
   )
   expect_error(
-    abort("boom", data = list(trace = "clobber", ok = 1L), verbosity = 0L),
+    abort("boom", data = list(calls = "clobber", ok = 1L), verbosity = 0L),
     "collide"
+  )
+})
+
+test_that("abort rejects a `trace` field in data", {
+  # `trace` is not a field abort() sets, so this is not a clobber check: it
+  # stops a caller from reintroducing the testthat/rlang reporter crash that
+  # naming the stack `$calls` was meant to avoid.
+  expect_error(
+    abort("boom", data = list(trace = "clobber"), verbosity = 0L),
+    "must not set `trace`"
+  )
+  expect_error(
+    abort("boom", data = list(trace = sys.calls(), ok = 1L), verbosity = 0L),
+    "must not set `trace`"
   )
 })
 
@@ -268,13 +282,27 @@ test_that("abort accepts NULL and empty-list data", {
 })
 
 
+test_that("abort does not claim the `trace` condition field", {
+  # rlang and testthat treat `$trace` as an `rlang::trace_back()` object and
+  # call `nrow()` on it. A `pairlist` there returns NULL, so testthat's
+  # `format.expectation()` errors on `NA` and takes the whole reporter down --
+  # every rtemis error in a failing test becomes unreadable. Leaving the name
+  # unclaimed also lets testthat show its own backtrace, pruned to user frames.
+  cond <- tryCatch(abort("boom", verbosity = 0L), condition = function(e) e)
+  expect_false("trace" %in% names(cond))
+  expect_null(cond[["trace"]])
+  expect_true(length(cond[["calls"]]) > 0L)
+  expect_true(all(vapply(cond[["calls"]], is.call, logical(1L))))
+})
+
+
 # format_trace ----
 test_that("format_trace returns empty string for NULL or empty trace", {
   expect_identical(format_trace(NULL), "")
   expect_identical(format_trace(list()), "")
 })
 
-test_that("format_trace accepts a condition and extracts $trace", {
+test_that("format_trace accepts a condition and extracts $calls", {
   cond <- tryCatch(
     abort("boom", verbosity = 0L),
     condition = function(e) e
@@ -301,4 +329,35 @@ test_that("format_trace truncates lines longer than max_width", {
   body <- sub("^ *\\d+: ", "", out)
   expect_identical(nchar(body), 40L)
   expect_true(endsWith(body, "..."))
+})
+
+test_that("format_trace renders an rlang trace via rlang's formatter", {
+  # Packages built on `rlang::abort()` put their stack on `$trace` as an
+  # rlang trace object, not on `$calls`. Deparsing that would walk the
+  # underlying data.frame's columns, so it is handed to rlang to format.
+  skip_if_not_installed("rlang")
+  cond <- tryCatch(rlang::abort("upstream boom"), condition = function(e) e)
+  expect_null(cond[["calls"]])
+  out <- format_trace(cond)
+  expect_type(out, "character")
+  expect_length(out, 1L)
+  expect_true(nchar(out) > 0L)
+  # rlang's tree layout, not our "%2d: " numbering, and no column garbage.
+  expect_no_match(out, "^c\\(0L, 1L", fixed = FALSE)
+  expect_match(out, "abort")
+})
+
+test_that("format_trace ignores a $trace that is not an rlang trace", {
+  # The class gate means a bogus `$trace` is skipped rather than mangled.
+  cond <- structure(
+    class = c("rtemis_error", "error", "condition"),
+    list(message = "boom", trace = list(quote(f()), quote(g())))
+  )
+  expect_identical(format_trace(cond), "")
+  # `$calls` still wins when both are present.
+  cond2 <- structure(
+    class = c("rtemis_error", "error", "condition"),
+    list(message = "boom", calls = list(quote(h())), trace = "junk")
+  )
+  expect_match(format_trace(cond2), "h\\(\\)")
 })

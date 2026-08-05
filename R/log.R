@@ -265,6 +265,12 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 
 # %% abort() ---------------------------------------------------------------------------------------
 
+# Names `data` may not use. The first four are fields abort() sets itself and
+# would be clobbered by; `trace` is rejected for a different reason - rlang and
+# testthat read it as an `rlang::trace_back()` object and call `nrow()` on it,
+# so anything else there breaks testthat's reporter mid-format.
+.abort_rejected <- c("message", "parent", "call", "calls", "trace")
+
 #' Dual-channel error signal
 #'
 #' Signals a condition AND optionally writes a styled event line to the
@@ -285,13 +291,21 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 #' can catch via `tryCatch()`. The base classes `"rtemis_error"`, `"error"`,
 #' and `"condition"` are always added.
 #'
-#' The condition also carries `$trace` - a `pairlist` of `sys.calls()`
+#' The condition also carries `$calls` - a `pairlist` of `sys.calls()`
 #' captured at the abort site, with `abort()`'s own frame trimmed. Unlike
 #' base R's `traceback()` (which only sees `.Traceback`, populated only
-#' when an error reaches the top-level uncaught), `$trace` survives
+#' when an error reaches the top-level uncaught), `$calls` survives
 #' `tryCatch()` and travels with the condition - so server-side handlers
 #' can ship the stack to a browser-side debug pane, or callers can call
 #' [format_trace()] to print it.
+#'
+#' The field is deliberately not named `trace`: rlang and testthat treat
+#' that name as an `rlang::trace_back()` object and call `nrow()` on it, so
+#' a `pairlist` there makes `testthat`'s reporter fail while formatting the
+#' error. Leaving the name unclaimed also lets testthat show its own
+#' backtrace, which is pruned to user frames where this one is not. For the
+#' same reason `abort()` rejects `data$trace`, so a caller cannot put the
+#' crash back by another route.
 #'
 #' @param ... Message components, concatenated with no separator.
 #' @param class Character vector: Additional condition classes (prepended
@@ -301,7 +315,10 @@ dbg <- function(..., verbosity = NULL, package = NULL) {
 #'   (e.g. `data = list(status_code = 429L, provider = "anthropic")`).
 #'   Fields ride on the condition only - they are not echoed to the
 #'   console or appended to the message. Names must not collide with the
-#'   built-in condition fields `message`, `parent`, `call`, `trace`.
+#'   built-in condition fields `message`, `parent`, `call`, `calls`.
+#'   `trace` is rejected too - not because `abort()` sets it, but because
+#'   rlang and testthat read that field as an `rlang::trace_back()` object
+#'   (see details).
 #' @param parent Condition or NULL: Wrapped parent condition. Its message is
 #'   echoed to the console (when verbosity allows) and stored on the
 #'   signalled condition as `$parent`.
@@ -332,11 +349,23 @@ abort <- function(
     if (!is.list(data) || is.null(names(data)) || !all(nzchar(names(data)))) {
       stop("`data` must be a fully named list.", call. = FALSE)
     }
-    reserved <- intersect(names(data), c("message", "parent", "call", "trace"))
-    if (length(reserved) > 0L) {
+    # One `%in%` pass screens every rejected name at once; the split below
+    # runs only on the way to stop(), so the accepted path costs just the
+    # scan. (`intersect()` here was ~12x slower for the same answer.)
+    nm <- names(data)
+    if (any(nm %in% .abort_rejected)) {
+      bad <- unique(nm[nm %in% .abort_rejected])
+      clobber <- setdiff(bad, "trace")
+      if (length(clobber) > 0L) {
+        stop(
+          "`data` names collide with built-in condition fields: ",
+          paste(clobber, collapse = ", "),
+          call. = FALSE
+        )
+      }
       stop(
-        "`data` names collide with built-in condition fields: ",
-        paste(reserved, collapse = ", "),
+        "`data` must not set `trace`: rlang and testthat read that field as ",
+        "an `rlang::trace_back()` object. Use `calls` for a captured stack.",
         call. = FALSE
       )
     }
@@ -394,9 +423,9 @@ abort <- function(
         parent = parent,
         # Display an argument-free call (`foo()`): base R's error printer
         # crops long deparsed calls mid-argument with no ellipsis. The full
-        # argument-bearing calls remain available on `$trace`.
+        # argument-bearing calls remain available on `$calls`.
         call = if (is.null(user$call)) NULL else user$call[1L],
-        trace = trace
+        calls = trace
       ),
       data
     )
@@ -409,17 +438,24 @@ abort <- function(
 
 #' Pretty-print a captured call trace
 #'
-#' Formats the `$trace` carried by an `rtemis_error` condition (see
+#' Formats the `$calls` carried by an `rtemis_error` condition (see
 #' [abort()]) as a numbered, one-line-per-frame string. Most-recent frame
 #' at the bottom, matching base R's [traceback()] convention. Each frame is
 #' deparsed with a single-line cap so long calls stay readable; no styling
 #' is applied, so the output is safe for any sink (terminal, JSON, HTML).
 #'
+#' Conditions from packages built on `rlang::abort()` carry their stack as
+#' an rlang trace object on `$trace` rather than on `$calls`. Those are
+#' passed to rlang's own formatter, so the result is rlang's tree layout
+#' and `max_width` does not apply; any ANSI styling is stripped.
+#'
 #' @param trace `pairlist` of calls, as captured by [abort()] on
-#'   `cond$trace`. Passing the condition itself also works - the trace is
-#'   extracted via `cond$trace`.
+#'   `cond$calls`. Passing the condition itself also works - the calls are
+#'   extracted via `cond[["calls"]]`, falling back to an rlang trace on
+#'   `cond[["trace"]]`.
 #' @param max_width Integer: Max characters per deparsed line. Longer
-#'   calls are truncated with a trailing ellipsis.
+#'   calls are truncated with a trailing ellipsis. Ignored for rlang
+#'   traces, which rlang formats itself.
 #'
 #' @return Character scalar with one frame per `\n`-separated line,
 #'   newest frame last. `""` if the trace is empty or NULL.
@@ -437,7 +473,17 @@ abort <- function(
 #' }
 format_trace <- function(trace, max_width = 80L) {
   if (inherits(trace, "condition")) {
-    trace <- trace$trace
+    cond <- trace
+    trace <- cond[["calls"]]
+    # Conditions from packages that use `rlang::abort()` carry their stack on
+    # `$trace` as an rlang trace object instead. Hand those to rlang's own
+    # formatter: the object is a data.frame underneath, so deparsing it below
+    # would walk its columns and print nonsense. Class-gated, so a `$trace` of
+    # any other shape is ignored rather than mangled, and dispatch-based, so
+    # this needs no dependency on rlang.
+    if (is.null(trace) && inherits(cond[["trace"]], "rlib_trace")) {
+      return(strip_ansi(paste(format(cond[["trace"]]), collapse = "\n")))
+    }
   }
   if (is.null(trace) || length(trace) == 0L) {
     return("")

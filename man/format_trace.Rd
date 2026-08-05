@@ -7,23 +7,31 @@
 format_trace(trace, max_width = 80L)
 }
 \arguments{
-\item{trace}{\code{pairlist} of calls, as captured by \code{\link[=abort]{abort()}} on
-\code{cond$trace}. Passing the condition itself also works - the trace is
-extracted via \code{cond$trace}.}
+\item{trace}{\code{pairlist} of calls, as captured by \code{\link[rlang:abort]{abort()}} on
+\code{cond$calls}. Passing the condition itself also works - the calls are
+extracted via \code{cond[["calls"]]}, falling back to an rlang trace on
+\code{cond[["trace"]]}.}
 
 \item{max_width}{Integer: Max characters per deparsed line. Longer
-calls are truncated with a trailing ellipsis.}
+calls are truncated with a trailing ellipsis. Ignored for rlang
+traces, which rlang formats itself.}
 }
 \value{
 Character scalar with one frame per \verb{\\n}-separated line,
 newest frame last. \code{""} if the trace is empty or NULL.
 }
 \description{
-Formats the \verb{$trace} carried by an \code{rtemis_error} condition (see
-\code{\link[=abort]{abort()}}) as a numbered, one-line-per-frame string. Most-recent frame
+Formats the \verb{$calls} carried by an \code{rtemis_error} condition (see
+\code{\link[rlang:abort]{abort()}}) as a numbered, one-line-per-frame string. Most-recent frame
 at the bottom, matching base R's \code{\link[=traceback]{traceback()}} convention. Each frame is
 deparsed with a single-line cap so long calls stay readable; no styling
 is applied, so the output is safe for any sink (terminal, JSON, HTML).
+}
+\details{
+Conditions from packages built on \code{rlang::abort()} carry their stack as
+an rlang trace object on \verb{$trace} rather than on \verb{$calls}. Those are
+passed to rlang's own formatter, so the result is rlang's tree layout
+and \code{max_width} does not apply; any ANSI styling is stripped.
 }
 \examples{
 \dontrun{
