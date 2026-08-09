@@ -1052,33 +1052,50 @@ repr_ls <- function(
         )
         result <- paste0(result, item_text)
       } else if (S7_inherits(x[[i]])) {
-        item_text <- paste0(
-          item_format(
-            format(
-              paste0(prefix, xnames[i]),
-              width = lhs,
-              justify = "right"
-            ),
-            output_type = output_type
+        item_text <- item_format(
+          format(
+            paste0(prefix, xnames[i]),
+            width = lhs,
+            justify = "right"
           ),
-          ":\n" # S7 show begin on next line, otherwise must have different pad for first line (S7name) and for rest
+          output_type = output_type
         )
-        result <- paste0(result, item_text)
         # Show S7 object: repr() must return a character string of length 1
         s7_output <- tryCatch(
           {
             repr(x[[i]], pad = lhs + 2, output_type = output_type)
           },
-          error = function(e) {
-            paste0(
-              strrep(" ", lhs + 2),
-              "(S7 object of class '",
-              paste(class(x[[i]]), collapse = ", "),
-              "')\n"
-            )
-          }
+          error = function(e) NULL
         )
-        result <- paste0(result, s7_output)
+        if (is.null(s7_output)) {
+          result <- paste0(
+            result,
+            item_text,
+            ": (S7 object of class '",
+            paste(class(x[[i]]), collapse = ", "),
+            "')\n"
+          )
+        } else if (grepl("\n", sub("\n+$", "", s7_output), fixed = TRUE)) {
+          # A repr spanning several lines begins on the next line, so that every
+          # one of its lines carries the same pad.
+          result <- paste0(result, item_text, ":\n", s7_output)
+        } else {
+          # A repr of a single line reads as a value, so it is shown on the
+          # name's line, re-rendered without the pad it would otherwise carry.
+          inline <- tryCatch(
+            {
+              repr(x[[i]], pad = 0L, output_type = output_type)
+            },
+            error = function(e) s7_output
+          )
+          result <- paste0(
+            result,
+            item_text,
+            ": ",
+            sub("\n+$", "", inline),
+            "\n"
+          )
+        }
       } else if (is.data.frame(x[[i]])) {
         item_text <- paste0(
           item_format(
