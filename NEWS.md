@@ -20,7 +20,8 @@
   break exists so that every line of a multi-line `repr()` carries the same
   pad, which a one-line `repr()` does not need; without this a one-line
   `repr()` also had to end in a newline of its own or the following element ran
-  on after it.
+  on after it. An element whose `repr()` fails is reported inline the same way,
+  rather than as a padded block.
 - Use updated rtemis schemas
 
 ## Version 0.4.1
