@@ -15,6 +15,12 @@
   resolved type also selects the progress display, forcing "ansi" where output
   is captured to a file yields carriage-return-rewritten lines, not just
   escape codes.
+- `repr_ls()` shows an S7 element whose `repr()` is a single line on the
+  element's own line, like a value, rather than breaking to the next line. The
+  break exists so that every line of a multi-line `repr()` carries the same
+  pad, which a one-line `repr()` does not need; without this a one-line
+  `repr()` also had to end in a newline of its own or the following element ran
+  on after it.
 - Use updated rtemis schemas
 
 ## Version 0.4.1

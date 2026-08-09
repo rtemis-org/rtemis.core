@@ -7,7 +7,7 @@
 format_trace(trace, max_width = 80L)
 }
 \arguments{
-\item{trace}{\code{pairlist} of calls, as captured by \code{\link[rlang:abort]{abort()}} on
+\item{trace}{\code{pairlist} of calls, as captured by \code{\link[=abort]{abort()}} on
 \code{cond$calls}. Passing the condition itself also works - the calls are
 extracted via \code{cond[["calls"]]}, falling back to an rlang trace on
 \code{cond[["trace"]]}.}
@@ -22,7 +22,7 @@ newest frame last. \code{""} if the trace is empty or NULL.
 }
 \description{
 Formats the \verb{$calls} carried by an \code{rtemis_error} condition (see
-\code{\link[rlang:abort]{abort()}}) as a numbered, one-line-per-frame string. Most-recent frame
+\code{\link[=abort]{abort()}}) as a numbered, one-line-per-frame string. Most-recent frame
 at the bottom, matching base R's \code{\link[=traceback]{traceback()}} convention. Each frame is
 deparsed with a single-line cap so long calls stay readable; no styling
 is applied, so the output is safe for any sink (terminal, JSON, HTML).
