@@ -7,16 +7,21 @@
 html_tag(name, ..., class = NULL, style = NULL, id = NULL)
 }
 \arguments{
-\item{name}{Character: Element name, e.g. "div".}
+\item{name}{Character: Element name, e.g. "div". Must be a single valid
+element name: a letter followed by letters, digits, or hyphens.}
 
 \item{...}{Children: Character, numbers, \code{rtemis_html} objects, or lists of
 those.}
 
-\item{class}{Optional Character: \code{class} attribute.}
+\item{class}{Optional Character: \code{class} attribute. Must be NULL or a single
+string; collapse multiple classes yourself, e.g.
+\code{paste(x, collapse = " ")}.}
 
-\item{style}{Optional Character: \code{style} attribute.}
+\item{style}{Optional Character: \code{style} attribute. Must be NULL or a single
+string.}
 
-\item{id}{Optional Character: \code{id} attribute.}
+\item{id}{Optional Character: \code{id} attribute. Must be NULL or a single
+string.}
 }
 \value{
 Character of class \code{rtemis_html_element} and \code{rtemis_html}.

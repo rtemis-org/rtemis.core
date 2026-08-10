@@ -10,7 +10,8 @@ html_escape(x, attribute = FALSE)
 \item{x}{Character: Text to escape. Coerced with \code{as.character()}.}
 
 \item{attribute}{Logical: If TRUE, also escape the quote characters, which
-must be escaped inside an attribute value but not in element text.}
+must be escaped inside an attribute value but not in element text. Must be a
+single non-NA TRUE or FALSE.}
 }
 \value{
 Character: Escaped text, carrying no class.

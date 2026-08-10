@@ -18,7 +18,8 @@
 #'
 #' @param x Character: Text to escape. Coerced with `as.character()`.
 #' @param attribute Logical: If TRUE, also escape the quote characters, which
-#' must be escaped inside an attribute value but not in element text.
+#' must be escaped inside an attribute value but not in element text. Must be a
+#' single non-NA TRUE or FALSE.
 #'
 #' @return Character: Escaped text, carrying no class.
 #'
@@ -28,6 +29,7 @@
 #' html_escape("a < b & c")
 #' html_escape('say "hi"', attribute = TRUE)
 html_escape <- function(x, attribute = FALSE) {
+  check_logical_scalar(attribute)
   x <- as.character(x)
   # Ampersand first: escaping it after the others would re-escape the
   # ampersands they introduce.
@@ -122,12 +124,17 @@ html_raw <- function(x) {
 #' as an indented block, and a child's own line breaks are indented with it, so
 #' indentation always tracks nesting depth.
 #'
-#' @param name Character: Element name, e.g. "div".
+#' @param name Character: Element name, e.g. "div". Must be a single valid
+#' element name: a letter followed by letters, digits, or hyphens.
 #' @param ... Children: Character, numbers, `rtemis_html` objects, or lists of
 #' those.
-#' @param class Optional Character: `class` attribute.
-#' @param style Optional Character: `style` attribute.
-#' @param id Optional Character: `id` attribute.
+#' @param class Optional Character: `class` attribute. Must be NULL or a single
+#' string; collapse multiple classes yourself, e.g.
+#' `paste(x, collapse = " ")`.
+#' @param style Optional Character: `style` attribute. Must be NULL or a single
+#' string.
+#' @param id Optional Character: `id` attribute. Must be NULL or a single
+#' string.
 #'
 #' @return Character of class `rtemis_html_element` and `rtemis_html`.
 #'
@@ -137,6 +144,24 @@ html_raw <- function(x) {
 #' html_tag("section", "Body text", class = "intro")
 #' html_tag("ul", lapply(c("one", "two"), html_li))
 html_tag <- function(name, ..., class = NULL, style = NULL, id = NULL) {
+  check_character_scalar(name)
+  # A name is written into the markup unescaped, so it is restricted rather
+  # than escaped: anything outside the pattern is a mistake, not a tag whose
+  # angle brackets should be spelled out. The hyphen admits custom elements.
+  if (!grepl("^[A-Za-z][A-Za-z0-9-]*$", name)) {
+    abort(
+      "`name` must be a valid HTML element name, not `",
+      name,
+      "`.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  # Scalars only: a vector would be pasted into one `name=` per element with
+  # `c()`-mangled names, e.g. `class1="a" class2="b"`. Callers that want
+  # several classes collapse them themselves.
+  check_optional_scalar_character(class)
+  check_optional_scalar_character(style)
+  check_optional_scalar_character(id)
   rendered <- .html_children(list(...))
   children <- rendered[["text"]]
   attribs <- c(id = id, class = class, style = style)
