@@ -1,5 +1,28 @@
 # rtemis.core NEWS
 
+## Version 0.4.3
+
+- HTML construction: `html_tag()` and the `html_div()`, `html_p()`,
+  `html_span()`, `html_strong()`, `html_ul()`, `html_li()` constructors, with
+  `html_escape()` and `html_raw()`. Elements are character strings rather than
+  a node tree, which is what `fmt(output_type = "html")` already emits and what
+  every consumer in the ecosystem wants to embed or send over the wire.
+  Text children are escaped and markup children are not, so composing an
+  element from an element neither double-escapes the inner markup nor leaves
+  user-supplied text unescaped: a bare string is text, `html_raw()` marks a
+  string that is already markup, and the constructors mark what they built.
+  `paste()` drops that marker, so a run of markup assembled with `paste()` is
+  passed on as `html_raw(paste(...))`.
+  Output matches what `htmltools` produced for the same input, including the
+  layout rule that a tag holding one text child renders inline while anything
+  else renders as an indented block. The one deliberate difference is that a
+  child's own line breaks are indented along with it, where `htmltools` splices
+  pre-built markup in verbatim and leaves its continuation lines at column
+  zero; indentation therefore always tracks nesting depth. Since HTML collapses
+  that whitespace, the rendered result is identical. This lets packages that
+  only built small fragments of HTML drop `htmltools`, and with it a GPL
+  dependency.
+
 ## Version 0.4.2
 
 - `get_output_type()` can now be overridden, so ANSI output is available in
