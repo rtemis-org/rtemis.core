@@ -9,7 +9,7 @@ Description: Utilities used across packages of the 'rtemis' ecosystem. Includes 
     test_* functions that return logical values, check_* functions that throw informative errors, 
     and clean_* functions that return validated and coerced values. This code began as part of the 
     'rtemis' package (<doi:10.32614/CRAN.package.rtemis>).
-License: GPL (>= 3)
+License: BSD_3_clause + file LICENSE
 URL: https://www.rtemis.org, https://github.com/rtemis-org/rtemis.core
 BugReports: https://github.com/rtemis-org/rtemis.core/issues
 Depends:

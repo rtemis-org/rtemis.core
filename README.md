@@ -39,3 +39,8 @@ install.packages(
   repos = c('https://rtemis-org.r-universe.dev', 'https://cloud.r-project.org')
 )
 ```
+
+---
+
+Copyright (c) 2016-2026 E.D. Gennatas. Licensed under
+[BSD 3-Clause](https://opensource.org/license/bsd-3-clause).
