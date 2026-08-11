@@ -101,13 +101,58 @@ install` already runs `just document`, which already runs `just format`.
 - `just check-cran` -- run before claiming CRAN compliance
 
 Because every rtemis package depends on this one, a change that alters existing
-behavior needs a reverse-dependency check as well; see `revdep/`.
+behavior also needs a reverse-dependency check. Say in the pull request whether
+you ran one and which consumers you checked against.
 
-Code conventions -- S7 classes and `prop_*` factories, type checking and
-validation at construction, `NULL` as the only unset value, `L` suffixes on
-integer defaults, US English spelling, ASCII only, roxygen2 on everything --
-are documented in [`AGENTS.md`](../AGENTS.md) at the repository root. That file
-is the authority; this list is a pointer to it, not a copy.
+### Code conventions
+
+**Classes and types.** The backend is S7 throughout. Build class properties
+with the `prop_*` factories rather than declaring them by hand: one declaration
+carries type, default, bounds, enum, tunability and description, and the S7
+validator, the JSON Schema and the defaults artifact are all generated from it.
+Hand-writing validation for a property usually means a factory argument was
+missed.
+
+Make a factory-built property optional with `nullable = TRUE`, not a union.
+Declare a hand-written optional property as `NULL | <class>`, never
+`<class> | NULL`: S7 takes a union's prototype from its **first** member, so
+`class_integer | NULL` defaults to `integer(0)` rather than `NULL`, and every
+`!is.null()` guard downstream silently misfires. `default = NULL` does not
+help -- S7 reads it as "no default supplied" and falls back to the prototype.
+
+`NULL` is the only unset value. Test for it with `is.null()`, not
+`length(x) == 0L`.
+
+**Validation.** Type-check and validate as early as possible, with corrective
+error messages. The `test_*` functions return a logical, the `check_*`
+functions throw an informative error, and the `clean_*` functions return a
+validated and coerced value; a new helper belongs to whichever family matches
+its return contract.
+
+**Logging.** `msg()`, `info()`, and `abort()` with the rtemis error classes.
+Any function that can print to the console takes a `verbosity` argument
+controlling how much.
+
+**Style.**
+
+- Type-stable code; never rely on implicit coercion
+- Integer literals carry an `L` suffix: `n = 10L`
+- Optional arguments default to `NULL`, with the real default set in the body
+- Two blank lines between definitions
+- US English: `behavior`, `normalize`, `analyze`, `license`
+- ASCII only, everywhere. CRAN rejects non-ASCII characters; use hexadecimal
+  Unicode escapes where a literal one is unavoidable
+- Comments describe only the current state of the code. No history ("used to",
+  "renamed from", "as of <date>") and no argument for why the project works the
+  way it does. Git records what changed. Do document non-obvious mechanism that
+  a future editor has to preserve
+
+**Documentation.** roxygen2 on everything, with examples. Internal functions
+get `@keywords internal` and `@noRd`. Document a `@param` as
+`Class: Description ending with period.` Do not restate default values in the
+description -- they already appear in the `Usage` section.
+
+**Tests.** Include tests for new functionality.
 
 ## Questions?
 
