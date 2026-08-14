@@ -2,13 +2,9 @@
 
 ## Version 0.4.3
 
-- **License: BSD 3-Clause**, replacing GPL (>= 3). Every line of this package
-  is the copyright holder's own work and nothing is derived from a copyleft
-  source, so the GPL terms restricted downstream users without protecting
-  anything. `Imports` are `data.table` (MPL-2.0), `S7` (MIT) and `methods`
-  (part of R). The change also unblocks `rtemis` itself, which cannot be
-  permissively licensed while it imports a GPL package.
-
+- **License: BSD 3-Clause**, replacing GPL (>= 3). `Imports` are `data.table` 
+  (MPL-2.0), `S7` (MIT) and `methods` (part of R). The change unblocks `rtemis` 
+  itself, which cannot be permissively licensed while it imports a GPL package.
 - HTML construction: `html_tag()` and the `html_div()`, `html_p()`,
   `html_span()`, `html_strong()`, `html_ul()`, `html_li()` constructors, with
   `html_escape()` and `html_raw()`. Elements are character strings rather than
@@ -29,6 +25,16 @@
   that whitespace, the rendered result is identical. This lets packages that
   only built small fragments of HTML drop `htmltools`, and with it a GPL
   dependency.
+- S7 property factories: `prop_boolean()`, `prop_integer()`, `prop_float()`,
+  `prop_string()`, `prop_bag()` and `prop_const()`, with `prop_spec()` to read
+  a property's declaration back. One call carries the property's type, default,
+  bounds, enum, container and description, and its S7 validator is generated
+  from that declaration rather than written by hand. Because the declaration
+  stays attached to the property, `prop_spec()` can recover it from a class
+  definition to generate documentation, a JSON Schema, or a defaults artifact.
+  These succeed the hand-written properties in `R/03_S7_properties.R`, which
+  remain: `prob_scalar` is `prop_float(min = 0, max = 1)` and
+  `optional_character_scalar` is `prop_string(nullable = TRUE)`.
 
 ## Version 0.4.2
 

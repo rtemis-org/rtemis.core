@@ -430,6 +430,10 @@ abort <- function(
       data
     )
   )
+  # R's default error printer writes before the stack unwinds, so anything
+  # still holding the cursor mid-line would have the message appended to it.
+  # `msg()` above already clears at verbosity >= 1; this covers the quiet path.
+  .clear_progress_line()
   stop(cond)
 }
 
