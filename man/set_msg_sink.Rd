@@ -42,6 +42,9 @@ emit execution-graph node events through the sink with these extra fields:
 \item \code{status}: character. \code{"start"}, \code{"update"}, \code{"done"}, \code{"error"}, or
 \code{"aborted"}.
 \item \code{current}, \code{total}: integer or \code{NA}. Progress counters.
+\item \code{label}: character. Display label without the counts (e.g. \code{"Tuning"}).
+\code{text} is the label and counts already composed for display; a sink that
+renders its own layout wants this instead of parsing them apart.
 }
 
 These are additive; sinks that only read the base fields keep working.

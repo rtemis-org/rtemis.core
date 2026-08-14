@@ -156,7 +156,11 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
       kind = handle[["kind"]],
       status = status,
       current = handle[["current"]],
-      total = handle[["total"]]
+      total = handle[["total"]],
+      # `text` above has the counts appended for display; a consumer laying
+      # out its own display (e.g. the rtemislive progress panel) wants the
+      # label on its own rather than parsing them back apart.
+      label = handle[["label"]]
     )
   )
 }
@@ -501,6 +505,12 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 #' @param id Character or NULL: Node id for the sink envelope. Auto-generated
 #'   (`"pb1"`, `"pb2"`, ...) when NULL; pass an execution-graph node id to
 #'   correlate progress with other node events.
+#' @param parent_id Character or NULL: Parent id reported in the sink envelope
+#'   when this handle is the outermost one on the stack. Lets a caller graft
+#'   its progress nodes onto an enclosing execution graph (e.g. rtemis passes
+#'   the node its loop is running inside), so a consumer reading both streams
+#'   reconstructs one tree. Ignored when the handle nests inside another
+#'   handle, whose id is then the parent.
 #' @param verbosity Integer or NULL: Overrides `get_verbosity()` when
 #'   supplied. Gates only the console renderer, never sink events.
 #' @param package Character or NULL: Package name for verbosity override
@@ -525,6 +535,7 @@ progress_begin <- function(
   label = "Progress",
   kind = "progress",
   id = NULL,
+  parent_id = NULL,
   verbosity = NULL,
   package = NULL,
   output_type = NULL
@@ -560,11 +571,21 @@ progress_begin <- function(
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
+  if (
+    !is.null(parent_id) && (!is.character(parent_id) || length(parent_id) != 1L)
+  ) {
+    abort(
+      "`parent_id` must be a single character string or NULL.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
   stack <- .rtemis_core_state[["progress_stack"]]
+  # An enclosing handle is the parent whatever the caller says: it is the loop
+  # this one actually nests inside. `parent_id` only fills the outermost slot.
   parent_id <- if (length(stack) > 0L) {
     stack[[length(stack)]][["id"]]
   } else {
-    NA_character_
+    parent_id %||% NA_character_
   }
   handle <- new.env(parent = emptyenv())
   handle[["id"]] <- id
@@ -832,6 +853,8 @@ progress_end <- function(handle, status = c("done", "error", "aborted")) {
 #' @param ... Additional arguments passed to `FUN`.
 #' @param label Character: Display label for the progress node.
 #' @param kind Character: Node kind forwarded in the sink envelope.
+#' @param parent_id Character or NULL: Parent id for the sink envelope when
+#'   this is the outermost active handle - see [progress_begin()].
 #' @param verbosity Integer or NULL: Overrides `get_verbosity()` when
 #'   supplied. Gates only the console renderer, never sink events.
 #' @param package Character or NULL: Package name for verbosity override
@@ -858,6 +881,7 @@ progress_lapply <- function(
   ...,
   label = "Processing",
   kind = "progress",
+  parent_id = NULL,
   verbosity = NULL,
   package = NULL,
   output_type = NULL
@@ -867,6 +891,7 @@ progress_lapply <- function(
     length(X),
     label = label,
     kind = kind,
+    parent_id = parent_id,
     verbosity = verbosity,
     package = package,
     output_type = output_type

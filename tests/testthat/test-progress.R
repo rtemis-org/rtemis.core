@@ -411,6 +411,48 @@ test_that("progress events emit enriched sink envelopes with parent chaining", {
   expect_equal(captured[[3L]][["current"]], 1L)
   expect_equal(captured[[3L]][["total"]], 3L)
   expect_equal(captured[[3L]][["text"]], "Inner 1/3")
+  # `label` ships separately from `text`, which has the counts appended
+  expect_equal(captured[[3L]][["label"]], "Inner")
+})
+
+test_that("`parent_id` fills the outermost slot and is ignored when nested", {
+  reset_progress_state()
+  op <- options(rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
+  captured <- list()
+  with_msg_sink(
+    function(m) captured[[length(captured) + 1L]] <<- m,
+    expect_silent({
+      outer <- progress_begin(
+        2L,
+        label = "Outer",
+        parent_id = "n7",
+        output_type = "plain"
+      )
+      inner <- progress_begin(
+        3L,
+        label = "Inner",
+        # An enclosing handle wins: this loop nests inside `outer`, whatever
+        # graph node the caller names.
+        parent_id = "n9",
+        output_type = "plain"
+      )
+      progress_end(inner)
+      progress_end(outer)
+    })
+  )
+  expect_equal(captured[[1L]][["parent_id"]], "n7")
+  expect_equal(captured[[2L]][["parent_id"]], captured[[1L]][["node_id"]])
+  reset_progress_state()
+})
+
+test_that("progress_begin() rejects a malformed parent_id", {
+  reset_progress_state()
+  expect_error(
+    progress_begin(2L, parent_id = c("a", "b"), output_type = "plain"),
+    class = "rtemis_type_error"
+  )
+  reset_progress_state()
 })
 
 test_that("sink events fire regardless of verbosity", {

@@ -10,6 +10,7 @@ progress_lapply(
   ...,
   label = "Processing",
   kind = "progress",
+  parent_id = NULL,
   verbosity = NULL,
   package = NULL,
   output_type = NULL
@@ -27,6 +28,9 @@ never collide with the wrapper's own parameters.}
 \item{label}{Character: Display label for the progress node.}
 
 \item{kind}{Character: Node kind forwarded in the sink envelope.}
+
+\item{parent_id}{Character or NULL: Parent id for the sink envelope when
+this is the outermost active handle - see \code{\link[=progress_begin]{progress_begin()}}.}
 
 \item{verbosity}{Integer or NULL: Overrides \code{get_verbosity()} when
 supplied. Gates only the console renderer, never sink events.}

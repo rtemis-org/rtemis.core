@@ -9,6 +9,7 @@ progress_begin(
   label = "Progress",
   kind = "progress",
   id = NULL,
+  parent_id = NULL,
   verbosity = NULL,
   package = NULL,
   output_type = NULL
@@ -26,6 +27,13 @@ progress. Must be non-negative.}
 \item{id}{Character or NULL: Node id for the sink envelope. Auto-generated
 (\code{"pb1"}, \code{"pb2"}, ...) when NULL; pass an execution-graph node id to
 correlate progress with other node events.}
+
+\item{parent_id}{Character or NULL: Parent id reported in the sink envelope
+when this handle is the outermost one on the stack. Lets a caller graft
+its progress nodes onto an enclosing execution graph (e.g. rtemis passes
+the node its loop is running inside), so a consumer reading both streams
+reconstructs one tree. Ignored when the handle nests inside another
+handle, whose id is then the parent.}
 
 \item{verbosity}{Integer or NULL: Overrides \code{get_verbosity()} when
 supplied. Gates only the console renderer, never sink events.}
