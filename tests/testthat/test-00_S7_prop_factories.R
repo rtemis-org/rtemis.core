@@ -154,12 +154,52 @@ test_that("prop_string map requires names", {
   expect_error(.PC$str_map(x = c("1", "2")))
 })
 
+test_that("prop_string map rejects blank and missing keys", {
+  expect_error(.PC$str_map(x = c(a = "1", "2")))
+  expect_error(.PC$str_map(x = c(a = "1", `  ` = "2")))
+  na_named <- c("1", "2")
+  names(na_named) <- c("a", NA)
+  expect_error(.PC$str_map(x = na_named))
+})
+
+test_that("prop_string map rejects repeated keys", {
+  expect_error(.PC$str_map(x = c(a = "1", a = "2")), "distinct names")
+})
+
 
 # %% prop_bag ----
 test_that("prop_bag carries a named list as one value", {
   expect_null(.PC$bag()@x)
   expect_identical(.PC$bag(x = list(a = 1, b = 2))@x, list(a = 1, b = 2))
   expect_error(.PC$bag(x = "a"))
+})
+
+test_that("prop_bag requires a key on every element", {
+  expect_error(.PC$bag(x = list(1, 2)))
+  expect_error(.PC$bag(x = list(a = 1, 2)))
+  expect_error(.PC$bag(x = list(a = 1, ` ` = 2)))
+})
+
+test_that("prop_bag rejects an empty list, NULL being the unset value", {
+  expect_error(.PC$bag(x = list()))
+})
+
+test_that("prop_bag rejects repeated keys", {
+  # R allows the duplicate but loses the second element: `[["a"]]` returns the
+  # first match, and no name reaches the second.
+  expect_error(.PC$bag(x = list(a = 1, a = 2)), "distinct names")
+  expect_error(.PC$bag(x = list(a = 1, b = 2, a = 3)), "'a' is repeated")
+  expect_error(
+    .PC$bag(x = list(a = 1, a = 2, b = 3, b = 4)),
+    "'a', 'b' are repeated"
+  )
+})
+
+test_that("prop_bag holds a value its keys do not describe", {
+  # The contents past the keys are the consumer's contract, not ours: mixed
+  # types, nested lists and NULL elements all pass.
+  nested <- list(a = 1, b = "two", c = list(d = TRUE), e = NULL)
+  expect_identical(.PC$bag(x = nested)@x, nested)
 })
 
 
@@ -208,4 +248,10 @@ test_that("prop_spec exposes the declaration", {
 
 test_that("prop_spec returns NULL for a hand-written property", {
   expect_null(prop_spec(character_scalar))
+})
+
+test_that("prop_spec rejects a non-property", {
+  expect_error(prop_spec(1), class = "rtemis_type_error")
+  expect_error(prop_spec("a"), class = "rtemis_type_error")
+  expect_error(prop_spec(list(spec = 1)), class = "rtemis_type_error")
 })

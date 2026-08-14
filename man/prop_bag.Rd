@@ -19,7 +19,9 @@ S7 property.
 \description{
 A pass-through for values with no per-key contract of our own -- extra
 request headers, backend-specific options -- carried as one value however
-many keys it holds.
+many keys it holds. The keys are required: the value becomes a JSON object,
+so every element must carry a name, and the names must be distinct. Use
+NULL, not \code{list()}, for no value.
 }
 \examples{
 extra_headers <- prop_bag(nullable = TRUE, description = "Extra headers")

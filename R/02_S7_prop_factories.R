@@ -155,6 +155,44 @@ new_prop_spec <- function(
 } # /rtemis.core::new_prop_spec
 
 
+# %% validate_keys ----
+#' Validate a value's names as JSON object keys
+#'
+#' Shared by the "map" container and the "object" scalar, both of which become
+#' a JSON object. A key exists to address one element, so a key that is
+#' missing, empty, blank or repeated is rejected here rather than reaching a
+#' backend. R permits repeated names, but they lose data: `x[["a"]]` returns
+#' the first match and no name reaches the rest, while `{"a": 1, "a": 2}` is
+#' left undefined by RFC 8259 and resolved differently by different parsers.
+#'
+#' @param value Named vector or list.
+#'
+#' @return NULL if every name is a usable key, otherwise character error
+#'   message.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+validate_keys <- function(value) {
+  keys <- names(value)
+  if (is.null(keys)) {
+    return("must be named.")
+  }
+  if (anyNA(keys) || !all(nzchar(trimws(keys)))) {
+    return("must have a non-empty name for every element.")
+  }
+  repeated <- unique(keys[duplicated(keys)])
+  if (length(repeated) > 0L) {
+    return(paste0(
+      "must have distinct names (",
+      paste0("'", repeated, "'", collapse = ", "),
+      if (length(repeated) == 1L) " is repeated)." else " are repeated)."
+    ))
+  }
+  NULL
+} # /rtemis.core::validate_keys
+
+
 # %% validate_with_spec ----
 #' Validate a property value against its spec
 #'
@@ -181,13 +219,9 @@ validate_with_spec <- function(value, fields) {
   if (is.null(value)) {
     return(if (nullable) NULL else "must not be NULL.")
   }
-  if (type == "object" && container == "none") {
-    # One named list is a single value however many keys it holds, and its
-    # contents are the consumer's contract, not ours.
-    return(if (is.list(value)) NULL else "must be a list.")
-  }
-  if (container == "map" && is.null(names(value))) {
-    return("must be named.")
+  object_scalar <- type == "object" && container == "none"
+  if (object_scalar && !is.list(value)) {
+    return("must be a list.")
   }
   if (length(value) == 0L) {
     # NULL is the only "unset" value: nullable properties declare their class
@@ -201,6 +235,20 @@ validate_with_spec <- function(value, fields) {
         "must not be empty."
       }
     )
+  }
+  # A JSON object is keyed by strings, so every element of a "map" -- and of an
+  # "object" scalar, which is one object however many keys it holds -- must
+  # carry a usable key.
+  if (object_scalar || container == "map") {
+    msg <- validate_keys(value)
+    if (!is.null(msg)) {
+      return(msg)
+    }
+    if (object_scalar) {
+      # Past its keys, an "object" scalar's contents are the consumer's
+      # contract and not ours, so the leaf checks below do not apply to it.
+      return(NULL)
+    }
   }
   if (container == "none" && length(value) > 1L) {
     return("must be a single value.")
@@ -525,7 +573,9 @@ prop_string <- function(
 #'
 #' A pass-through for values with no per-key contract of our own -- extra
 #' request headers, backend-specific options -- carried as one value however
-#' many keys it holds.
+#' many keys it holds. The keys are required: the value becomes a JSON object,
+#' so every element must carry a name, and the names must be distinct. Use
+#' NULL, not `list()`, for no value.
 #'
 #' @param default List: Default value (NULL for none, or if `nullable`).
 #' @param nullable Logical: If TRUE, NULL is a valid value.
@@ -619,5 +669,11 @@ prop_const <- function(value, description = "") {
 #' temperature <- prop_float(default = 0.3, min = 0, max = 2)
 #' prop_spec(temperature)[["maximum"]]
 prop_spec <- function(property) {
+  if (!inherits(property, "S7_property")) {
+    abort(
+      "`property` must be an S7 property.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
   property[["spec"]]
 } # /rtemis.core::prop_spec
