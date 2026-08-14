@@ -518,6 +518,9 @@ msgdone <- function(caller = NULL, call_depth = 1, caller_id = 1, sep = " ") {
 #' - `status`: character. `"start"`, `"update"`, `"done"`, `"error"`, or
 #'   `"aborted"`.
 #' - `current`, `total`: integer or `NA`. Progress counters.
+#' - `label`: character. Display label without the counts (e.g. `"Tuning"`).
+#'   `text` is the label and counts already composed for display; a sink that
+#'   renders its own layout wants this instead of parsing them apart.
 #'
 #' These are additive; sinks that only read the base fields keep working.
 #' Progress events fire regardless of verbosity (verbosity gates only the
