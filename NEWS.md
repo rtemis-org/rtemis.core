@@ -2,13 +2,9 @@
 
 ## Version 0.4.3
 
-- **License: BSD 3-Clause**, replacing GPL (>= 3). Every line of this package
-  is the copyright holder's own work and nothing is derived from a copyleft
-  source, so the GPL terms restricted downstream users without protecting
-  anything. `Imports` are `data.table` (MPL-2.0), `S7` (MIT) and `methods`
-  (part of R). The change also unblocks `rtemis` itself, which cannot be
-  permissively licensed while it imports a GPL package.
-
+- **License: BSD 3-Clause**, replacing GPL (>= 3). `Imports` are `data.table` 
+  (MPL-2.0), `S7` (MIT) and `methods` (part of R). The change unblocks `rtemis` 
+  itself, which cannot be permissively licensed while it imports a GPL package.
 - HTML construction: `html_tag()` and the `html_div()`, `html_p()`,
   `html_span()`, `html_strong()`, `html_ul()`, `html_li()` constructors, with
   `html_escape()` and `html_raw()`. Elements are character strings rather than
@@ -29,6 +25,7 @@
   that whitespace, the rendered result is identical. This lets packages that
   only built small fragments of HTML drop `htmltools`, and with it a GPL
   dependency.
+- Added prop_ factory
 
 ## Version 0.4.2
 

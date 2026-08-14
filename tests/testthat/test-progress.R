@@ -866,3 +866,65 @@ test_that("msg() during an active status line clears it first", {
   expect_false(.state[["progress_visible"]])
   reset_progress_state()
 })
+
+
+# Errors during progress_lapply() ----
+test_that("progress_lapply() clears the status line before an error prints", {
+  # R's default error printer writes at the point the condition is signaled,
+  # before the stack unwinds, so the clear has to happen in a calling handler
+  # rather than in progress_lapply()'s on.exit(). Otherwise the message lands
+  # appended to the frame: "... 1/6Error: ...".
+  reset_progress_state()
+  op <- options(rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
+  visible_at_signal <- NA
+  visible_mid_run <- FALSE
+  suppressMessages(
+    tryCatch(
+      withCallingHandlers(
+        progress_lapply(
+          1:3,
+          function(i) {
+            if (i == 2L) {
+              visible_mid_run <<- isTRUE(.state[["progress_visible"]])
+              stop("boom")
+            }
+            i
+          },
+          label = "Work",
+          output_type = "ansi"
+        ),
+        # Established outside progress_lapply()'s own handler, so this runs
+        # after it: by now the line must already be clear.
+        error = function(e) {
+          visible_at_signal <<- isTRUE(.state[["progress_visible"]])
+        }
+      ),
+      error = function(e) NULL
+    )
+  )
+  expect_true(visible_mid_run)
+  expect_false(visible_at_signal)
+  reset_progress_state()
+})
+
+test_that("progress_lapply() emits a clear frame before uncaught error text", {
+  reset_progress_state()
+  op <- options(rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
+  msgs <- capture_messages(
+    tryCatch(
+      progress_lapply(
+        1:3,
+        function(i) if (i == 2L) stop("boom") else i,
+        label = "Work",
+        output_type = "ansi"
+      ),
+      error = function(e) NULL
+    )
+  )
+  # A frame is drawn, then cleared, and nothing is left on screen after.
+  expect_true(any(grepl("^\r +\r$", msgs)))
+  expect_false(.state[["progress_visible"]])
+  reset_progress_state()
+})

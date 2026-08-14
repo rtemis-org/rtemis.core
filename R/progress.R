@@ -882,14 +882,24 @@ progress_lapply <- function(
     X,
     function(el, ...) {
       # Foreign output guard: if `FUN` (or anything it calls) signals a
-      # message or warning, clear the status line first so the text lands
-      # on a clean line instead of being appended to the frame. Our own
-      # frame writes are marked via `progress_drawing` and skipped. The
+      # message, warning, error or interrupt, clear the status line first so
+      # the text lands on a clean line instead of being appended to the frame.
+      # Our own frame writes are marked via `progress_drawing` and skipped. The
       # handler does not touch the condition, so normal handling proceeds.
+      #
+      # `error` and `interrupt` are handled here rather than left to the
+      # `progress_end(status = "error")` in `on.exit()` above: R's default
+      # error printer writes the message at the point the condition is
+      # signaled, *before* the stack unwinds, so an on-exit clear runs too
+      # late and the error text lands appended to the frame ("... 1/6Error:").
+      # A calling handler runs before the default one and does not stop
+      # propagation, so the line is clear by the time anything prints.
       res <- withCallingHandlers(
         FUN(el, ...),
         message = .progress_foreign_output,
-        warning = .progress_foreign_output
+        warning = .progress_foreign_output,
+        error = .progress_foreign_output,
+        interrupt = .progress_foreign_output
       )
       progress_update(handle)
       res
