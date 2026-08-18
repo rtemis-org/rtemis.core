@@ -13,19 +13,19 @@
 #' rtemis_colors[["teal"]]
 rtemis_colors <- c(
   teal = "#6CA3A0",
-  light_orange = "#FDB808",
   orange = "#F08904",
   magenta = "#BE2E5F",
-  green = "#0F6A66",
-  juniper = "#526551",
   light_blue = "#B3CFE8",
-  blue = "#466D96",
-  dark_blue = "#375D86",
+  green = "#0F6A66",
+  light_orange = "#FDB808",
   red = "#EA384A",
-  light_mauve = "#B1A7B3",
+  blue = "#466D96",
+  juniper = "#526551",
   pink = "#F384FF",
-  purple = "#7364F2",
   dark_magenta = "#7D0830",
+  dark_blue = "#375D86",
+  light_mauve = "#B1A7B3",
+  purple = "#7364F2",
   terracotta = "#895140"
 )
 
