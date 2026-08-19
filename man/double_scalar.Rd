@@ -12,6 +12,11 @@ An S7 property object.
 \description{
 S7 property accepting a single non-NA double value.
 }
+\examples{
+Metric <- S7::new_class("Metric", properties = list(value = double_scalar))
+Metric(value = -1.5)@value
+try(Metric(value = c(1, 2)))
+}
 \author{
 EDG
 }

@@ -13,6 +13,14 @@ An S7 property object.
 S7 property accepting a non-empty double vector with all elements finite, greater than or
 equal to zero, and no NAs.
 }
+\examples{
+Importance <- S7::new_class(
+  "Importance",
+  properties = list(scores = nonneg_double_vector)
+)
+Importance(scores = c(0, 1.5, 3))@scores
+try(Importance(scores = c(1, -1)))
+}
 \author{
 EDG
 }

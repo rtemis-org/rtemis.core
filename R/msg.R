@@ -562,6 +562,12 @@ set_msg_sink <- function(sink) {
 #' @export
 #'
 #' @seealso [set_msg_sink()], [with_msg_sink()].
+#'
+#' @examples
+#' get_msg_sink() # NULL unless a sink is set
+#' old <- set_msg_sink(function(m) invisible(m))
+#' is.function(get_msg_sink())
+#' set_msg_sink(old) # restore the previous sink
 get_msg_sink <- function() {
   .rtemis_core_state[["msg_sink"]]
 }

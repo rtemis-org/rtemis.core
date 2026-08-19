@@ -13,6 +13,15 @@ An S7 property object.
 S7 property accepting \code{NULL} or a non-empty double vector with all elements strictly in
 \eqn{(0, 1)} and no NAs.
 }
+\examples{
+Grid <- S7::new_class(
+  "Grid",
+  properties = list(subsamples = optional_unit_open_vector)
+)
+Grid()@subsamples
+Grid(subsamples = c(0.5, 0.8))@subsamples
+try(Grid(subsamples = c(0.5, 1)))
+}
 \author{
 EDG
 }

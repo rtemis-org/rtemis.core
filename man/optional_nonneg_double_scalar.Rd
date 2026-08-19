@@ -12,6 +12,15 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single finite double greater than or equal to zero.
 }
+\examples{
+Penalty <- S7::new_class(
+  "Penalty",
+  properties = list(alpha = optional_nonneg_double_scalar)
+)
+Penalty()@alpha
+Penalty(alpha = 0)@alpha
+try(Penalty(alpha = -1))
+}
 \author{
 EDG
 }

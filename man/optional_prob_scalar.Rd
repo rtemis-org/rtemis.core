@@ -12,6 +12,12 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single finite double in \eqn{[0, 1]}.
 }
+\examples{
+Split <- S7::new_class("Split", properties = list(threshold = optional_prob_scalar))
+Split()@threshold
+Split(threshold = 0.5)@threshold
+try(Split(threshold = -0.1))
+}
 \author{
 EDG
 }

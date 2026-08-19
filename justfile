@@ -30,6 +30,18 @@ document: format
     {{rscript}} -e "roxygen2::roxygenize()"
     @just _msg "Done"
 
+# Check that each man/*.Rd file has \value and \examples sections
+check-rd:
+    @just _msg "─── Checking Rd sections for {{pkg}}... ───"
+    tools/check-rd-sections.sh man
+    @just _msg "Done"
+
+# Like check-rd but also enforces \keyword{internal} docs (data/package stay exempt)
+check-rd-all:
+    @just _msg "─── Checking Rd sections (incl. internal) for {{pkg}}... ───"
+    tools/check-rd-sections.sh -internal man
+    @just _msg "Done"
+
 # Document and install the package locally with pak
 install: document
     @just _msg "─── Installing {{pkg}} package... ───"

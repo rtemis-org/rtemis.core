@@ -13,6 +13,15 @@ An S7 property object.
 S7 property accepting \code{NULL} or a non-empty double vector with all elements in \eqn{[0, 1]}
 and no NAs.
 }
+\examples{
+Preds <- S7::new_class(
+  "Preds",
+  properties = list(probabilities = optional_prob_vector)
+)
+Preds()@probabilities
+Preds(probabilities = c(0.1, 0.9))@probabilities
+try(Preds(probabilities = c(0.1, 1.1)))
+}
 \author{
 EDG
 }

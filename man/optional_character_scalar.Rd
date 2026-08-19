@@ -12,6 +12,12 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single non-NA, non-empty (after trimming whitespace) string.
 }
+\examples{
+Model <- S7::new_class("Model", properties = list(label = optional_character_scalar))
+Model()@label
+Model(label = "Experiment 1")@label
+try(Model(label = ""))
+}
 \author{
 EDG
 }

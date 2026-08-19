@@ -12,6 +12,12 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single non-NA logical value.
 }
+\examples{
+Params <- S7::new_class("Params", properties = list(scale = optional_logical_scalar))
+Params()@scale
+Params(scale = FALSE)@scale
+try(Params(scale = c(TRUE, FALSE)))
+}
 \author{
 EDG
 }

@@ -13,6 +13,14 @@ An S7 property object.
 S7 property accepting a non-empty double vector with all elements finite, strictly greater
 than zero, and no NAs.
 }
+\examples{
+Weights <- S7::new_class(
+  "Weights",
+  properties = list(case_weights = pos_double_vector)
+)
+Weights(case_weights = c(0.5, 1, 2))@case_weights
+try(Weights(case_weights = c(1, 0)))
+}
 \author{
 EDG
 }

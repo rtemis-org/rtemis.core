@@ -12,6 +12,12 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single non-NA double value.
 }
+\examples{
+Metric <- S7::new_class("Metric", properties = list(offset = optional_double_scalar))
+Metric()@offset
+Metric(offset = 0.5)@offset
+try(Metric(offset = NA_real_))
+}
 \author{
 EDG
 }

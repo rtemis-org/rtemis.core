@@ -12,6 +12,11 @@ An S7 property object.
 \description{
 S7 property accepting a single non-NA, non-empty (after trimming whitespace) string.
 }
+\examples{
+Model <- S7::new_class("Model", properties = list(algorithm = character_scalar))
+Model(algorithm = "LightGBM")@algorithm
+try(Model(algorithm = ""))
+}
 \author{
 EDG
 }

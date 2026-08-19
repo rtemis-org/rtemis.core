@@ -13,6 +13,11 @@ An S7 property object.
 S7 property accepting a non-empty double vector with all elements strictly in \eqn{(0, 1)}
 and no NAs.
 }
+\examples{
+Grid <- S7::new_class("Grid", properties = list(learning_rates = unit_open_vector))
+Grid(learning_rates = c(0.01, 0.1))@learning_rates
+try(Grid(learning_rates = c(0.1, 1)))
+}
 \author{
 EDG
 }

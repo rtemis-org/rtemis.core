@@ -12,6 +12,15 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single non-NA integer value greater than or equal to zero.
 }
+\examples{
+Counter <- S7::new_class(
+  "Counter",
+  properties = list(n_failed = optional_nonneg_integer_scalar)
+)
+Counter()@n_failed
+Counter(n_failed = 3L)@n_failed
+try(Counter(n_failed = -1L))
+}
 \author{
 EDG
 }

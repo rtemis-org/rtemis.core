@@ -12,6 +12,11 @@ An S7 property object.
 \description{
 S7 property accepting a non-empty double vector with all elements in \eqn{[0, 1]} and no NAs.
 }
+\examples{
+Preds <- S7::new_class("Preds", properties = list(probabilities = prob_vector))
+Preds(probabilities = c(0, 0.5, 1))@probabilities
+try(Preds(probabilities = c(0.5, NA)))
+}
 \author{
 EDG
 }

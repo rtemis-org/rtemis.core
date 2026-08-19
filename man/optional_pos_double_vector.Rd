@@ -13,6 +13,12 @@ An S7 property object.
 S7 property accepting \code{NULL} or a non-empty double vector with all elements finite,
 strictly greater than zero, and no NAs.
 }
+\examples{
+Grid <- S7::new_class("Grid", properties = list(lambdas = optional_pos_double_vector))
+Grid()@lambdas
+Grid(lambdas = c(0.01, 0.1, 1))@lambdas
+try(Grid(lambdas = c(0.1, Inf)))
+}
 \author{
 EDG
 }

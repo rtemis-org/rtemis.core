@@ -12,6 +12,12 @@ An S7 property object.
 \description{
 S7 property accepting a single finite double strictly in \eqn{(0, 1)}.
 }
+\examples{
+Boost <- S7::new_class("Boost", properties = list(learning_rate = unit_open_scalar))
+Boost(learning_rate = 0.1)@learning_rate
+# Bounds are exclusive: 0 and 1 are rejected
+try(Boost(learning_rate = 1))
+}
 \author{
 EDG
 }

@@ -12,6 +12,11 @@ An S7 property object.
 \description{
 S7 property accepting a single finite double in \eqn{[0, 1]}.
 }
+\examples{
+Split <- S7::new_class("Split", properties = list(train_p = prob_scalar))
+Split(train_p = 0.75)@train_p
+try(Split(train_p = 1.5))
+}
 \author{
 EDG
 }

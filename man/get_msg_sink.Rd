@@ -12,6 +12,12 @@ The currently registered sink function, or \code{NULL} if none is set.
 \description{
 Get the current rtemis message sink
 }
+\examples{
+get_msg_sink() # NULL unless a sink is set
+old <- set_msg_sink(function(m) invisible(m))
+is.function(get_msg_sink())
+set_msg_sink(old) # restore the previous sink
+}
 \seealso{
 \code{\link[=set_msg_sink]{set_msg_sink()}}, \code{\link[=with_msg_sink]{with_msg_sink()}}.
 }

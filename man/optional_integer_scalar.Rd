@@ -12,6 +12,12 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single non-NA integer value (must be \code{integer} type, e.g. \code{1L}).
 }
+\examples{
+Params <- S7::new_class("Params", properties = list(seed = optional_integer_scalar))
+Params()@seed
+Params(seed = 42L)@seed
+try(Params(seed = 42))
+}
 \author{
 EDG
 }

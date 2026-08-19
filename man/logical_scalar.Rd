@@ -12,6 +12,11 @@ An S7 property object.
 \description{
 S7 property accepting a single non-NA logical value.
 }
+\examples{
+Params <- S7::new_class("Params", properties = list(scale = logical_scalar))
+Params(scale = TRUE)@scale
+try(Params(scale = NA))
+}
 \author{
 EDG
 }

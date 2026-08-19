@@ -12,6 +12,11 @@ An S7 property object.
 \description{
 S7 property accepting a single finite double strictly greater than zero, i.e. in \eqn{(0, \infty)}.
 }
+\examples{
+Penalty <- S7::new_class("Penalty", properties = list(lambda = pos_double_scalar))
+Penalty(lambda = 0.01)@lambda
+try(Penalty(lambda = 0))
+}
 \author{
 EDG
 }

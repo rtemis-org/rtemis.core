@@ -12,6 +12,15 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single non-NA integer value strictly greater than zero.
 }
+\examples{
+Resample <- S7::new_class(
+  "Resample",
+  properties = list(n_workers = optional_pos_integer_scalar)
+)
+Resample()@n_workers
+Resample(n_workers = 4L)@n_workers
+try(Resample(n_workers = 0L))
+}
 \author{
 EDG
 }

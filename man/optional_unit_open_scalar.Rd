@@ -12,6 +12,15 @@ An S7 property object.
 \description{
 S7 property accepting \code{NULL} or a single finite double strictly in \eqn{(0, 1)}.
 }
+\examples{
+Boost <- S7::new_class(
+  "Boost",
+  properties = list(subsample = optional_unit_open_scalar)
+)
+Boost()@subsample
+Boost(subsample = 0.8)@subsample
+try(Boost(subsample = 0))
+}
 \author{
 EDG
 }

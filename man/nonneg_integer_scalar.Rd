@@ -13,6 +13,14 @@ An S7 property object.
 S7 property accepting a single non-NA integer value greater than or equal to zero,
 i.e. in \eqn{[0, \infty)} (e.g. \code{0L}, \code{1L}).
 }
+\examples{
+Counter <- S7::new_class(
+  "Counter",
+  properties = list(n_failed = nonneg_integer_scalar)
+)
+Counter(n_failed = 0L)@n_failed
+try(Counter(n_failed = -1L))
+}
 \author{
 EDG
 }
