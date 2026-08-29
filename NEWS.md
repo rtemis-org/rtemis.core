@@ -1,5 +1,12 @@
 # rtemis.core NEWS
 
+## Version 0.4.4
+
+- `write_JSONSchema()` and `write_lines()`, moved here from `rtemis`. The schema
+  registry has more than one producer, so a document's shape belongs to the
+  registry rather than to whichever package emitted it. Keywords are ordered on
+  write; `digits` is an argument, `I(17)` where a double must round-trip exactly.
+
 ## Version 0.4.3
 
 - **License: BSD 3-Clause**, replacing GPL (>= 3). `Imports` are `data.table` 
