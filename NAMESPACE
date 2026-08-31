@@ -3,6 +3,7 @@
 export(abbreviate_class)
 export(abort)
 export(ansi256_to_hex)
+export(assert_config_contract)
 export(bold)
 export(bounded_double_property)
 export(catsize)
