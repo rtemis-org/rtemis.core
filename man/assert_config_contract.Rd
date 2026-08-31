@@ -7,13 +7,20 @@
 assert_config_contract(schema, id = schema[["$id"]], structural = character())
 }
 \arguments{
-\item{schema}{List: The generated schema, as \code{S7_to_JSONSchema()} returns it.}
+\item{schema}{Named list: The generated schema, as \code{S7_to_JSONSchema()} or
+\code{S7_dispatcher_JSONSchema()} returns it.}
 
 \item{id}{Character: The schema's \verb{$id}, used to name it in the error.}
+
+\item{structural}{Character: Keys this schema may require because they carry
+the document's shape rather than a value -- the discriminator and, where the
+variant's fields are nested, the payload key holding them. Empty for a leaf
+or a flat config.}
 }
 \value{
-The \code{schema}, invisibly. Throws with class \code{simpleError} listing
-every rule broken, so one run reports all of them rather than the first.
+The \code{schema}, invisibly, so it can wrap a write call. Throws with
+class \code{simpleError} listing every rule broken, so one run reports all of
+them rather than the first.
 }
 \description{
 Checks one generated JSON Schema against the rules a \emph{config} document must
@@ -24,6 +31,10 @@ documents held to two standards.
 \details{
 Four rules, each recorded where it is raised:
 \itemize{
+\item No top-level \code{required} beyond the keys carrying the document's shape:
+the discriminator and, where a family nests its variant fields, the
+payload key holding them. A config is otherwise a partial expression of
+intent.
 \item No \code{default}: defaults are versioned separately, in \code{defaults/v1}.
 \item No conditional demand for a key (\code{then}/\verb{else} with \code{required}, or
 \code{dependentRequired}): an implementation could satisfy it by filling a

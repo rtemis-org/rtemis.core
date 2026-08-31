@@ -1,5 +1,24 @@
 # rtemis.core NEWS
 
+## Version 0.4.5
+
+- **`assert_config_contract()`, moved here from `rtemis`'s `data-raw/`.** The
+  input-schema contract governs what a *config* document may say, and the
+  registry has more than one producer: `rtemis` and `rtemis.draw` both publish
+  into it, and only one of them was holding itself to the rules. `rtemis.draw`
+  had been shipping `chart/*` documents that named R constructors in their
+  descriptions, which nothing caught because the gate lived in the other
+  package's build script. Exported so both call the same function; the rule
+  predicates stay internal.
+- **A config schema may not name an R construct in a description.** New rule in
+  that contract. The corpus calls itself language-independent and is read by R,
+  by the Rust CLI, by the browser, and by a model that writes no code at all, so
+  a description ending "See `setup_GLMNET`." spent a clause of every reader's
+  attention on a function only one of them can call -- and the agent's algorithm
+  listing, which shows 27 at once, spent 27. Matched by construct rather than by
+  taste: `setup_X`, `pkg::fn` and `.list_to_X` are refused, while prose naming a
+  package -- "Elastic net (glmnet)" -- says what the algorithm *is* and stays.
+
 ## Version 0.4.4
 
 - `write_JSONSchema()` and `write_lines()`, moved here from `rtemis`. The schema

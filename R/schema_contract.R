@@ -165,12 +165,19 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
   offenders <- character()
   for (entry in .subschemas(schema)) {
     node <- entry[["node"]]
-    if (!is.list(node)) next
+    if (!is.list(node)) {
+      next
+    }
     text <- node[["description"]]
-    if (!is.character(text) || length(text) != 1L) next
+    if (!is.character(text) || length(text) != 1L) {
+      next
+    }
     hit <- regmatches(
       text,
-      regexpr("setup_[A-Za-z0-9_]+|[A-Za-z0-9.]+::[A-Za-z0-9_.]+|[.]list_to_[A-Za-z0-9_]+", text)
+      regexpr(
+        "setup_[A-Za-z0-9_]+|[A-Za-z0-9.]+::[A-Za-z0-9_.]+|[.]list_to_[A-Za-z0-9_]+",
+        text
+      )
     )
     if (length(hit) == 1L && nzchar(hit)) {
       offenders <- c(
@@ -195,6 +202,10 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #' @details
 #' Four rules, each recorded where it is raised:
 #'
+#' - No top-level `required` beyond the keys carrying the document's shape:
+#'   the discriminator and, where a family nests its variant fields, the
+#'   payload key holding them. A config is otherwise a partial expression of
+#'   intent.
 #' - No `default`: defaults are versioned separately, in `defaults/v1`.
 #' - No conditional demand for a key (`then`/`else` with `required`, or
 #'   `dependentRequired`): an implementation could satisfy it by filling a
@@ -206,11 +217,17 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #' Record schemas are not subject to this: a record states what a run used, so
 #' everything in it is required and the config's rules do not apply.
 #'
-#' @param schema List: The generated schema, as `S7_to_JSONSchema()` returns it.
+#' @param schema Named list: The generated schema, as `S7_to_JSONSchema()` or
+#' `S7_dispatcher_JSONSchema()` returns it.
 #' @param id Character: The schema's `$id`, used to name it in the error.
+#' @param structural Character: Keys this schema may require because they carry
+#' the document's shape rather than a value -- the discriminator and, where the
+#' variant's fields are nested, the payload key holding them. Empty for a leaf
+#' or a flat config.
 #'
-#' @return The `schema`, invisibly. Throws with class `simpleError` listing
-#'   every rule broken, so one run reports all of them rather than the first.
+#' @return The `schema`, invisibly, so it can wrap a write call. Throws with
+#'   class `simpleError` listing every rule broken, so one run reports all of
+#'   them rather than the first.
 #'
 #' @author EDG
 #' @export
@@ -219,17 +236,6 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #'   list(type = "object", properties = list(k = list(type = "integer"))),
 #'   "https://schema.rtemis.org/example/v1/schema.json"
 #' )
-# Abort unless `schema` satisfies the input-schema contract.
-#
-# `schema`     Named list: a generated schema, as `S7_to_JSONSchema()` or
-#              `S7_dispatcher_JSONSchema()` returns it.
-# `id`         Character: the schema's `$id`, used in the error message.
-# `structural` Character: keys this schema may require because they carry the
-#              document's shape rather than a value -- the discriminator and,
-#              where the variant's fields are nested, the payload key holding
-#              them. Empty for a leaf or a flat config.
-#
-# Returns `schema` invisibly, so it can wrap a write call.
 assert_config_contract <- function(
   schema,
   id = schema[["$id"]],
