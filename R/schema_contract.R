@@ -14,10 +14,10 @@
 #
 # Three rules follow:
 #
-# 1. No top-level `required` beyond the keys that give the document its shape:
-#    the discriminator that says which schema applies and, for a family that
-#    nests its variant fields, the payload key that holds them. A config is
-#    otherwise a partial expression of intent. Nested `required` is untouched:
+# 1. No top-level `required` beyond the key that gives the document its shape:
+#    a family dispatcher's discriminator, which says which variant's schema
+#    applies to its siblings. A config is otherwise a partial expression of
+#    intent. Nested `required` is untouched:
 #    a nested object is either a table row or an `origin` block, whose members
 #    are structural, or a `$ref` to a schema asserted in its own right.
 # 2. No conditional branch may introduce a `required`. A `then` or `else` may
@@ -202,9 +202,9 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #' @details
 #' Four rules, each recorded where it is raised:
 #'
-#' - No top-level `required` beyond the keys carrying the document's shape:
-#'   the discriminator and, where a family nests its variant fields, the
-#'   payload key holding them. A config is otherwise a partial expression of
+#' - No top-level `required` beyond the key carrying the document's shape:
+#'   a family dispatcher's discriminator, which selects the variant whose
+#'   settings are its siblings. A config is otherwise a partial expression of
 #'   intent.
 #' - No `default`: defaults are versioned separately, in `defaults/v1`.
 #' - No conditional demand for a key (`then`/`else` with `required`, or
@@ -221,9 +221,8 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #' `S7_dispatcher_JSONSchema()` returns it.
 #' @param id Character: The schema's `$id`, used to name it in the error.
 #' @param structural Character: Keys this schema may require because they carry
-#' the document's shape rather than a value -- the discriminator and, where the
-#' variant's fields are nested, the payload key holding them. Empty for a leaf
-#' or a flat config.
+#' the document's shape rather than a value -- a family dispatcher's
+#' discriminator. Empty for a leaf or a flat config.
 #'
 #' @return The `schema`, invisibly, so it can wrap a write call. Throws with
 #'   class `simpleError` listing every rule broken, so one run reports all of
@@ -254,7 +253,7 @@ assert_config_contract <- function(
         "declares required propert",
         if (length(stray) == 1L) "y: " else "ies: ",
         paste(stray, collapse = ", "),
-        ". A config is partial by nature; only the discriminator and payload ",
+        ". A config is partial by nature; only a dispatcher's discriminator ",
         "may be required."
       )
     )

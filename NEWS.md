@@ -2,6 +2,14 @@
 
 ## Version 0.4.5
 
+- **`assert_config_contract()` names the one structural key a config may
+  require: a dispatcher's discriminator.** The rule and its message allowed
+  "the discriminator and payload", the payload being the key a family could
+  nest its variant's settings under. No family nests them any more -- settings
+  are siblings of the discriminator everywhere, so that the name alone is a
+  variant with every default -- and the wording described a shape the registry
+  no longer has. `structural` keeps its signature; only what it is expected to
+  carry changed.
 - **`assert_config_contract()`, moved here from `rtemis`'s `data-raw/`.** The
   input-schema contract governs what a *config* document may say, and the
   registry has more than one producer: `rtemis` and `rtemis.draw` both publish
