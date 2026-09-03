@@ -12,7 +12,7 @@
 #   A schema states what is true of the data. It never states what any
 #   interface chooses to fill in.
 #
-# Three rules follow:
+# Four rules follow:
 #
 # 1. No top-level `required` beyond the key that gives the document its shape:
 #    a family dispatcher's discriminator, which says which variant's schema
@@ -35,12 +35,18 @@
 #    `defaults/v1/defaults.json`, which is versioned independently; emitting
 #    one here would version-couple an artifact that is immutable once
 #    published.
+# 4. No description names an R construct. The corpus calls itself
+#    language-independent and is read by R, by the Rust CLI, by the browser and
+#    by a model that writes no code at all; an R constructor or a namespaced
+#    call spends a clause of every reader's attention on a function only one of
+#    them can call. Matched by construct rather than by taste -- see
+#    `.r_specific_prose()` for what counts.
 #
-# Rules 2 and 3 hold at every depth, so they walk the whole document rather
+# Rules 2 to 4 hold at every depth, so they walk the whole document rather
 # than its top level: a nullable `$ref` is emitted as a `oneOf`, and a rule
 # that stopped at `properties` and `items` would not see inside one.
 #
-# Records are exempt from all three: a record asserts what ran, so every field
+# Records are exempt from all four: a record asserts what ran, so every field
 # is required and `required` is set wholesale by `S7_to_JSONSchema(record =)`.
 
 # %% Subschema keywords ----
@@ -242,6 +248,10 @@ assert_config_contract <- function(
 ) {
   problems <- character()
 
+  # `$schema` identifies the document rather than stating anything about it, so
+  # requiring it demands nothing an implementation could fill in. No generator
+  # puts it in `required` -- both `S7_to_JSONSchema()` and the dispatcher strip
+  # it -- so this tolerates a hand-written schema rather than anything emitted.
   stray <- setdiff(
     as.character(schema[["required"]]),
     c("$schema", structural)
