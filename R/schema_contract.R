@@ -12,12 +12,12 @@
 #   A schema states what is true of the data. It never states what any
 #   interface chooses to fill in.
 #
-# Three rules follow:
+# Four rules follow:
 #
-# 1. No top-level `required` beyond the keys that give the document its shape:
-#    the discriminator that says which schema applies and, for a family that
-#    nests its variant fields, the payload key that holds them. A config is
-#    otherwise a partial expression of intent. Nested `required` is untouched:
+# 1. No top-level `required` beyond the key that gives the document its shape:
+#    a family dispatcher's discriminator, which says which variant's schema
+#    applies to its siblings. A config is otherwise a partial expression of
+#    intent. Nested `required` is untouched:
 #    a nested object is either a table row or an `origin` block, whose members
 #    are structural, or a `$ref` to a schema asserted in its own right.
 # 2. No conditional branch may introduce a `required`. A `then` or `else` may
@@ -35,12 +35,18 @@
 #    `defaults/v1/defaults.json`, which is versioned independently; emitting
 #    one here would version-couple an artifact that is immutable once
 #    published.
+# 4. No description names an R construct. The corpus calls itself
+#    language-independent and is read by R, by the Rust CLI, by the browser and
+#    by a model that writes no code at all; an R constructor or a namespaced
+#    call spends a clause of every reader's attention on a function only one of
+#    them can call. Matched by construct rather than by taste -- see
+#    `.r_specific_prose()` for what counts.
 #
-# Rules 2 and 3 hold at every depth, so they walk the whole document rather
+# Rules 2 to 4 hold at every depth, so they walk the whole document rather
 # than its top level: a nullable `$ref` is emitted as a `oneOf`, and a rule
 # that stopped at `properties` and `items` would not see inside one.
 #
-# Records are exempt from all three: a record asserts what ran, so every field
+# Records are exempt from all four: a record asserts what ran, so every field
 # is required and `required` is set wholesale by `S7_to_JSONSchema(record =)`.
 
 # %% Subschema keywords ----
@@ -202,9 +208,9 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #' @details
 #' Four rules, each recorded where it is raised:
 #'
-#' - No top-level `required` beyond the keys carrying the document's shape:
-#'   the discriminator and, where a family nests its variant fields, the
-#'   payload key holding them. A config is otherwise a partial expression of
+#' - No top-level `required` beyond the key carrying the document's shape:
+#'   a family dispatcher's discriminator, which selects the variant whose
+#'   settings are its siblings. A config is otherwise a partial expression of
 #'   intent.
 #' - No `default`: defaults are versioned separately, in `defaults/v1`.
 #' - No conditional demand for a key (`then`/`else` with `required`, or
@@ -221,9 +227,8 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #' `S7_dispatcher_JSONSchema()` returns it.
 #' @param id Character: The schema's `$id`, used to name it in the error.
 #' @param structural Character: Keys this schema may require because they carry
-#' the document's shape rather than a value -- the discriminator and, where the
-#' variant's fields are nested, the payload key holding them. Empty for a leaf
-#' or a flat config.
+#' the document's shape rather than a value -- a family dispatcher's
+#' discriminator. Empty for a leaf or a flat config.
 #'
 #' @return The `schema`, invisibly, so it can wrap a write call. Throws with
 #'   class `simpleError` listing every rule broken, so one run reports all of
@@ -243,6 +248,10 @@ assert_config_contract <- function(
 ) {
   problems <- character()
 
+  # `$schema` identifies the document rather than stating anything about it, so
+  # requiring it demands nothing an implementation could fill in. No generator
+  # puts it in `required` -- both `S7_to_JSONSchema()` and the dispatcher strip
+  # it -- so this tolerates a hand-written schema rather than anything emitted.
   stray <- setdiff(
     as.character(schema[["required"]]),
     c("$schema", structural)
@@ -254,7 +263,7 @@ assert_config_contract <- function(
         "declares required propert",
         if (length(stray) == 1L) "y: " else "ies: ",
         paste(stray, collapse = ", "),
-        ". A config is partial by nature; only the discriminator and payload ",
+        ". A config is partial by nature; only a dispatcher's discriminator ",
         "may be required."
       )
     )
