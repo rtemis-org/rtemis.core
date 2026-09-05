@@ -1,5 +1,28 @@
 # rtemis.core NEWS
 
+## Version 0.4.6
+
+- **`bounded_double_property()` is removed, superseded by `prop_float()`.** It
+  built its property with a bare `new_property()`, so it carried no spec:
+  `prop_spec()` returned `NULL` for it and its bounds never reached the
+  generated JSON Schema, leaving a class and its published schema free to
+  disagree. It also rendered infinite bounds closed (`[0, Inf]`) while rejecting
+  infinities, skipped validation of its own bounds, and typed its value
+  `class_double`, rejecting the integers `jsonlite::fromJSON()` produces for
+  whole numbers. `prop_float()` covers the same intervals via `min`/`max` and
+  `exclusive_min`/`exclusive_max`, and does carry a spec.
+
+- **`check_bounded_double_scalar()` and `check_bounded_integer_scalar()`, with
+  their `check_optional_*` counterparts.** Bounds are arguments rather than fixed
+  in the function name, for ranges that vary by caller. The double check takes
+  `lower`, `upper`, `lower_open` and `upper_open`, matching `prop_float()`,
+  whose argument-checking counterpart it is; the integer check takes inclusive
+  bounds. An infinite bound is reported open, so an unbounded side reads
+  `[0, Inf)` -- and is enforced open: the double check rejects `Inf`/`-Inf`,
+  finite like the property it mirrors. Both checks validate their own
+  `lower`/`upper` first, so an `NA` or inverted bound is a structured rtemis
+  error naming the bad bound rather than a base R comparison failure.
+
 ## Version 0.4.5
 
 - **`assert_config_contract()` names the one structural key a config may

@@ -367,63 +367,6 @@ test_that("optional_nonneg_double_scalar rejects negative value", {
   expect_error(.TC$opt_nng(x = -1.0))
 })
 
-# bounded_double_property ----
-test_that("bounded_double_property closed interval accepts endpoints", {
-  TC <- new_class(
-    "TC_bnd1",
-    properties = list(x = bounded_double_property(0, 10))
-  )
-  expect_no_error(TC(x = 0))
-  expect_no_error(TC(x = 10))
-  expect_no_error(TC(x = 5))
-})
-
-test_that("bounded_double_property closed interval rejects outside", {
-  TC <- new_class(
-    "TC_bnd2",
-    properties = list(x = bounded_double_property(0, 10))
-  )
-  expect_error(TC(x = -0.1))
-  expect_error(TC(x = 10.1))
-})
-
-test_that("bounded_double_property lower_open rejects lower endpoint", {
-  TC <- new_class(
-    "TC_bnd3",
-    properties = list(x = bounded_double_property(0, 1, lower_open = TRUE))
-  )
-  expect_error(TC(x = 0))
-  expect_no_error(TC(x = 0.001))
-  expect_no_error(TC(x = 1))
-})
-
-test_that("bounded_double_property upper_open rejects upper endpoint", {
-  TC <- new_class(
-    "TC_bnd4",
-    properties = list(x = bounded_double_property(0, 1, upper_open = TRUE))
-  )
-  expect_no_error(TC(x = 0))
-  expect_error(TC(x = 1))
-})
-
-test_that("bounded_double_property nullable accepts NULL", {
-  TC <- new_class(
-    "TC_bnd5",
-    properties = list(x = bounded_double_property(0, 1, nullable = TRUE))
-  )
-  expect_no_error(TC(x = NULL))
-  expect_no_error(TC(x = 0.5))
-  expect_error(TC(x = 2.0))
-})
-
-test_that("bounded_double_property rejects Inf", {
-  TC <- new_class(
-    "TC_bnd6",
-    properties = list(x = bounded_double_property(0, 100))
-  )
-  expect_error(TC(x = Inf))
-})
-
 # prob_vector ----
 test_that("prob_vector accepts valid vector", {
   expect_no_error(.TC$pvec(x = c(0, 0.5, 1)))

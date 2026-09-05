@@ -383,6 +383,60 @@ test_that("check_optional_pos_integer_scalar rejects 0", {
   expect_error(check_optional_pos_integer_scalar(0L))
 })
 
+# check_bounded_integer_scalar ----
+test_that("check_bounded_integer_scalar passes within inclusive bounds", {
+  expect_invisible(check_bounded_integer_scalar(5L, lower = 0, upper = 20))
+  expect_invisible(check_bounded_integer_scalar(0, lower = 0, upper = 20))
+  expect_invisible(check_bounded_integer_scalar(20, lower = 0, upper = 20))
+})
+
+test_that("check_bounded_integer_scalar rejects values outside bounds", {
+  expect_error(
+    check_bounded_integer_scalar(25, lower = 0, upper = 20),
+    class = "rtemis_range_error"
+  )
+  expect_error(
+    check_bounded_integer_scalar(-1, lower = 0),
+    class = "rtemis_range_error"
+  )
+})
+
+test_that("check_bounded_integer_scalar defaults leave each side unbounded", {
+  expect_invisible(check_bounded_integer_scalar(1e6, lower = 0))
+  expect_invisible(check_bounded_integer_scalar(-1e6, upper = 0))
+})
+
+test_that("check_bounded_integer_scalar rejects non-whole numbers", {
+  expect_error(
+    check_bounded_integer_scalar(1.5, lower = 0),
+    class = "rtemis_value_error"
+  )
+})
+
+test_that("check_bounded_integer_scalar names an infinite bound as open", {
+  # "[0, Inf]" would claim Inf itself is an acceptable value.
+  expect_error(
+    check_bounded_integer_scalar(-1, lower = 0, arg_name = "n"),
+    "\\[0, Inf\\)",
+    fixed = FALSE
+  )
+})
+
+test_that("check_optional_bounded_integer_scalar accepts NULL", {
+  expect_invisible(check_optional_bounded_integer_scalar(NULL))
+  expect_invisible(
+    check_optional_bounded_integer_scalar(NULL, lower = 0, upper = 20)
+  )
+})
+
+test_that("check_optional_bounded_integer_scalar checks a supplied value", {
+  expect_invisible(check_optional_bounded_integer_scalar(5L, lower = 0))
+  expect_error(
+    check_optional_bounded_integer_scalar(25, lower = 0, upper = 20),
+    class = "rtemis_range_error"
+  )
+})
+
 # check_character_scalar ----
 test_that("check_character_scalar passes for non-empty string", {
   expect_invisible(check_character_scalar("hello"))
@@ -517,6 +571,139 @@ test_that("check_prob_scalar passes for values in [0, 1]", {
 test_that("check_prob_scalar rejects values outside [0, 1]", {
   expect_error(check_prob_scalar(1.5))
   expect_error(check_prob_scalar(-0.1))
+})
+
+# check_bounded_double_scalar ----
+test_that("check_bounded_double_scalar passes within inclusive bounds", {
+  expect_invisible(check_bounded_double_scalar(0.7, lower = 0, upper = 2))
+  expect_invisible(check_bounded_double_scalar(0, lower = 0, upper = 2))
+  expect_invisible(check_bounded_double_scalar(2, lower = 0, upper = 2))
+})
+
+test_that("check_bounded_double_scalar rejects values outside bounds", {
+  expect_error(
+    check_bounded_double_scalar(5, lower = 0, upper = 2),
+    class = "rtemis_range_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(-0.1, lower = 0, upper = 2),
+    class = "rtemis_range_error"
+  )
+})
+
+test_that("check_bounded_double_scalar honors exclusive bounds", {
+  # A learning rate in (0, 1]: 0 is out, 1 is in.
+  expect_error(
+    check_bounded_double_scalar(0, lower = 0, upper = 1, lower_open = TRUE),
+    class = "rtemis_range_error"
+  )
+  expect_invisible(
+    check_bounded_double_scalar(1, lower = 0, upper = 1, lower_open = TRUE)
+  )
+  expect_error(
+    check_bounded_double_scalar(1, lower = 0, upper = 1, upper_open = TRUE),
+    class = "rtemis_range_error"
+  )
+})
+
+test_that("check_bounded_double_scalar reports the interval it enforced", {
+  expect_error(
+    check_bounded_double_scalar(5, lower = 0, upper = 2, arg_name = "temp"),
+    "\\[0, 2\\]"
+  )
+  expect_error(
+    check_bounded_double_scalar(
+      0,
+      lower = 0,
+      upper = 1,
+      lower_open = TRUE,
+      arg_name = "lr"
+    ),
+    "\\(0, 1\\]"
+  )
+})
+
+test_that("check_bounded_double_scalar rejects non-numeric and NA", {
+  expect_error(
+    check_bounded_double_scalar("x", lower = 0, upper = 2),
+    class = "rtemis_type_error"
+  )
+  expect_error(check_bounded_double_scalar(NA_real_, lower = 0, upper = 2))
+})
+
+test_that("check_bounded_double_scalar rejects infinite values", {
+  # An infinite bound is always an open one, so Inf is out even when unbounded
+  # above - matching prop_float(), whose validator requires a finite value.
+  expect_error(
+    check_bounded_double_scalar(Inf, lower = 0),
+    class = "rtemis_value_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(-Inf, upper = 0),
+    class = "rtemis_value_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(Inf, lower = 0, upper = Inf),
+    class = "rtemis_value_error"
+  )
+  # The reported interval renders the infinite side open.
+  expect_error(
+    check_bounded_double_scalar(Inf, lower = 0, arg_name = "temp"),
+    "\\[0, Inf\\)"
+  )
+  expect_error(
+    check_optional_bounded_double_scalar(Inf, lower = 0),
+    class = "rtemis_value_error"
+  )
+})
+
+test_that("bounded checks reject unusable bounds", {
+  # NA bounds would otherwise surface as a base R comparison error.
+  expect_error(
+    check_bounded_integer_scalar(5L, lower = NA),
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(0.5, upper = NA_real_),
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(0.5, lower = c(0, 1)),
+    class = "rtemis_type_error"
+  )
+  # Inverted bounds describe an empty interval no value can satisfy.
+  expect_error(
+    check_bounded_integer_scalar(5L, lower = 20, upper = 0),
+    class = "rtemis_value_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(0.5, lower = 1, upper = 0),
+    class = "rtemis_value_error"
+  )
+  # Bounds are checked before the value, so a bad bound wins over a bad value.
+  expect_error(
+    check_bounded_integer_scalar("x", lower = 20, upper = 0),
+    class = "rtemis_value_error"
+  )
+})
+
+test_that("check_optional_bounded_double_scalar accepts NULL", {
+  expect_invisible(check_optional_bounded_double_scalar(NULL))
+  expect_invisible(
+    check_optional_bounded_double_scalar(NULL, lower = 0, upper = 2)
+  )
+})
+
+test_that("check_optional_bounded_double_scalar checks a supplied value", {
+  expect_invisible(check_optional_bounded_double_scalar(
+    0.7,
+    lower = 0,
+    upper = 2
+  ))
+  expect_error(
+    check_optional_bounded_double_scalar(5, lower = 0, upper = 2),
+    class = "rtemis_range_error"
+  )
 })
 
 test_that("check_prob_scalar rejects NA", {
