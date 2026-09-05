@@ -21,8 +21,6 @@
 #   unit_open_vector / optional_unit_open_vector         (0, 1)
 #   pos_double_vector / optional_pos_double_vector       (0, Inf)
 #   nonneg_double_vector / optional_nonneg_double_vector [0, Inf)
-# Factory ---------------------------------------------------------------------
-#   bounded_double_property
 
 # %% Character ----
 #' Non-empty character scalar S7 property
@@ -813,76 +811,6 @@ optional_nonneg_double_vector <- new_property(
     NULL
   }
 )
-
-
-# %% Factory ----
-#' Create a bounded double S7 property
-#'
-#' Returns a `new_property()` for a double scalar constrained to a given interval.
-#' Useful for bounds not covered by the pre-built properties.
-#'
-#' @param lower Numeric scalar. Lower bound. Default `-Inf`.
-#' @param upper Numeric scalar. Upper bound. Default `Inf`.
-#' @param lower_open Logical scalar. If `TRUE`, lower bound is exclusive `(lower, ...]`.
-#'   Default `FALSE`.
-#' @param upper_open Logical scalar. If `TRUE`, upper bound is exclusive `[..., upper)`.
-#'   Default `FALSE`.
-#' @param nullable Logical scalar. If `TRUE`, `NULL` is also accepted. Default `FALSE`.
-#'
-#' @return An S7 property object.
-#' @author EDG
-#' @export
-#'
-#' @examples
-#' # Learning rate in (0, 1]
-#' lr_prop <- bounded_double_property(0, 1, lower_open = TRUE)
-bounded_double_property <- function(
-  lower = -Inf,
-  upper = Inf,
-  lower_open = FALSE,
-  upper_open = FALSE,
-  nullable = FALSE
-) {
-  lower_sym <- if (lower_open) "(" else "["
-  upper_sym <- if (upper_open) ")" else "]"
-  bound_desc <- paste0(
-    "must be a finite double in ",
-    lower_sym,
-    lower,
-    ", ",
-    upper,
-    upper_sym
-  )
-
-  check_lower <- if (lower_open) {
-    function(v) v > lower
-  } else {
-    function(v) v >= lower
-  }
-  check_upper <- if (upper_open) {
-    function(v) v < upper
-  } else {
-    function(v) v <= upper
-  }
-
-  cls <- if (nullable) new_union(NULL, class_double) else class_double
-
-  new_property(
-    class = cls,
-    validator = function(value) {
-      if (nullable && is.null(value)) {
-        return(NULL)
-      }
-      if (length(value) != 1L || is.na(value) || !is.finite(value)) {
-        return(paste0(bound_desc, " (must be a finite scalar)"))
-      }
-      if (!check_lower(value) || !check_upper(value)) {
-        return(bound_desc)
-      }
-      NULL
-    }
-  )
-}
 
 
 # %% enum() ----

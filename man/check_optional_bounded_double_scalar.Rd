@@ -17,15 +17,13 @@ check_optional_bounded_double_scalar(
 \item{x}{Optional Numeric: Value to check. Must be \code{NULL} or a single finite non-NA
 number within bounds.}
 
-\item{lower}{Numeric scalar: Lower bound. Default \code{-Inf}.}
+\item{lower}{Numeric scalar: Lower bound.}
 
-\item{upper}{Numeric scalar: Upper bound. Default \code{Inf}.}
+\item{upper}{Numeric scalar: Upper bound.}
 
-\item{lower_open}{Logical scalar: If \code{TRUE}, the lower bound is exclusive. Default
-\code{FALSE}.}
+\item{lower_open}{Logical scalar: If \code{TRUE}, the lower bound is exclusive.}
 
-\item{upper_open}{Logical scalar: If \code{TRUE}, the upper bound is exclusive. Default
-\code{FALSE}.}
+\item{upper_open}{Logical scalar: If \code{TRUE}, the upper bound is exclusive.}
 
 \item{arg_name}{Character: Argument name to use in error messages.}
 }

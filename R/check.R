@@ -1191,8 +1191,8 @@ check_optional_pos_integer_scalar <- function(
 #' next whole number in.
 #'
 #' @param x Numeric: Value to check. Must be a single non-NA whole number.
-#' @param lower Numeric scalar: Lower bound, inclusive. Default `-Inf`.
-#' @param upper Numeric scalar: Upper bound, inclusive. Default `Inf`.
+#' @param lower Numeric scalar: Lower bound, inclusive.
+#' @param upper Numeric scalar: Upper bound, inclusive.
 #' @param arg_name Character: Argument name to use in error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
@@ -1235,8 +1235,8 @@ check_bounded_integer_scalar <- function(
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single non-NA whole
 #'   number within bounds.
-#' @param lower Numeric scalar: Lower bound, inclusive. Default `-Inf`.
-#' @param upper Numeric scalar: Upper bound, inclusive. Default `Inf`.
+#' @param lower Numeric scalar: Lower bound, inclusive.
+#' @param upper Numeric scalar: Upper bound, inclusive.
 #' @param arg_name Character: Argument name to use in error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
@@ -1549,17 +1549,16 @@ check_optional_nonneg_double_scalar <- function(
 #' @details
 #' For bounds not covered by the fixed-range checks ([check_prob_scalar] is `[0, 1]`,
 #' [check_pos_double_scalar] is `(0, Inf)`), or where the range is not known until
-#' runtime. The argument-checking counterpart to [bounded_double_property], and
-#' finite like it: `Inf`/`-Inf` are rejected even where the matching bound is
-#' unbounded, since an infinite bound is always an open one.
+#' runtime. The argument-checking counterpart to [prop_float], whose `min`/`max`
+#' and `exclusive_min`/`exclusive_max` describe the same intervals for a config
+#' class. Finite like it: `Inf`/`-Inf` are rejected even where the matching bound
+#' is unbounded, since an infinite bound is always an open one.
 #'
 #' @param x Numeric: Value to check. Must be a single finite non-NA number.
-#' @param lower Numeric scalar: Lower bound. Default `-Inf`.
-#' @param upper Numeric scalar: Upper bound. Default `Inf`.
-#' @param lower_open Logical scalar: If `TRUE`, the lower bound is exclusive. Default
-#'   `FALSE`.
-#' @param upper_open Logical scalar: If `TRUE`, the upper bound is exclusive. Default
-#'   `FALSE`.
+#' @param lower Numeric scalar: Lower bound.
+#' @param upper Numeric scalar: Upper bound.
+#' @param lower_open Logical scalar: If `TRUE`, the lower bound is exclusive.
+#' @param upper_open Logical scalar: If `TRUE`, the upper bound is exclusive.
 #' @param arg_name Character: Argument name to use in error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.
@@ -1619,12 +1618,10 @@ check_bounded_double_scalar <- function(
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single finite non-NA
 #'   number within bounds.
-#' @param lower Numeric scalar: Lower bound. Default `-Inf`.
-#' @param upper Numeric scalar: Upper bound. Default `Inf`.
-#' @param lower_open Logical scalar: If `TRUE`, the lower bound is exclusive. Default
-#'   `FALSE`.
-#' @param upper_open Logical scalar: If `TRUE`, the upper bound is exclusive. Default
-#'   `FALSE`.
+#' @param lower Numeric scalar: Lower bound.
+#' @param upper Numeric scalar: Upper bound.
+#' @param lower_open Logical scalar: If `TRUE`, the lower bound is exclusive.
+#' @param upper_open Logical scalar: If `TRUE`, the upper bound is exclusive.
 #' @param arg_name Character: Argument name to use in error messages.
 #'
 #' @return Called for side effects. Throws an error if checks fail.

@@ -16,15 +16,13 @@ check_bounded_double_scalar(
 \arguments{
 \item{x}{Numeric: Value to check. Must be a single finite non-NA number.}
 
-\item{lower}{Numeric scalar: Lower bound. Default \code{-Inf}.}
+\item{lower}{Numeric scalar: Lower bound.}
 
-\item{upper}{Numeric scalar: Upper bound. Default \code{Inf}.}
+\item{upper}{Numeric scalar: Upper bound.}
 
-\item{lower_open}{Logical scalar: If \code{TRUE}, the lower bound is exclusive. Default
-\code{FALSE}.}
+\item{lower_open}{Logical scalar: If \code{TRUE}, the lower bound is exclusive.}
 
-\item{upper_open}{Logical scalar: If \code{TRUE}, the upper bound is exclusive. Default
-\code{FALSE}.}
+\item{upper_open}{Logical scalar: If \code{TRUE}, the upper bound is exclusive.}
 
 \item{arg_name}{Character: Argument name to use in error messages.}
 }
@@ -37,9 +35,10 @@ Check double scalar within bounds
 \details{
 For bounds not covered by the fixed-range checks (\link{check_prob_scalar} is \verb{[0, 1]},
 \link{check_pos_double_scalar} is \verb{(0, Inf)}), or where the range is not known until
-runtime. The argument-checking counterpart to \link{bounded_double_property}, and
-finite like it: \code{Inf}/\code{-Inf} are rejected even where the matching bound is
-unbounded, since an infinite bound is always an open one.
+runtime. The argument-checking counterpart to \link{prop_float}, whose \code{min}/\code{max}
+and \code{exclusive_min}/\code{exclusive_max} describe the same intervals for a config
+class. Finite like it: \code{Inf}/\code{-Inf} are rejected even where the matching bound
+is unbounded, since an infinite bound is always an open one.
 }
 \examples{
 check_bounded_double_scalar(0.7, lower = 0, upper = 2)

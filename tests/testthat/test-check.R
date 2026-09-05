@@ -633,7 +633,7 @@ test_that("check_bounded_double_scalar rejects non-numeric and NA", {
 
 test_that("check_bounded_double_scalar rejects infinite values", {
   # An infinite bound is always an open one, so Inf is out even when unbounded
-  # above - matching bounded_double_property(), which requires is.finite().
+  # above - matching prop_float(), whose validator requires a finite value.
   expect_error(
     check_bounded_double_scalar(Inf, lower = 0),
     class = "rtemis_value_error"

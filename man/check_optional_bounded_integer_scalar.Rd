@@ -15,9 +15,9 @@ check_optional_bounded_integer_scalar(
 \item{x}{Optional Numeric: Value to check. Must be \code{NULL} or a single non-NA whole
 number within bounds.}
 
-\item{lower}{Numeric scalar: Lower bound, inclusive. Default \code{-Inf}.}
+\item{lower}{Numeric scalar: Lower bound, inclusive.}
 
-\item{upper}{Numeric scalar: Upper bound, inclusive. Default \code{Inf}.}
+\item{upper}{Numeric scalar: Upper bound, inclusive.}
 
 \item{arg_name}{Character: Argument name to use in error messages.}
 }
