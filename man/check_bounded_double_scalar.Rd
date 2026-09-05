@@ -14,7 +14,7 @@ check_bounded_double_scalar(
 )
 }
 \arguments{
-\item{x}{Numeric: Value to check. Must be a single non-NA number.}
+\item{x}{Numeric: Value to check. Must be a single finite non-NA number.}
 
 \item{lower}{Numeric scalar: Lower bound. Default \code{-Inf}.}
 
@@ -37,7 +37,9 @@ Check double scalar within bounds
 \details{
 For bounds not covered by the fixed-range checks (\link{check_prob_scalar} is \verb{[0, 1]},
 \link{check_pos_double_scalar} is \verb{(0, Inf)}), or where the range is not known until
-runtime. The argument-checking counterpart to \link{bounded_double_property}.
+runtime. The argument-checking counterpart to \link{bounded_double_property}, and
+finite like it: \code{Inf}/\code{-Inf} are rejected even where the matching bound is
+unbounded, since an infinite bound is always an open one.
 }
 \examples{
 check_bounded_double_scalar(0.7, lower = 0, upper = 2)
@@ -45,6 +47,7 @@ check_bounded_double_scalar(0.7, lower = 0, upper = 2)
 check_bounded_double_scalar(0.1, lower = 0, upper = 1, lower_open = TRUE)
 # Throw error:
 try(check_bounded_double_scalar(5, lower = 0, upper = 2))
+try(check_bounded_double_scalar(Inf, lower = 0))
 }
 \author{
 EDG

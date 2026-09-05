@@ -14,8 +14,8 @@ check_optional_bounded_double_scalar(
 )
 }
 \arguments{
-\item{x}{Optional Numeric: Value to check. Must be \code{NULL} or a single non-NA number
-within bounds.}
+\item{x}{Optional Numeric: Value to check. Must be \code{NULL} or a single finite non-NA
+number within bounds.}
 
 \item{lower}{Numeric scalar: Lower bound. Default \code{-Inf}.}
 

@@ -97,6 +97,50 @@ describe_bounds <- function(
 } # /rtemis.core::describe_bounds
 
 
+# %% check_bounds ----
+#' Check the bounds handed to a bounded check
+#'
+#' Guards the `lower`/`upper` arguments of the bounded scalar checks. These are
+#' supplied by the calling code, not the end user, so a bad bound is a programming
+#' error - but without this guard it surfaces as a base R condition
+#' ("missing value where TRUE/FALSE needed") from the comparison, or, for inverted
+#' bounds, as a range error naming an empty interval that no value can satisfy.
+#'
+#' @param lower Numeric scalar: Lower bound.
+#' @param upper Numeric scalar: Upper bound.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+check_bounds <- function(lower, upper) {
+  for (i in seq_len(2L)) {
+    nm <- c("lower", "upper")[i]
+    val <- if (i == 1L) lower else upper
+    if (!is.numeric(val) || length(val) != 1L || is.na(val)) {
+      abort(
+        "`",
+        nm,
+        "` must be a single non-NA number.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
+    }
+  }
+  if (lower > upper) {
+    abort(
+      "`lower` (",
+      lower,
+      ") must not exceed `upper` (",
+      upper,
+      ").",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  invisible()
+} # /rtemis.core::check_bounds
+
+
 # %% check_inherits ----
 #' Check class of object
 #'
@@ -1168,6 +1212,7 @@ check_bounded_integer_scalar <- function(
   upper = Inf,
   arg_name = deparse(substitute(x))
 ) {
+  check_bounds(lower, upper)
   check_integer_scalar(x, arg_name = arg_name)
   if (x < lower || x > upper) {
     abort(
@@ -1504,9 +1549,11 @@ check_optional_nonneg_double_scalar <- function(
 #' @details
 #' For bounds not covered by the fixed-range checks ([check_prob_scalar] is `[0, 1]`,
 #' [check_pos_double_scalar] is `(0, Inf)`), or where the range is not known until
-#' runtime. The argument-checking counterpart to [bounded_double_property].
+#' runtime. The argument-checking counterpart to [bounded_double_property], and
+#' finite like it: `Inf`/`-Inf` are rejected even where the matching bound is
+#' unbounded, since an infinite bound is always an open one.
 #'
-#' @param x Numeric: Value to check. Must be a single non-NA number.
+#' @param x Numeric: Value to check. Must be a single finite non-NA number.
 #' @param lower Numeric scalar: Lower bound. Default `-Inf`.
 #' @param upper Numeric scalar: Upper bound. Default `Inf`.
 #' @param lower_open Logical scalar: If `TRUE`, the lower bound is exclusive. Default
@@ -1526,6 +1573,7 @@ check_optional_nonneg_double_scalar <- function(
 #' check_bounded_double_scalar(0.1, lower = 0, upper = 1, lower_open = TRUE)
 #' # Throw error:
 #' try(check_bounded_double_scalar(5, lower = 0, upper = 2))
+#' try(check_bounded_double_scalar(Inf, lower = 0))
 check_bounded_double_scalar <- function(
   x,
   lower = -Inf,
@@ -1534,7 +1582,20 @@ check_bounded_double_scalar <- function(
   upper_open = FALSE,
   arg_name = deparse(substitute(x))
 ) {
+  check_bounds(lower, upper)
   check_double_scalar(x, arg_name = arg_name)
+  if (!is.finite(x)) {
+    abort(
+      "`",
+      arg_name,
+      "` must be a finite number in ",
+      describe_bounds(lower, upper, lower_open, upper_open),
+      ", not ",
+      x,
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
   below <- if (lower_open) x <= lower else x < lower
   above <- if (upper_open) x >= upper else x > upper
   if (below || above) {
@@ -1556,8 +1617,8 @@ check_bounded_double_scalar <- function(
 # %% check_optional_bounded_double_scalar ----
 #' Check optional double scalar within bounds
 #'
-#' @param x Optional Numeric: Value to check. Must be `NULL` or a single non-NA number
-#'   within bounds.
+#' @param x Optional Numeric: Value to check. Must be `NULL` or a single finite non-NA
+#'   number within bounds.
 #' @param lower Numeric scalar: Lower bound. Default `-Inf`.
 #' @param upper Numeric scalar: Upper bound. Default `Inf`.
 #' @param lower_open Logical scalar: If `TRUE`, the lower bound is exclusive. Default

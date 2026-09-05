@@ -8,7 +8,10 @@
   `lower`, `upper`, `lower_open` and `upper_open`, matching
   `bounded_double_property()`, whose argument-checking counterpart it is; the
   integer check takes inclusive bounds. An infinite bound is reported open, so an
-  unbounded side reads `[0, Inf)`.
+  unbounded side reads `[0, Inf)` -- and is enforced open: the double check
+  rejects `Inf`/`-Inf`, finite like the property it mirrors. Both checks validate
+  their own `lower`/`upper` first, so an `NA` or inverted bound is a structured
+  rtemis error naming the bad bound rather than a base R comparison failure.
 
 ## Version 0.4.5
 

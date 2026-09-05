@@ -631,6 +631,62 @@ test_that("check_bounded_double_scalar rejects non-numeric and NA", {
   expect_error(check_bounded_double_scalar(NA_real_, lower = 0, upper = 2))
 })
 
+test_that("check_bounded_double_scalar rejects infinite values", {
+  # An infinite bound is always an open one, so Inf is out even when unbounded
+  # above - matching bounded_double_property(), which requires is.finite().
+  expect_error(
+    check_bounded_double_scalar(Inf, lower = 0),
+    class = "rtemis_value_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(-Inf, upper = 0),
+    class = "rtemis_value_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(Inf, lower = 0, upper = Inf),
+    class = "rtemis_value_error"
+  )
+  # The reported interval renders the infinite side open.
+  expect_error(
+    check_bounded_double_scalar(Inf, lower = 0, arg_name = "temp"),
+    "\\[0, Inf\\)"
+  )
+  expect_error(
+    check_optional_bounded_double_scalar(Inf, lower = 0),
+    class = "rtemis_value_error"
+  )
+})
+
+test_that("bounded checks reject unusable bounds", {
+  # NA bounds would otherwise surface as a base R comparison error.
+  expect_error(
+    check_bounded_integer_scalar(5L, lower = NA),
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(0.5, upper = NA_real_),
+    class = "rtemis_type_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(0.5, lower = c(0, 1)),
+    class = "rtemis_type_error"
+  )
+  # Inverted bounds describe an empty interval no value can satisfy.
+  expect_error(
+    check_bounded_integer_scalar(5L, lower = 20, upper = 0),
+    class = "rtemis_value_error"
+  )
+  expect_error(
+    check_bounded_double_scalar(0.5, lower = 1, upper = 0),
+    class = "rtemis_value_error"
+  )
+  # Bounds are checked before the value, so a bad bound wins over a bad value.
+  expect_error(
+    check_bounded_integer_scalar("x", lower = 20, upper = 0),
+    class = "rtemis_value_error"
+  )
+})
+
 test_that("check_optional_bounded_double_scalar accepts NULL", {
   expect_invisible(check_optional_bounded_double_scalar(NULL))
   expect_invisible(
