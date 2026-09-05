@@ -1,5 +1,15 @@
 # rtemis.core NEWS
 
+## Version 0.4.6
+
+- **`check_bounded_double_scalar()` and `check_bounded_integer_scalar()`, with
+  their `check_optional_*` counterparts.** Bounds are arguments rather than fixed
+  in the function name, for ranges that vary by caller. The double check takes
+  `lower`, `upper`, `lower_open` and `upper_open`, matching
+  `bounded_double_property()`, whose argument-checking counterpart it is; the
+  integer check takes inclusive bounds. An infinite bound is reported open, so an
+  unbounded side reads `[0, Inf)`.
+
 ## Version 0.4.5
 
 - **`assert_config_contract()` names the one structural key a config may

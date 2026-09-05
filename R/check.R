@@ -38,6 +38,8 @@
 #   check_optional_integer_scalar
 #   check_pos_integer_scalar
 #   check_optional_pos_integer_scalar
+#   check_bounded_integer_scalar
+#   check_optional_bounded_integer_scalar
 #   check_logical_scalar
 #   check_optional_logical_scalar
 #   check_prob_scalar
@@ -47,6 +49,8 @@
 #   check_optional_pos_double_scalar
 #   check_nonneg_double_scalar
 #   check_optional_nonneg_double_scalar
+#   check_bounded_double_scalar
+#   check_optional_bounded_double_scalar
 # S7-parallel vector checks
 #   check_prob_vector
 #   check_optional_prob_vector
@@ -60,6 +64,38 @@
 #   check_scalar_logical
 #   check_scalar_character
 #   check_optional_scalar_character
+
+# %% describe_bounds ----
+#' Render an interval for an error message
+#'
+#' An infinite bound is always rendered open, so an unbounded side reads
+#' `[0, Inf)` rather than the nonsensical `[0, Inf]`.
+#'
+#' @param lower Numeric scalar: Lower bound.
+#' @param upper Numeric scalar: Upper bound.
+#' @param lower_open Logical scalar: Whether the lower bound is exclusive.
+#' @param upper_open Logical scalar: Whether the upper bound is exclusive.
+#'
+#' @return Character: The interval, e.g. `"[0, 20]"`.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+describe_bounds <- function(
+  lower,
+  upper,
+  lower_open = FALSE,
+  upper_open = FALSE
+) {
+  paste0(
+    if (lower_open || !is.finite(lower)) "(" else "[",
+    lower,
+    ", ",
+    upper,
+    if (upper_open || !is.finite(upper)) ")" else "]"
+  )
+} # /rtemis.core::describe_bounds
+
 
 # %% check_inherits ----
 #' Check class of object
@@ -1100,6 +1136,93 @@ check_optional_pos_integer_scalar <- function(
 } # /rtemis.core::check_optional_pos_integer_scalar
 
 
+# %% check_bounded_integer_scalar ----
+#' Check integer scalar within bounds
+#'
+#' @details
+#' For bounds not covered by the fixed-range checks: `check_pos_integer_scalar()` is
+#' `[1, Inf)`, and there is no non-negative or upper-bounded equivalent. Integer-typed
+#' inputs (`5L`) and double-typed whole numbers (`5`) are both accepted, matching
+#' [check_integer_scalar]. Both bounds are inclusive; an exclusive integer bound is the
+#' next whole number in.
+#'
+#' @param x Numeric: Value to check. Must be a single non-NA whole number.
+#' @param lower Numeric scalar: Lower bound, inclusive. Default `-Inf`.
+#' @param upper Numeric scalar: Upper bound, inclusive. Default `Inf`.
+#' @param arg_name Character: Argument name to use in error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' check_bounded_integer_scalar(5L, lower = 0, upper = 20)
+#' check_bounded_integer_scalar(0, lower = 0)
+#' # Throw error:
+#' try(check_bounded_integer_scalar(25, lower = 0, upper = 20))
+#' try(check_bounded_integer_scalar(1.5, lower = 0))
+check_bounded_integer_scalar <- function(
+  x,
+  lower = -Inf,
+  upper = Inf,
+  arg_name = deparse(substitute(x))
+) {
+  check_integer_scalar(x, arg_name = arg_name)
+  if (x < lower || x > upper) {
+    abort(
+      "`",
+      arg_name,
+      "` must be a whole number in ",
+      describe_bounds(lower, upper),
+      ", not ",
+      x,
+      ".",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
+  }
+  invisible()
+} # /rtemis.core::check_bounded_integer_scalar
+
+
+# %% check_optional_bounded_integer_scalar ----
+#' Check optional integer scalar within bounds
+#'
+#' @param x Optional Numeric: Value to check. Must be `NULL` or a single non-NA whole
+#'   number within bounds.
+#' @param lower Numeric scalar: Lower bound, inclusive. Default `-Inf`.
+#' @param upper Numeric scalar: Upper bound, inclusive. Default `Inf`.
+#' @param arg_name Character: Argument name to use in error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' check_optional_bounded_integer_scalar(NULL)
+#' check_optional_bounded_integer_scalar(5L, lower = 0, upper = 20)
+#' # Throw error:
+#' try(check_optional_bounded_integer_scalar(25, lower = 0, upper = 20))
+check_optional_bounded_integer_scalar <- function(
+  x,
+  lower = -Inf,
+  upper = Inf,
+  arg_name = deparse(substitute(x))
+) {
+  if (is.null(x)) {
+    return(invisible())
+  }
+  check_bounded_integer_scalar(
+    x,
+    lower = lower,
+    upper = upper,
+    arg_name = arg_name
+  )
+  invisible()
+} # /rtemis.core::check_optional_bounded_integer_scalar
+
+
 # %% check_logical_scalar ----
 #' Check logical scalar
 #'
@@ -1373,6 +1496,107 @@ check_optional_nonneg_double_scalar <- function(
   check_nonneg_double_scalar(x, arg_name = arg_name)
   invisible()
 } # /rtemis.core::check_optional_nonneg_double_scalar
+
+
+# %% check_bounded_double_scalar ----
+#' Check double scalar within bounds
+#'
+#' @details
+#' For bounds not covered by the fixed-range checks ([check_prob_scalar] is `[0, 1]`,
+#' [check_pos_double_scalar] is `(0, Inf)`), or where the range is not known until
+#' runtime. The argument-checking counterpart to [bounded_double_property].
+#'
+#' @param x Numeric: Value to check. Must be a single non-NA number.
+#' @param lower Numeric scalar: Lower bound. Default `-Inf`.
+#' @param upper Numeric scalar: Upper bound. Default `Inf`.
+#' @param lower_open Logical scalar: If `TRUE`, the lower bound is exclusive. Default
+#'   `FALSE`.
+#' @param upper_open Logical scalar: If `TRUE`, the upper bound is exclusive. Default
+#'   `FALSE`.
+#' @param arg_name Character: Argument name to use in error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' check_bounded_double_scalar(0.7, lower = 0, upper = 2)
+#' # Learning rate in (0, 1]
+#' check_bounded_double_scalar(0.1, lower = 0, upper = 1, lower_open = TRUE)
+#' # Throw error:
+#' try(check_bounded_double_scalar(5, lower = 0, upper = 2))
+check_bounded_double_scalar <- function(
+  x,
+  lower = -Inf,
+  upper = Inf,
+  lower_open = FALSE,
+  upper_open = FALSE,
+  arg_name = deparse(substitute(x))
+) {
+  check_double_scalar(x, arg_name = arg_name)
+  below <- if (lower_open) x <= lower else x < lower
+  above <- if (upper_open) x >= upper else x > upper
+  if (below || above) {
+    abort(
+      "`",
+      arg_name,
+      "` must be in ",
+      describe_bounds(lower, upper, lower_open, upper_open),
+      ", not ",
+      x,
+      ".",
+      class = c("rtemis_range_error", "rtemis_input_error")
+    )
+  }
+  invisible()
+} # /rtemis.core::check_bounded_double_scalar
+
+
+# %% check_optional_bounded_double_scalar ----
+#' Check optional double scalar within bounds
+#'
+#' @param x Optional Numeric: Value to check. Must be `NULL` or a single non-NA number
+#'   within bounds.
+#' @param lower Numeric scalar: Lower bound. Default `-Inf`.
+#' @param upper Numeric scalar: Upper bound. Default `Inf`.
+#' @param lower_open Logical scalar: If `TRUE`, the lower bound is exclusive. Default
+#'   `FALSE`.
+#' @param upper_open Logical scalar: If `TRUE`, the upper bound is exclusive. Default
+#'   `FALSE`.
+#' @param arg_name Character: Argument name to use in error messages.
+#'
+#' @return Called for side effects. Throws an error if checks fail.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' check_optional_bounded_double_scalar(NULL)
+#' check_optional_bounded_double_scalar(0.7, lower = 0, upper = 2)
+#' # Throw error:
+#' try(check_optional_bounded_double_scalar(5, lower = 0, upper = 2))
+check_optional_bounded_double_scalar <- function(
+  x,
+  lower = -Inf,
+  upper = Inf,
+  lower_open = FALSE,
+  upper_open = FALSE,
+  arg_name = deparse(substitute(x))
+) {
+  if (is.null(x)) {
+    return(invisible())
+  }
+  check_bounded_double_scalar(
+    x,
+    lower = lower,
+    upper = upper,
+    lower_open = lower_open,
+    upper_open = upper_open,
+    arg_name = arg_name
+  )
+  invisible()
+} # /rtemis.core::check_optional_bounded_double_scalar
 
 
 # %% S7-parallel vector checks ----
