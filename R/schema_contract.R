@@ -41,13 +41,23 @@
 #    call spends a clause of every reader's attention on a function only one of
 #    them can call. Matched by construct rather than by taste -- see
 #    `.r_specific_prose()` for what counts.
+# 5. No description spells a value the way R does. `NULL`, `TRUE`, `FALSE` and
+#    `NA` are not JSON, and `@property` is S7 accessor syntax: a reader told
+#    "NULL = unweighted" and writing what it says produces an invalid
+#    document. Say what the absent value *means* ("Unset leaves the cases
+#    unweighted"), or spell the literal as JSON writes it.
 #
-# Rules 2 to 4 hold at every depth, so they walk the whole document rather
+# Rules 2 to 5 hold at every depth, so they walk the whole document rather
 # than its top level: a nullable `$ref` is emitted as a `oneOf`, and a rule
 # that stopped at `properties` and `items` would not see inside one.
 #
-# Records are exempt from all four: a record asserts what ran, so every field
-# is required and `required` is set wholesale by `S7_to_JSONSchema(record =)`.
+# Rules 1 to 3 are about what a *config* may demand, and records are exempt
+# from them: a record asserts what ran, so every field is required and
+# `required` is set wholesale by `S7_to_JSONSchema(record =)`. Rules 4 and 5
+# are about prose, which every published document has, so they are also
+# reachable on their own through `assert_description_language()` -- the entry
+# point for a record or a result class, neither of which goes through
+# `assert_config_contract()`.
 
 # %% Subschema keywords ----
 # Where a JSON Schema node holds further schemas: one directly, a list of
@@ -168,6 +178,39 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 # (`.list_to_X`). Prose that merely mentions a package by name -- "Elastic net
 # (glmnet)" -- says what the algorithm *is* and stays.
 .r_specific_prose <- function(schema) {
+  .offending_descriptions(
+    schema,
+    "setup_[A-Za-z0-9_]+|[A-Za-z0-9.]+::[A-Za-z0-9_.]+|[.]list_to_[A-Za-z0-9_]+"
+  )
+} # /.r_specific_prose
+
+
+# %% .r_literal_prose ----
+# Descriptions that spell a value the way R does, by path.
+#
+# Rule 5, and the one a writer breaks without noticing, because the R word for
+# the value is right there in the property's own `@param`: "NULL = unweighted"
+# is correct roxygen and an invalid instruction to everyone else, who must
+# write `null`. The same holds for `TRUE`/`FALSE` against `true`/`false`, for
+# `NA` against a JSON document that has no such literal at all, and for the
+# `@property` accessor, which is S7 syntax for a key the document spells bare.
+#
+# Word-bounded so a value is matched and a sentence is not: "unset" and
+# "nullable" do not match, and `NA` does not match inside "N/A" or a longer
+# word. The remedy is almost always to say what the absent value means rather
+# than to transliterate the literal.
+.r_literal_prose <- function(schema) {
+  .offending_descriptions(
+    schema,
+    "\\bNULL\\b|\\bTRUE\\b|\\bFALSE\\b|\\bNA\\b|@[A-Za-z_][A-Za-z0-9_]*"
+  )
+} # /.r_literal_prose
+
+
+# %% .offending_descriptions ----
+# Every description in the document matching `pattern`, reported as
+# "path (first match)" so the message names both where and what.
+.offending_descriptions <- function(schema, pattern) {
   offenders <- character()
   for (entry in .subschemas(schema)) {
     node <- entry[["node"]]
@@ -178,13 +221,7 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
     if (!is.character(text) || length(text) != 1L) {
       next
     }
-    hit <- regmatches(
-      text,
-      regexpr(
-        "setup_[A-Za-z0-9_]+|[A-Za-z0-9.]+::[A-Za-z0-9_.]+|[.]list_to_[A-Za-z0-9_]+",
-        text
-      )
-    )
+    hit <- regmatches(text, regexpr(pattern, text))
     if (length(hit) == 1L && nzchar(hit)) {
       offenders <- c(
         offenders,
@@ -193,7 +230,101 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
     }
   }
   offenders
-} # /.r_specific_prose
+} # /.offending_descriptions
+
+
+# %% .description_language_problems ----
+# Rules 4 and 5 as message strings: the two that are about prose rather than
+# about what a document demands, so they hold for a record and a result class
+# as much as for a config.
+.description_language_problems <- function(schema) {
+  problems <- character()
+
+  r_prose <- .r_specific_prose(schema)
+  if (length(r_prose) > 0L) {
+    problems <- c(
+      problems,
+      paste0(
+        "names an R construct in a description at: ",
+        paste(r_prose, collapse = ", "),
+        ". The corpus is language-independent; an R constructor or function ",
+        "belongs in the roxygen docs, not in a document the CLI, the browser ",
+        "and a model all read."
+      )
+    )
+  }
+
+  r_literals <- .r_literal_prose(schema)
+  if (length(r_literals) > 0L) {
+    problems <- c(
+      problems,
+      paste0(
+        "spells a value the way R does, in a description at: ",
+        paste(r_literals, collapse = ", "),
+        ". A reader who writes what the description says produces an invalid ",
+        "document: JSON has `null`, `true` and `false`, no `NA`, and no ",
+        "`@property` accessor. Say what the absent value means -- \"Unset ",
+        "leaves the cases unweighted\" -- and leave the R spelling to the ",
+        "roxygen `@param`, where it is correct."
+      )
+    )
+  }
+
+  problems
+} # /.description_language_problems
+
+
+# %% assert_description_language ----
+#' Assert a published schema's descriptions are language-independent
+#'
+#' @description
+#' The two prose rules of the input-schema contract, on their own: no
+#' description may name an R construct, and none may spell a value the way R
+#' does. `assert_config_contract()` applies both along with the rules about
+#' what a config may demand; this is the entry point for a document those do
+#' not govern -- a record, or a result class whose `required` states what
+#' rtemis always writes.
+#'
+#' @details
+#' Every published document is read by R, by the Rust CLI, by the browser and
+#' by a model that writes no code at all, so its prose is part of the interface
+#' rather than a comment on it. A description reading "NULL = unweighted" is
+#' correct roxygen and an invalid instruction to every reader but one, who must
+#' write `null`; the fix is to say what the absent value means, not to
+#' transliterate the literal.
+#'
+#' @param schema Named list: The generated schema, as `S7_to_JSONSchema()` or
+#' `S7_dispatcher_JSONSchema()` returns it.
+#' @param id Character: The schema's `$id`, used to name it in the error.
+#'
+#' @return The `schema`, invisibly, so it can wrap a write call. Throws with
+#'   class `simpleError` naming every offending description, so one run reports
+#'   all of them rather than the first.
+#'
+#' @author EDG
+#' @export
+#' @examples
+#' assert_description_language(
+#'   list(
+#'     type = "object",
+#'     properties = list(k = list(type = "integer", description = "Clusters."))
+#'   ),
+#'   "https://schema.rtemis.org/example/v1/schema.json"
+#' )
+assert_description_language <- function(schema, id = schema[["$id"]]) {
+  problems <- .description_language_problems(schema)
+  if (length(problems) > 0L) {
+    stop(
+      "Published-description contract violated by ",
+      id,
+      ":\n  - ",
+      paste(problems, collapse = "\n  - "),
+      "\nSee plan/schema-interface-boundary.md.",
+      call. = FALSE
+    )
+  }
+  invisible(schema)
+} # /assert_description_language
 
 
 # %% assert_config_contract ----
@@ -206,7 +337,7 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #' documents held to two standards.
 #'
 #' @details
-#' Four rules, each recorded where it is raised:
+#' Five rules, each recorded where it is raised:
 #'
 #' - No top-level `required` beyond the key carrying the document's shape:
 #'   a family dispatcher's discriminator, which selects the variant whose
@@ -219,9 +350,14 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 #' - No R construct named in a description: the corpus is language-independent
 #'   and is read by R, by the Rust CLI, by the browser, and by a model that
 #'   writes no code at all.
+#' - No R spelling of a value in a description: `NULL`, `TRUE`, `FALSE`, `NA`
+#'   and the `@property` accessor are R, not JSON.
 #'
-#' Record schemas are not subject to this: a record states what a run used, so
-#' everything in it is required and the config's rules do not apply.
+#' The first three are about what a config may demand, and record schemas are
+#' not subject to them: a record states what a run used, so everything in it is
+#' required. The last two are about prose, which every published document has;
+#' `assert_description_language()` applies just those, for a record or a result
+#' class that does not come through here.
 #'
 #' @param schema Named list: The generated schema, as `S7_to_JSONSchema()` or
 #' `S7_dispatcher_JSONSchema()` returns it.
@@ -296,19 +432,7 @@ assert_config_contract <- function(
     )
   }
 
-  r_prose <- .r_specific_prose(schema)
-  if (length(r_prose) > 0L) {
-    problems <- c(
-      problems,
-      paste0(
-        "names an R construct in a description at: ",
-        paste(r_prose, collapse = ", "),
-        ". The corpus is language-independent; an R constructor or function ",
-        "belongs in the roxygen docs, not in a document the CLI, the browser ",
-        "and a model all read."
-      )
-    )
-  }
+  problems <- c(problems, .description_language_problems(schema))
 
   if (length(problems) > 0L) {
     stop(
