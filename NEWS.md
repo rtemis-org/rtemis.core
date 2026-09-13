@@ -11,7 +11,7 @@
   while `assert_config_contract()` governs only what a caller-authored config
   may demand, so a record and a result class had no gate at all. Say what the
   absent value means -- "Unset leaves the cases unweighted" -- and leave the R
-  spelling to the roxygen `@param`, where it is correct.
+  spelling to the roxygen `@param`.
 
 - **`bounded_double_property()` is removed, superseded by `prop_float()`.** It
   built its property with a bare `new_property()`, so it carried no spec:
