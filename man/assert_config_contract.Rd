@@ -28,7 +28,7 @@ schema.rtemis.org -- rtemis and rtemis.draw -- so one registry cannot hold
 documents held to two standards.
 }
 \details{
-Four rules, each recorded where it is raised:
+Five rules, each recorded where it is raised:
 \itemize{
 \item No top-level \code{required} beyond the key carrying the document's shape:
 a family dispatcher's discriminator, which selects the variant whose
@@ -41,10 +41,15 @@ value, which makes it a resolution rule and belongs to the record form.
 \item No R construct named in a description: the corpus is language-independent
 and is read by R, by the Rust CLI, by the browser, and by a model that
 writes no code at all.
+\item No R spelling of a value in a description: \code{NULL}, \code{TRUE}, \code{FALSE}, \code{NA}
+and the \verb{@property} accessor are R, not JSON.
 }
 
-Record schemas are not subject to this: a record states what a run used, so
-everything in it is required and the config's rules do not apply.
+The first three are about what a config may demand, and record schemas are
+not subject to them: a record states what a run used, so everything in it is
+required. The last two are about prose, which every published document has;
+\code{assert_description_language()} applies just those, for a record or a result
+class that does not come through here.
 }
 \examples{
 assert_config_contract(

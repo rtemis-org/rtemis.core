@@ -2,6 +2,17 @@
 
 ## Version 0.4.6
 
+- **The input-schema contract gains a fifth rule: no description may spell a
+  value the way R does.** `NULL`, `TRUE`, `FALSE`, `NA` and the `@property`
+  accessor are R, not JSON, so a reader told "NULL = unweighted" and writing
+  what it says produces an invalid document. The rule joins the existing "names
+  an R construct" check, and both now also stand alone as
+  **`assert_description_language()`**: prose is published by every document,
+  while `assert_config_contract()` governs only what a caller-authored config
+  may demand, so a record and a result class had no gate at all. Say what the
+  absent value means -- "Unset leaves the cases unweighted" -- and leave the R
+  spelling to the roxygen `@param`.
+
 - **`bounded_double_property()` is removed, superseded by `prop_float()`.** It
   built its property with a bare `new_property()`, so it carried no spec:
   `prop_spec()` returned `NULL` for it and its bounds never reached the
