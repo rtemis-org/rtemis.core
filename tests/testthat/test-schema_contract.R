@@ -36,7 +36,9 @@ test_that("a description spelling a value the way R does is rejected", {
     "Handle missing values. FALSE ignores them.",
     "Applies only when linear_tree is TRUE.",
     "Undefined for a single component: NA.",
-    "Repeats of the cross-validation. Requires @nfold."
+    "Repeats of the cross-validation. Requires @nfold.",
+    "Repeats of the cross-validation. Requires config@nfold.",
+    "Follow @rtemis."
   )) {
     expect_error(
       assert_config_contract(one_prop(text)),
@@ -57,6 +59,33 @@ test_that("the language rules match a value, not a sentence containing one", {
     "Contact the maintainer at the address in DESCRIPTION."
   )) {
     expect_silent(assert_config_contract(one_prop(text)))
+  }
+})
+
+test_that("email addresses are allowed without hiding other violations", {
+  for (assert in list(assert_config_contract, assert_description_language)) {
+    for (text in c(
+      "Contact support@example.org.",
+      "Contact <first.last+support@example.co.uk>.",
+      "Contact a@example.org or b@example.org."
+    )) {
+      expect_silent(assert(one_prop(text)))
+    }
+    for (text in c(
+      "Contact support@example.org. Requires @nfold.",
+      "Contact support@example.org. Requires config@nfold.",
+      "Contact support@example.org. NULL uses the default."
+    )) {
+      expect_error(
+        assert(one_prop(text)),
+        "x \\((@nfold|NULL)\\)",
+        info = text
+      )
+    }
+    expect_error(
+      assert(one_prop("Contact support@example.org. See setup_GLMNET.")),
+      "names an R construct"
+    )
   }
 })
 
@@ -120,6 +149,15 @@ test_that("assert_description_language applies the prose rules alone", {
     assert_description_language(result_like),
     "spells a value the way R does"
   )
+
+  for (text in c("See setup_GLMNET.", "Determined by stats::lm.")) {
+    result_like[["properties"]][["n_cases"]][["description"]] <- text
+    expect_error(
+      assert_description_language(result_like),
+      "names an R construct",
+      info = text
+    )
+  }
 })
 
 test_that("assert_description_language returns the schema invisibly", {

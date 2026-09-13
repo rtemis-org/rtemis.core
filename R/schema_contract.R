@@ -12,7 +12,7 @@
 #   A schema states what is true of the data. It never states what any
 #   interface chooses to fill in.
 #
-# Four rules follow:
+# Five rules follow:
 #
 # 1. No top-level `required` beyond the key that gives the document its shape:
 #    a family dispatcher's discriminator, which says which variant's schema
@@ -199,10 +199,13 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 # "nullable" do not match, and `NA` does not match inside "N/A" or a longer
 # word. The remedy is almost always to say what the absent value means rather
 # than to transliterate the literal.
+# Email addresses with a dotted domain are excluded before matching. Bare
+# `@name` and `object@name` still count as accessor syntax.
 .r_literal_prose <- function(schema) {
   .offending_descriptions(
     schema,
-    "\\bNULL\\b|\\bTRUE\\b|\\bFALSE\\b|\\bNA\\b|@[A-Za-z_][A-Za-z0-9_]*"
+    "\\bNULL\\b|\\bTRUE\\b|\\bFALSE\\b|\\bNA\\b|@[A-Za-z_][A-Za-z0-9_]*",
+    exclude_pattern = "[[:alnum:]._%+-]+@[[:alnum:]-]+([.][[:alnum:]-]+)+"
   )
 } # /.r_literal_prose
 
@@ -210,7 +213,8 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
 # %% .offending_descriptions ----
 # Every description in the document matching `pattern`, reported as
 # "path (first match)" so the message names both where and what.
-.offending_descriptions <- function(schema, pattern) {
+# Spans matching `exclude_pattern`, if supplied, are replaced with spaces.
+.offending_descriptions <- function(schema, pattern, exclude_pattern = NULL) {
   offenders <- character()
   for (entry in .subschemas(schema)) {
     node <- entry[["node"]]
@@ -220,6 +224,9 @@ SUBSCHEMA_MAP_KEYWORDS <- c(
     text <- node[["description"]]
     if (!is.character(text) || length(text) != 1L) {
       next
+    }
+    if (!is.null(exclude_pattern)) {
+      text <- gsub(exclude_pattern, " ", text)
     }
     hit <- regmatches(text, regexpr(pattern, text))
     if (length(hit) == 1L && nzchar(hit)) {
