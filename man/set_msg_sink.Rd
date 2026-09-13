@@ -33,7 +33,7 @@ with fields
 
 Producers may include \strong{additional} fields in the list, which sinks should
 ignore when not understood. In particular, the progress API in this package
-and \code{rtemis}'s training observability (see its \code{specs/observability.md})
+and \code{rtemis}'s training observability
 emit execution-graph node events through the sink with these extra fields:
 \itemize{
 \item \code{node_id}: character. Unique id of the execution-graph node.

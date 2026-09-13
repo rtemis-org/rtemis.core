@@ -509,7 +509,7 @@ msgdone <- function(caller = NULL, call_depth = 1, caller_id = 1, sep = " ") {
 #'
 #' Producers may include **additional** fields in the list, which sinks should
 #' ignore when not understood. In particular, the progress API in this package
-#' and `rtemis`'s training observability (see its `specs/observability.md`)
+#' and `rtemis`'s training observability
 #' emit execution-graph node events through the sink with these extra fields:
 #'
 #' - `node_id`: character. Unique id of the execution-graph node.

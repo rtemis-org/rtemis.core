@@ -172,7 +172,7 @@
 - Message-sink integration: progress events are forwarded through the
   `set_msg_sink()` envelope with `level = "progress"` and node fields
   (`node_id`, `parent_id`, `kind`, `status`, `current`, `total`),
-  implementing the rtemis.core side of rtemis `specs/observability.md`.
+  supporting progress tracking during rtemis training.
   Sink events fire regardless of verbosity; verbosity gates only the console
   renderer. `"update"` events honor the throttle.
 - Completion lines report uniformly completed nested loops as a
