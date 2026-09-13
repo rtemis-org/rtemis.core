@@ -3,11 +3,10 @@
 # 2026- EDG rtemis.org
 
 # Enforces the input-schema contract at the point the artifact is produced.
-# Sourced by `generate_schemas.R`, which calls `assert_config_contract()` on
-# every config (non-record) schema before writing it, so a violating schema
-# cannot be generated.
+# Schema producers call `assert_config_contract()` on each config schema and
+# `assert_description_language()` on every published schema before writing it.
 #
-# The contract (see `plan/schema-interface-boundary.md`, `ARCHITECTURE.md`):
+# The contract:
 #
 #   A schema states what is true of the data. It never states what any
 #   interface chooses to fill in.
@@ -326,7 +325,7 @@ assert_description_language <- function(schema, id = schema[["$id"]]) {
       id,
       ":\n  - ",
       paste(problems, collapse = "\n  - "),
-      "\nSee plan/schema-interface-boundary.md.",
+      "\nSee ?rtemis.core::assert_description_language.",
       call. = FALSE
     )
   }
@@ -447,7 +446,7 @@ assert_config_contract <- function(
       id,
       ":\n  - ",
       paste(problems, collapse = "\n  - "),
-      "\nSee plan/schema-interface-boundary.md.",
+      "\nSee ?rtemis.core::assert_config_contract.",
       call. = FALSE
     )
   }
