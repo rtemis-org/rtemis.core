@@ -26,7 +26,8 @@ rtemis_colors <- c(
   dark_blue = "#375D86",
   light_mauve = "#B1A7B3",
   purple = "#7364F2",
-  terracotta = "#895140"
+  terracotta = "#895140",
+  sunset_gold = "#C5A267"
 )
 
 # Internal colors
