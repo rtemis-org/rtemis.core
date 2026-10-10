@@ -15,6 +15,26 @@ reset_progress_state <- function() {
   .state[["progress_spinner_frame"]] <- 0L
 }
 
+# Scope session detection to the renderer, including byte-compiled package code.
+local_progress_context <- function(
+  is_interactive = TRUE,
+  knitting = FALSE,
+  .env = parent.frame()
+) {
+  draw <- rtemis.core:::.progress_draw
+  context <- list2env(
+    list(interactive = function() is_interactive),
+    parent = environment(draw)
+  )
+  draw <- eval(call("function", formals(draw), body(draw)), envir = context)
+  local_mocked_bindings(
+    .progress_draw = draw,
+    .package = "rtemis.core",
+    .env = .env
+  )
+  withr::local_options(list(knitr.in.progress = knitting), .local_envir = .env)
+}
+
 # Fake renderer input: `.progress_render()` only reads fields via `[[`.
 fake_handle <- function(label, current, total, t_start = 0) {
   list(label = label, current = current, total = total, t_start = t_start)
@@ -214,8 +234,87 @@ test_that(".progress_render() degrades under narrow widths", {
 })
 
 
+# Console output: captured sessions ----
+for (context in c("noninteractive", "knitr")) {
+  test_that(paste(context, "retains results and summaries without redraws"), {
+    is_interactive <- identical(context, "knitr")
+    local_progress_context(
+      is_interactive = is_interactive,
+      knitting = is_interactive
+    )
+    withr::local_options(
+      knitr.in.progress = is_interactive,
+      rtemis.output_type = "ansi",
+      rtemis.progress_throttle = 0
+    )
+    reset_progress_state()
+    withr::defer(reset_progress_state())
+    msgs <- capture_messages({
+      result <- progress_lapply(
+        1:2,
+        function(i) {
+          progress_lapply(
+            1:3,
+            function(j) {
+              if (i == 1L && j == 1L) {
+                msg("Retained message", caller = NA_character_)
+              }
+              i * j
+            },
+            label = "Tuning"
+          )
+        },
+        label = "Outer"
+      )
+    })
+    expect_identical(result, list(list(1L, 2L, 3L), list(2L, 4L, 6L)))
+    expect_equal(sum(grepl("done in", msgs, fixed = TRUE)), 1L)
+    raw <- paste(msgs, collapse = "")
+    expect_false(grepl("\r", raw, fixed = TRUE))
+    expect_match(raw, "\033[", fixed = TRUE)
+    expect_match(strip_ansi(raw), "Retained message", fixed = TRUE)
+    expect_match(
+      strip_ansi(raw),
+      paste0("Outer 2/2 ", times, " Tuning 3/3 done in"),
+      fixed = TRUE
+    )
+    expect_identical(.state[["progress_spinner_frame"]], 0L)
+    expect_identical(.state[["progress_last_draw"]], 0)
+    expect_false(.state[["progress_visible"]])
+    expect_length(.state[["progress_stack"]], 0L)
+  })
+}
+
+test_that("knitted noninteractive runs retain structured progress events", {
+  local_progress_context(is_interactive = FALSE, knitting = TRUE)
+  withr::local_options(knitr.in.progress = TRUE, rtemis.progress_throttle = 0)
+  reset_progress_state()
+  withr::defer(reset_progress_state())
+  events <- list()
+  with_msg_sink(function(event) events[[length(events) + 1L]] <<- event, {
+    expect_silent({
+      result <- progress_lapply(
+        1:2,
+        identity,
+        label = "Work",
+        output_type = "ansi"
+      )
+    })
+  })
+  expect_identical(result, list(1L, 2L))
+  expect_identical(
+    vapply(events, function(event) event[["status"]], character(1L)),
+    c("start", "update", "update", "done")
+  )
+  expect_equal(events[[4L]][["current"]], 2L)
+  expect_equal(events[[4L]][["total"]], 2L)
+  expect_length(.state[["progress_stack"]], 0L)
+})
+
+
 # Console output: ansi ----
 test_that("ansi mode rewrites one status line and prints a completion line", {
+  local_progress_context()
   reset_progress_state()
   op <- options(rtemis.progress_throttle = 0)
   on.exit(options(op), add = TRUE)
@@ -236,6 +335,7 @@ test_that("ansi mode rewrites one status line and prints a completion line", {
 })
 
 test_that("inner progress_end() does not print a completion line in ansi mode", {
+  local_progress_context()
   reset_progress_state()
   op <- options(rtemis.progress_throttle = 0)
   on.exit(options(op), add = TRUE)
@@ -305,6 +405,7 @@ test_that("verbosity 0 silences console output", {
 
 # Verbosity inheritance ----
 test_that("nested node inherits console visibility from a visible parent", {
+  local_progress_context()
   # Callers routinely decrement verbosity for inner code paths (e.g.
   # per-fold train()); the nested node must still enrich the breadcrumb.
   reset_progress_state()
@@ -338,6 +439,7 @@ test_that("nested node inherits console visibility from a visible parent", {
 })
 
 test_that("nested node stays silent under a silenced root", {
+  local_progress_context()
   # A silenced root never clears the status line nor prints a completion
   # line, so a nested node must not draw even if its own verbosity resolves
   # higher - otherwise it would resurrect silenced output and leave a stale
@@ -824,6 +926,7 @@ test_that("completion chain is omitted for heterogeneous sibling labels", {
 
 # Foreign output during progress_lapply ----
 test_that("message() from fn clears the status line and prints intact", {
+  local_progress_context()
   reset_progress_state()
   op <- options(rtemis.progress_throttle = 0)
   on.exit(options(op), add = TRUE)
@@ -853,6 +956,7 @@ test_that("message() from fn clears the status line and prints intact", {
 })
 
 test_that("warning() from fn clears the status line", {
+  local_progress_context()
   reset_progress_state()
   op <- options(rtemis.progress_throttle = 0)
   on.exit(options(op), add = TRUE)
@@ -873,6 +977,7 @@ test_that("warning() from fn clears the status line", {
 })
 
 test_that("progress_clear() clears a visible line and no-ops otherwise", {
+  local_progress_context()
   reset_progress_state()
   expect_silent(progress_clear())
   op <- options(rtemis.progress_throttle = 0)
@@ -891,6 +996,7 @@ test_that("progress_clear() clears a visible line and no-ops otherwise", {
 
 # Interplay with msg() ----
 test_that("msg() during an active status line clears it first", {
+  local_progress_context()
   reset_progress_state()
   op <- options(rtemis.progress_throttle = 0)
   on.exit(options(op), add = TRUE)
@@ -912,6 +1018,7 @@ test_that("msg() during an active status line clears it first", {
 
 # Errors during progress_lapply() ----
 test_that("progress_lapply() clears the status line before an error prints", {
+  local_progress_context()
   # R's default error printer writes at the point the condition is signaled,
   # before the stack unwinds, so the clear has to happen in a calling handler
   # rather than in progress_lapply()'s on.exit(). Otherwise the message lands
@@ -951,6 +1058,7 @@ test_that("progress_lapply() clears the status line before an error prints", {
 })
 
 test_that("progress_lapply() emits a clear frame before uncaught error text", {
+  local_progress_context()
   reset_progress_state()
   op <- options(rtemis.progress_throttle = 0)
   on.exit(options(op), add = TRUE)
