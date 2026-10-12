@@ -1,5 +1,9 @@
 # rtemis.core NEWS
 
+## Development version
+
+- Property factories accept vector, map, and list defaults without warnings with development S7.
+
 ## Version 0.4.6
 
 - **The input-schema contract gains a fifth rule: no description may spell a

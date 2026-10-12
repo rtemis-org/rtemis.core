@@ -347,6 +347,15 @@ spec_validator <- function(fields) {
 #' @keywords internal
 #' @noRd
 make_prop <- function(fields) {
+  default <- fields[["default"]]
+  if (
+    !is.null(default) &&
+      (!is.atomic(default) ||
+        length(default) != 1L ||
+        !is.null(attributes(default)))
+  ) {
+    default <- call("identity", default)
+  }
   base_class <- switch(
     fields[["type"]],
     boolean = class_logical,
@@ -357,7 +366,7 @@ make_prop <- function(fields) {
   )
   p <- new_property(
     class = if (fields[["nullable"]]) NULL | base_class else base_class,
-    default = fields[["default"]],
+    default = default,
     validator = spec_validator(fields)
   )
   p[["spec"]] <- fields
