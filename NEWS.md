@@ -2,7 +2,7 @@
 
 ## Development version
 
-- Property factories accept vector, map, and list defaults without warnings with development S7.
+- Updates for compatibility with S7 > 0.2.2.
 
 ## Version 0.4.6
 
