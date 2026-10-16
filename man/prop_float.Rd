@@ -18,7 +18,11 @@ prop_float(
 )
 }
 \arguments{
-\item{default}{Numeric: Default value (NULL for none, or if \code{nullable}).}
+\item{default}{Numeric: Default value (NULL for none, or if \code{nullable}).
+Use a quoted call for a default that needs construction. The call is
+evaluated once in the caller's environment to validate
+the default and record it in \code{\link[=prop_spec]{prop_spec()}}, then again for each object in
+the class's environment.}
 
 \item{min, max}{Numeric or NULL: Inclusive bounds.}
 

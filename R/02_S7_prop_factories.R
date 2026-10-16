@@ -78,8 +78,12 @@ new_prop_spec <- function(
   min_items = 1L,
   unique_items = FALSE,
   allow_empty = FALSE,
-  description = ""
+  description = "",
+  default_env = parent.frame()
 ) {
+  if (is.call(default)) {
+    default <- eval(default, envir = default_env)
+  }
   if (!type %in% PROP_TYPES) {
     abort(
       "`type` must be one of ",
@@ -346,7 +350,7 @@ spec_validator <- function(fields) {
 #' @author EDG
 #' @keywords internal
 #' @noRd
-make_prop <- function(fields) {
+make_prop <- function(fields, default = fields[["default"]]) {
   base_class <- switch(
     fields[["type"]],
     boolean = class_logical,
@@ -355,9 +359,33 @@ make_prop <- function(fields) {
     string = class_character,
     object = class_list
   )
+  if (is.call(default)) {
+    types <- switch(
+      fields[["type"]],
+      boolean = "logical",
+      integer = "integer",
+      number = c("integer", "double"),
+      string = "character",
+      object = "list"
+    )
+    if (fields[["nullable"]]) {
+      types <- c(types, "NULL")
+    }
+    value_type <- typeof(fields[["default"]])
+    if (!value_type %in% types) {
+      abort(
+        "`default` must be of type <",
+        paste(types, collapse = "/"),
+        ">, not <",
+        value_type,
+        ">.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
+    }
+  }
   p <- new_property(
     class = if (fields[["nullable"]]) NULL | base_class else base_class,
-    default = fields[["default"]],
+    default = default,
     validator = spec_validator(fields)
   )
   p[["spec"]] <- fields
@@ -369,6 +397,10 @@ make_prop <- function(fields) {
 #' Logical (boolean) S7 property
 #'
 #' @param default Logical: Default value (NULL only if `nullable`).
+#'   Use a quoted call for a default that needs construction. The call is
+#'   evaluated once in the caller's environment to validate
+#'   the default and record it in [prop_spec()], then again for each object in
+#'   the class's environment.
 #' @param nullable Logical: If TRUE, NULL is a valid value.
 #' @param description Character: Human-readable description.
 #'
@@ -384,12 +416,14 @@ prop_boolean <- function(
   nullable = FALSE,
   description = ""
 ) {
-  make_prop(new_prop_spec(
+  fields <- new_prop_spec(
     type = "boolean",
     default = default,
     nullable = nullable,
-    description = description
-  ))
+    description = description,
+    default_env = parent.frame()
+  )
+  make_prop(fields, default = default)
 } # /rtemis.core::prop_boolean
 
 
@@ -400,6 +434,10 @@ prop_boolean <- function(
 #' enforced by the type rather than by a rounding check.
 #'
 #' @param default Integer: Default value (NULL for none, or if `nullable`).
+#'   Use a quoted call for a default that needs construction. The call is
+#'   evaluated once in the caller's environment to validate
+#'   the default and record it in [prop_spec()], then again for each object in
+#'   the class's environment.
 #' @param min,max Integer or NULL: Inclusive bounds.
 #' @param exclusive_min,exclusive_max Integer or NULL: Exclusive bounds.
 #' @param nullable Logical: If TRUE, NULL is a valid value.
@@ -428,7 +466,7 @@ prop_integer <- function(
   unique_items = FALSE,
   description = ""
 ) {
-  make_prop(new_prop_spec(
+  fields <- new_prop_spec(
     type = "integer",
     default = default,
     minimum = min,
@@ -439,8 +477,10 @@ prop_integer <- function(
     container = if (vector) "array" else "none",
     min_items = min_items,
     unique_items = unique_items,
-    description = description
-  ))
+    description = description,
+    default_env = parent.frame()
+  )
+  make_prop(fields, default = default)
 } # /rtemis.core::prop_integer
 
 
@@ -454,6 +494,10 @@ prop_integer <- function(
 #' integer values too (`class_numeric`), floats being a superset of integers.
 #'
 #' @param default Numeric: Default value (NULL for none, or if `nullable`).
+#'   Use a quoted call for a default that needs construction. The call is
+#'   evaluated once in the caller's environment to validate
+#'   the default and record it in [prop_spec()], then again for each object in
+#'   the class's environment.
 #' @param min,max Numeric or NULL: Inclusive bounds.
 #' @param exclusive_min,exclusive_max Numeric or NULL: Exclusive bounds.
 #' @param nullable Logical: If TRUE, NULL is a valid value.
@@ -485,7 +529,7 @@ prop_float <- function(
   unique_items = FALSE,
   description = ""
 ) {
-  make_prop(new_prop_spec(
+  fields <- new_prop_spec(
     type = "number",
     default = default,
     minimum = min,
@@ -496,8 +540,10 @@ prop_float <- function(
     container = if (vector) "array" else "none",
     min_items = min_items,
     unique_items = unique_items,
-    description = description
-  ))
+    description = description,
+    default_env = parent.frame()
+  )
+  make_prop(fields, default = default)
 } # /rtemis.core::prop_float
 
 
@@ -509,6 +555,10 @@ prop_float <- function(
 #' deliberate empty name. Pass `allow_empty = TRUE` where it is meaningful.
 #'
 #' @param default Character: Default value (NULL for none, or if `nullable`).
+#'   Use a quoted call for a default that needs construction. The call is
+#'   evaluated once in the caller's environment to validate
+#'   the default and record it in [prop_spec()], then again for each object in
+#'   the class's environment.
 #' @param enum Character or NULL: Allowed values.
 #' @param nullable Logical: If TRUE, NULL is a valid value.
 #' @param vector Logical: If TRUE, the value is vector-valued (a JSON array).
@@ -548,7 +598,7 @@ prop_string <- function(
       class = c("rtemis_value_error", "rtemis_input_error")
     )
   }
-  make_prop(new_prop_spec(
+  fields <- new_prop_spec(
     type = "string",
     default = default,
     enum = enum,
@@ -563,8 +613,10 @@ prop_string <- function(
     min_items = min_items,
     unique_items = unique_items,
     allow_empty = allow_empty,
-    description = description
-  ))
+    description = description,
+    default_env = parent.frame()
+  )
+  make_prop(fields, default = default)
 } # /rtemis.core::prop_string
 
 
@@ -578,6 +630,10 @@ prop_string <- function(
 #' NULL, not `list()`, for no value.
 #'
 #' @param default List: Default value (NULL for none, or if `nullable`).
+#'   Use a quoted call for a default that needs construction. The call is
+#'   evaluated once in the caller's environment to validate
+#'   the default and record it in [prop_spec()], then again for each object in
+#'   the class's environment.
 #' @param nullable Logical: If TRUE, NULL is a valid value.
 #' @param description Character: Human-readable description.
 #'
@@ -593,12 +649,14 @@ prop_bag <- function(
   nullable = TRUE,
   description = ""
 ) {
-  make_prop(new_prop_spec(
+  fields <- new_prop_spec(
     type = "object",
     default = default,
     nullable = nullable,
-    description = description
-  ))
+    description = description,
+    default_env = parent.frame()
+  )
+  make_prop(fields, default = default)
 } # /rtemis.core::prop_bag
 
 

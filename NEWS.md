@@ -1,5 +1,9 @@
 # rtemis.core NEWS
 
+## Development version
+
+- Updates for compatibility with S7 > 0.2.2.
+
 ## Version 0.4.6
 
 - **The input-schema contract gains a fifth rule: no description may spell a
