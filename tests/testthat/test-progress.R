@@ -18,7 +18,6 @@ reset_progress_state <- function() {
 # Scope session detection to the renderer, including byte-compiled package code.
 local_progress_context <- function(
   is_interactive = TRUE,
-  knitting = FALSE,
   .env = parent.frame()
 ) {
   draw <- rtemis.core:::.progress_draw
@@ -32,7 +31,6 @@ local_progress_context <- function(
     .package = "rtemis.core",
     .env = .env
   )
-  withr::local_options(list(knitr.in.progress = knitting), .local_envir = .env)
 }
 
 # Fake renderer input: `.progress_render()` only reads fields via `[[`.
@@ -238,17 +236,18 @@ test_that(".progress_render() degrades under narrow widths", {
 for (context in c("noninteractive", "knitr")) {
   test_that(paste(context, "retains results and summaries without redraws"), {
     is_interactive <- identical(context, "knitr")
-    local_progress_context(
-      is_interactive = is_interactive,
-      knitting = is_interactive
-    )
-    withr::local_options(
+    # testthat defers through withr, which calls knitr::knit_global() while
+    # knitr.in.progress is TRUE.
+    if (is_interactive) skip_if_not_installed("knitr")
+    local_progress_context(is_interactive = is_interactive)
+    op <- options(
       knitr.in.progress = is_interactive,
       rtemis.output_type = "ansi",
       rtemis.progress_throttle = 0
     )
+    on.exit(options(op), add = TRUE)
     reset_progress_state()
-    withr::defer(reset_progress_state())
+    on.exit(reset_progress_state(), add = TRUE)
     msgs <- capture_messages({
       result <- progress_lapply(
         1:2,
@@ -286,10 +285,12 @@ for (context in c("noninteractive", "knitr")) {
 }
 
 test_that("knitted noninteractive runs retain structured progress events", {
-  local_progress_context(is_interactive = FALSE, knitting = TRUE)
-  withr::local_options(knitr.in.progress = TRUE, rtemis.progress_throttle = 0)
+  skip_if_not_installed("knitr")
+  local_progress_context(is_interactive = FALSE)
+  op <- options(knitr.in.progress = TRUE, rtemis.progress_throttle = 0)
+  on.exit(options(op), add = TRUE)
   reset_progress_state()
-  withr::defer(reset_progress_state())
+  on.exit(reset_progress_state(), add = TRUE)
   events <- list()
   with_msg_sink(function(event) events[[length(events) + 1L]] <<- event, {
     expect_silent({
