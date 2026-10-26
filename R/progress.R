@@ -280,8 +280,9 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 }
 
 
-#' Draw the progress status line to the console
+#' Draw the progress status line in an interactive console
 #'
+#' Returns without drawing in noninteractive sessions or during knitting.
 #' Side-effecting wrapper around `.progress_render()`: closes any pending
 #' `msgstart()` line, rewrites the status line in place with `\r`, and pads
 #' with trailing spaces to the previous frame's visible width so leftover
@@ -294,6 +295,9 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 #' @keywords internal
 #' @noRd
 .progress_draw <- function() {
+  if (!interactive() || isTRUE(getOption("knitr.in.progress"))) {
+    return(invisible(NULL))
+  }
   stack <- .rtemis_core_state[["progress_stack"]]
   if (length(stack) == 0L) {
     return(invisible(NULL))
@@ -473,9 +477,11 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 #' a color-pulsing spinner and a breadcrumb of all active levels, e.g.
 #' `Outer resamples 2/5 > Tuning 7/30 ETA 0:41`. Each level shows the step
 #' currently in flight (1-based), so a loop counts `1/n` through `n/n`;
-#' the ETA is computed from completed steps. Non-`"ansi"` output gets one
-#' begin line and one completion line instead (no line rewriting). Two
-#' options control rendering:
+#' the ETA is computed from completed steps. Animation requires an interactive
+#' session with `getOption("knitr.in.progress")` other than `TRUE`. With
+#' `"ansi"` output, noninteractive and knitted runs retain the outermost
+#' completion line. Non-`"ansi"` output gets one begin line and one completion
+#' line per handle. Two options control rendering:
 #'
 #' - `rtemis.progress_throttle`: Minimum seconds between redraws and between
 #'   sink `"update"` events (default `0.1`). Begin/end events always fire;
@@ -517,7 +523,8 @@ glyph_times <- "\u00D7" # multiplication sign (completed-children chain)
 #'   lookup (e.g. `"rtemis"`).
 #' @param output_type Character or NULL: `"ansi"`, `"html"`, or `"plain"`;
 #'   resolved via [get_output_type()] when NULL (`"ansi"` in interactive
-#'   sessions, `"plain"` otherwise). Only `"ansi"` animates.
+#'   sessions, `"plain"` otherwise). Animation requires `"ansi"` output in an
+#'   interactive session outside knitting.
 #'
 #' @return An `rtemis_progress` handle (environment), invisibly. Pass it to
 #'   [progress_update()] and [progress_end()].
@@ -748,9 +755,10 @@ progress_update <- function(
 #' sink events fire), so the stack stays consistent. No-op on an already
 #' closed handle.
 #'
-#' In `"ansi"` mode, only the outermost end prints a permanent completion
-#' line (`label n/total done in 0:41`); inner-level ends just redraw the
-#' remaining breadcrumb, so tight nested loops don't spam the console.
+#' In `"ansi"` mode, including noninteractive and knitted runs, only the
+#' outermost end prints a permanent completion line (`label n/total done in 0:41`).
+#' Inner-level ends redraw the remaining breadcrumb in interactive sessions
+#' outside knitting.
 #' Non-`"ansi"` output prints a completion line per handle.
 #'
 #' When nested loops complete uniformly, the completion line reports them as

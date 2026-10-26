@@ -43,7 +43,8 @@ lookup (e.g. \code{"rtemis"}).}
 
 \item{output_type}{Character or NULL: \code{"ansi"}, \code{"html"}, or \code{"plain"};
 resolved via \code{\link[=get_output_type]{get_output_type()}} when NULL (\code{"ansi"} in interactive
-sessions, \code{"plain"} otherwise). Only \code{"ansi"} animates.}
+sessions, \code{"plain"} otherwise). Animation requires \code{"ansi"} output in an
+interactive session outside knitting.}
 }
 \value{
 An \code{rtemis_progress} handle (environment), invisibly. Pass it to
@@ -60,9 +61,11 @@ The console renderer writes a single status line rewritten in place, with
 a color-pulsing spinner and a breadcrumb of all active levels, e.g.
 \verb{Outer resamples 2/5 > Tuning 7/30 ETA 0:41}. Each level shows the step
 currently in flight (1-based), so a loop counts \code{1/n} through \code{n/n};
-the ETA is computed from completed steps. Non-\code{"ansi"} output gets one
-begin line and one completion line instead (no line rewriting). Two
-options control rendering:
+the ETA is computed from completed steps. Animation requires an interactive
+session with \code{getOption("knitr.in.progress")} other than \code{TRUE}. With
+\code{"ansi"} output, noninteractive and knitted runs retain the outermost
+completion line. Non-\code{"ansi"} output gets one begin line and one completion
+line per handle. Two options control rendering:
 \itemize{
 \item \code{rtemis.progress_throttle}: Minimum seconds between redraws and between
 sink \code{"update"} events (default \code{0.1}). Begin/end events always fire;

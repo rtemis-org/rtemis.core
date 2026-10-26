@@ -1,5 +1,9 @@
 # rtemis.core NEWS
 
+## Version 0.4.7
+
+- Animated progress is limited to interactive sessions outside knitting; ANSI output in noninteractive and knitted runs retains completion summaries and structured progress events.
+
 ## Version 0.4.6
 
 - **The input-schema contract gains a fifth rule: no description may spell a

@@ -1,7 +1,7 @@
 Package: rtemis.core
 Title: Core Utilities for the 'rtemis' Ecosystem
-Version: 0.4.6
-Date: 2026-09-04
+Version: 0.4.7
+Date: 2026-10-09
 Authors@R: person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"), 
     email = "gennatas@gmail.com", comment = c(ORCID = "0000-0001-9280-3609"))
 Description: Utilities used across packages of the 'rtemis' ecosystem. Includes the msg() 
@@ -26,4 +26,4 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Config/testthat/parallel: true
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1
