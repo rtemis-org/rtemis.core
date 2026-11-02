@@ -238,7 +238,9 @@ for (context in c("noninteractive", "knitr")) {
     is_interactive <- identical(context, "knitr")
     # testthat defers through withr, which calls knitr::knit_global() while
     # knitr.in.progress is TRUE.
-    if (is_interactive) skip_if_not_installed("knitr")
+    if (is_interactive) {
+      skip_if_not_installed("knitr")
+    }
     local_progress_context(is_interactive = is_interactive)
     op <- options(
       knitr.in.progress = is_interactive,
