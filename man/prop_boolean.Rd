@@ -7,7 +7,11 @@
 prop_boolean(default = FALSE, nullable = FALSE, description = "")
 }
 \arguments{
-\item{default}{Logical: Default value (NULL only if \code{nullable}).}
+\item{default}{Logical: Default value (NULL only if \code{nullable}).
+Use a quoted call for a default that needs construction. The call is
+evaluated once in the caller's environment to validate
+the default and record it in \code{\link[=prop_spec]{prop_spec()}}, then again for each object in
+the class's environment.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 

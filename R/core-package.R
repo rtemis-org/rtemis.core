@@ -7,7 +7,8 @@
 #'
 #' @name rtemis.core-package
 #'
-#' @import stats methods graphics grDevices data.table S7
+#' @import stats methods graphics grDevices S7
+#' @import data.table, except = ":="
 #' @importFrom utils head
 "_PACKAGE"
 

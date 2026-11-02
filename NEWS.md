@@ -3,6 +3,20 @@
 ## Version 0.4.7
 
 - Animated progress is limited to interactive sessions outside knitting; ANSI output in noninteractive and knitted runs retains completion summaries and structured progress events.
+- **Compatibility with S7 releases after 0.2.2.** The namespace imports S7's
+  `:=` and excludes data.table's, which removes the import-replacement warning
+  on load.
+  Load, unload, and build hooks register and clean up S7 methods through
+  `S7_on_load()`, `S7_on_unload()`, and `S7_on_build()` when S7 provides them,
+  and through `methods_register()` with earlier S7 releases. The minimum S7
+  version is unchanged.
+- **`prop_boolean()`, `prop_integer()`, `prop_float()`, `prop_string()`, and
+  `prop_bag()` accept a quoted default**, such as
+  `prop_string(default = quote(c("a", "b")), vector = TRUE)`. The expression is
+  evaluated once at declaration, where it is validated and recorded as a value
+  in `prop_spec()`, and again for each constructed object. S7 releases after
+  0.2.2 warn about a default supplied directly unless it is a scalar or an
+  empty vector without attributes; quote any other default.
 
 ## Version 0.4.6
 

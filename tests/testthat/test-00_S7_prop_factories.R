@@ -43,7 +43,7 @@ library(S7)
       "PC_str_vec",
       properties = list(
         x = prop_string(
-          default = c("a", "b"),
+          default = quote(c("a", "b")),
           vector = TRUE,
           min_items = 2L,
           unique_items = TRUE
@@ -52,7 +52,9 @@ library(S7)
     ),
     str_map = new_class(
       "PC_str_map",
-      properties = list(x = prop_string(default = c(a = "1"), map = TRUE))
+      properties = list(
+        x = prop_string(default = quote(c(a = "1")), map = TRUE)
+      )
     ),
     bag = new_class("PC_bag", properties = list(x = prop_bag())),
     const = new_class(
