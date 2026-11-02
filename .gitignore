@@ -28,3 +28,6 @@ SKILL.md
 
 # CRAN
 CRAN-SUBMISSION
+
+# Local coverage reports
+coverage/

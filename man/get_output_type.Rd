@@ -39,10 +39,10 @@ CLI, a scheduler job script) decide per invocation.
 Unrecognized values in 2 and 3 are ignored rather than raising, so a typo falls through to
 the next rule.
 
-Note that "ansi" means more than color: \code{\link[=progress_begin]{progress_begin()}} and friends render a
-carriage-return-rewritten status line when it is in effect, and plain \code{msg0()} lines
-otherwise. Forcing "ansi" where output is captured to a file therefore produces overwritten
-lines, not just escape codes.
+With "ansi" output, \code{\link[=progress_begin]{progress_begin()}} and friends render a
+carriage-return-rewritten status line in interactive sessions outside knitting.
+Noninteractive and knitted runs retain the final completion summary.
+Non-"ansi" output uses \code{msg0()} start and completion lines.
 }
 \examples{
 get_output_type()

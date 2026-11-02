@@ -22,9 +22,10 @@ sink events fire), so the stack stays consistent. No-op on an already
 closed handle.
 }
 \details{
-In \code{"ansi"} mode, only the outermost end prints a permanent completion
-line (\verb{label n/total done in 0:41}); inner-level ends just redraw the
-remaining breadcrumb, so tight nested loops don't spam the console.
+In \code{"ansi"} mode, including noninteractive and knitted runs, only the
+outermost end prints a permanent completion line (\verb{label n/total done in 0:41}).
+Inner-level ends redraw the remaining breadcrumb in interactive sessions
+outside knitting.
 Non-\code{"ansi"} output prints a completion line per handle.
 
 When nested loops complete uniformly, the completion line reports them as
