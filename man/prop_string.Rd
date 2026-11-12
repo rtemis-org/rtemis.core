@@ -2,60 +2,48 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_string}
 \alias{prop_string}
-\title{Character (string) S7 property}
+\title{String S7 property}
 \usage{
 prop_string(
   default = NULL,
+  ...,
   enum = NULL,
+  const = NULL,
   pattern = NULL,
-  min_length = NULL,
+  min_length = 1L,
+  max_length = NULL,
   nullable = FALSE,
-  vector = FALSE,
-  map = FALSE,
-  min_items = 1L,
-  max_items = NULL,
-  unique_items = FALSE,
-  allow_empty = FALSE,
   def_name = NULL,
   description = ""
 )
 }
 \arguments{
-\item{default}{Character: Default value (NULL for none, or if \code{nullable}).
-Use a quoted call for a default that needs construction. The call is
-evaluated once in the caller's environment to validate
-the default and record it in \code{\link[=prop_spec]{prop_spec()}}, then again for each object in
-the class's environment.}
+\item{default}{Character or NULL: Default value. NULL gives no default
+unless \code{const} is given or \code{nullable} is TRUE. A quoted call is evaluated
+once in the caller's environment at declaration and again for each
+object.}
+
+\item{...}{Empty, except for the released arguments \code{vector}, \code{map},
+\code{allow_empty}, \code{min_items}, and \code{unique_items}, which build the
+declaration of \code{prop_array(prop_string(...))},
+\code{prop_map(prop_string(...))}, or \code{prop_string(min_length = 0L)}.}
 
 \item{enum}{Character or NULL: Allowed values.}
 
-\item{pattern}{Character or NULL: Regular expression every value must match,
-evaluated with \code{perl = TRUE} and emitted as JSON Schema \code{pattern}. Anchor
-it (\verb{^...$}) to constrain the whole string. Write it in the syntax common
-to PCRE and ECMA-262, the dialect JSON Schema validators use.}
+\item{const}{Character or NULL: The single allowed value.}
 
-\item{min_length}{Integer or NULL: Fewest characters a value may have.}
+\item{pattern}{Character or NULL: Regular expression every value matches,
+written in the subset of ECMA-262 that PCRE shares. R evaluates it with
+\code{perl = TRUE} and the \verb{(*UCP)} prefix.}
+
+\item{min_length}{Integer [0, Inf): Fewest characters. \code{0L} admits \code{""}.}
+
+\item{max_length}{Integer or NULL: Most characters.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 
-\item{vector}{Logical: If TRUE, the value is vector-valued (a JSON array).}
-
-\item{map}{Logical: If TRUE, the value is a \emph{named} vector (a JSON object
-with string values). Mutually exclusive with \code{vector}.}
-
-\item{min_items}{Integer: Fewest elements a \code{vector} or \code{map} value may hold.
-\code{0L} admits an empty value.}
-
-\item{max_items}{Integer or NULL: Most elements a \code{vector} or \code{map} value may
-hold.}
-
-\item{unique_items}{Logical: If TRUE, a \code{vector} value's elements must be
-distinct.}
-
-\item{allow_empty}{Logical: If TRUE, \code{""} is a valid value.}
-
-\item{def_name}{Character or NULL: Name of this declaration's definition in
-an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
+\item{def_name}{Character or NULL: Name of the declaration in an emitted
+JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -63,14 +51,15 @@ an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{cla
 S7 property.
 }
 \description{
-Empty and whitespace-only strings are rejected by default: an unset value is
-\code{NULL}, so \code{""} reaching a property is almost always a mistake rather than a
-deliberate empty name. Pass \code{allow_empty = TRUE} where it is meaningful.
+Declares a property whose value is one string, emitted as a JSON Schema
+\code{string}. A string of spaces is valid unless \code{pattern} excludes it, for
+example with \code{pattern = "\\\\S"}. A string may carry a \code{class}, such as the
+\code{json} class of \code{jsonlite::toJSON()} output.
 }
 \examples{
-model_name <- prop_string(description = "Model name")
-backend <- prop_string(default = "ollama", enum = c("ollama", "openai"))
-api_key <- prop_string(nullable = TRUE, description = "API key")
+model_name <- prop_string(description = "Model name.")
+backend <- prop_string("ollama", enum = c("ollama", "openai"))
+api_key <- prop_string(nullable = TRUE, description = "API key.")
 # One-letter amino acid codes, at least two residues
 sequence <- prop_string(pattern = "^[A-Za-z*]+$", min_length = 2L)
 }

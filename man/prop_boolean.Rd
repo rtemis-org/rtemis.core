@@ -2,27 +2,31 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_boolean}
 \alias{prop_boolean}
-\title{Logical (boolean) S7 property}
+\title{Boolean S7 property}
 \usage{
 prop_boolean(
-  default = if (nullable) NULL else FALSE,
+  default = NULL,
+  ...,
+  const = NULL,
   nullable = FALSE,
   def_name = NULL,
   description = ""
 )
 }
 \arguments{
-\item{default}{Logical: Default value. \code{FALSE} unless \code{nullable}, in which
-case NULL (unset), as for every other factory.
-Use a quoted call for a default that needs construction. The call is
-evaluated once in the caller's environment to validate
-the default and record it in \code{\link[=prop_spec]{prop_spec()}}, then again for each object in
-the class's environment.}
+\item{default}{Logical or NULL: Default value. NULL gives no default unless
+\code{const} is given or \code{nullable} is TRUE, in which case the default is the
+constant or NULL. A quoted call is evaluated once in the caller's
+environment at declaration and again for each object.}
+
+\item{...}{Empty. Every argument after \code{default} is passed by name.}
+
+\item{const}{Logical or NULL: The single allowed value.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 
-\item{def_name}{Character or NULL: Name of this declaration's definition in
-an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
+\item{def_name}{Character or NULL: Name of the declaration in an emitted
+JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -30,10 +34,11 @@ an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{cla
 S7 property.
 }
 \description{
-Logical (boolean) S7 property
+Declares a property whose value is one logical, \code{TRUE} or \code{FALSE}, emitted
+as a JSON Schema \code{boolean}.
 }
 \examples{
-verbose <- prop_boolean(default = TRUE, description = "Print progress")
+verbose <- prop_boolean(TRUE, description = "Print progress.")
 # Unset until the user chooses
 shuffle <- prop_boolean(nullable = TRUE)
 prop_spec(shuffle)[["default"]]

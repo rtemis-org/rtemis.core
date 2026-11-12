@@ -2,12 +2,12 @@ test_that("property factories preserve vector and map defaults without warnings"
   expect_silent(
     properties <- list(
       enabled = prop_boolean(default = quote(!FALSE)),
-      counts = prop_integer(default = quote(c(1L, 2L)), vector = TRUE),
-      limits = prop_float(default = quote(c(0, 1)), vector = TRUE),
-      integer_limits = prop_float(default = quote(c(0L, 1L)), vector = TRUE),
-      values = prop_string(default = quote(c("a", "b")), vector = TRUE),
-      mapping = prop_string(default = quote(c(a = "1")), map = TRUE),
-      bag = prop_bag(default = quote(list(a = 1))),
+      counts = prop_array(prop_integer(), default = quote(c(1L, 2L))),
+      limits = prop_array(prop_number(), default = quote(c(0, 1))),
+      integer_limits = prop_array(prop_number(), default = quote(c(0L, 1L))),
+      values = prop_array(prop_string(), default = quote(c("a", "b"))),
+      mapping = prop_map(prop_string(), default = quote(c(a = "1"))),
+      bag = prop_map(prop_any(), default = quote(list(a = 1))),
       optional = prop_string(
         default = quote({
           NULL
@@ -37,7 +37,7 @@ test_that("quoted defaults are evaluated for each construction", {
     evaluations <<- evaluations + 1L
     list(state = new.env(parent = emptyenv()))
   }
-  property <- prop_bag(default = quote(make_bag()))
+  property <- prop_map(prop_any(), default = quote(make_bag()))
   Example <- S7::new_class(name = "Example", properties = list(bag = property))
 
   expect_identical(evaluations, 1L)
@@ -52,10 +52,9 @@ test_that("quoted defaults are evaluated for each construction", {
 test_that("quoted defaults are validated at declaration", {
   expect_snapshot(
     error = TRUE,
-    suppressMessages(prop_float(
-      default = quote(c(0, 2)),
-      vector = TRUE,
-      max = 1
+    suppressMessages(prop_array(
+      prop_number(max = 1),
+      default = quote(c(0, 2))
     ))
   )
   expect_snapshot(
@@ -64,7 +63,7 @@ test_that("quoted defaults are validated at declaration", {
   )
   expect_snapshot(
     error = TRUE,
-    suppressMessages(prop_bag(default = quote(list(a = 1, a = 2))))
+    suppressMessages(prop_map(prop_any(), default = quote(list(a = 1, a = 2))))
   )
   expect_snapshot(
     error = TRUE,

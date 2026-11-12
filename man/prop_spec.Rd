@@ -2,25 +2,22 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_spec}
 \alias{prop_spec}
-\title{A factory-built property's spec}
+\title{Get the declaration of a factory-built property}
 \usage{
 prop_spec(property)
 }
 \arguments{
-\item{property}{S7 property, from one of the \verb{prop_*} factories.}
+\item{property}{S7 property.}
 }
 \value{
-Named list of spec fields, or NULL if the property was not built by
-a \verb{prop_*} factory.
+Named list: The declaration a \verb{prop_*} factory stored, or NULL for a
+property built otherwise.
 }
 \description{
-The machine-readable declaration behind a property: type, shape, default,
-bounds, enum, and description. Read it to generate documentation, a JSON
-Schema, or a defaults artifact from the class definition itself.
+Get the declaration of a factory-built property
 }
 \examples{
-temperature <- prop_float(default = 0.3, min = 0, max = 2)
-prop_spec(temperature)[["maximum"]]
+prop_spec(prop_number(0.5, min = 0, max = 1))[["maximum"]]
 }
 \author{
 EDG

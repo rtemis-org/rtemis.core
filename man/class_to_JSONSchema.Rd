@@ -25,8 +25,8 @@ class_to_JSONSchema(
 \item{envelope}{Named list of S7 properties: Document members placed before
 the class's own properties.}
 
-\item{required}{Character: Members to require in addition to those without
-a default.}
+\item{required}{Character: Members of the document root to require in
+addition to those without a default. An unknown name aborts.}
 }
 \value{
 Named list: The JSON Schema.
@@ -34,35 +34,36 @@ Named list: The JSON Schema.
 \description{
 Emits a JSON Schema (draft 2020-12) for documents that serialize an object
 of \code{cls}: a closed object with one member per property, each typed from its
-\verb{prop_*} declaration. S7 classes referenced through \code{\link[=prop_object]{prop_object()}} and
-\code{\link[=prop_collection]{prop_collection()}} are defined once in \verb{$defs} under their class names;
+\verb{prop_*} declaration. S7 classes referenced through \code{\link[=prop_instance]{prop_instance()}} are
+defined once in \verb{$defs} under their class names;
 declarations carrying a \code{def_name} are defined once under that name. Write
 the result with \code{\link[=write_JSONSchema]{write_JSONSchema()}}.
 }
 \details{
-A member is required exactly when its declaration has no default, and when
-it is named in \code{required}. No \code{default} keyword is emitted. Every property
-must be built by a \verb{prop_*} factory.
+A member is required when it is not nullable and has no default, or when
+\code{required} names it. \code{required} applies to the document root only; a class
+reached through \code{\link[=prop_instance]{prop_instance()}} has derived presence. No \code{default} keyword
+is emitted. Every property must be built by a \verb{prop_*} factory.
 
 \code{envelope} holds members that belong to the document rather than to the R
 object, such as a \verb{$schema} identifier and a format version declared with
-\code{\link[=prop_const]{prop_const()}}. They are placed first. Name them in \code{required} when the
-document must carry them; a constant has a default, so it is otherwise
+\code{const}. They are placed first. Name them in \code{required} when the document
+must carry them; a constant is its own default, so it is otherwise
 optional.
 }
 \examples{
 Point <- S7::new_class(
   "Point",
   properties = list(
-    x = prop_float(description = "Horizontal coordinate."),
-    label = prop_string(default = "", allow_empty = TRUE)
+    x = prop_number(description = "Horizontal coordinate."),
+    label = prop_string("", min_length = 0L)
   )
 )
 schema <- class_to_JSONSchema(
   Point,
   id = "https://example.org/point/v1/schema.json",
   title = "Point",
-  envelope = list(version = prop_const("1.0.0")),
+  envelope = list(version = prop_string(const = "1.0.0")),
   required = "version"
 )
 schema[["required"]]

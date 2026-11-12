@@ -4,7 +4,13 @@
 \alias{write_JSONSchema}
 \title{Write a JSON Schema to file}
 \usage{
-write_JSONSchema(schema, file, overwrite = FALSE, digits = NA, verbosity = 1L)
+write_JSONSchema(
+  schema,
+  file,
+  overwrite = FALSE,
+  digits = NULL,
+  verbosity = 1L
+)
 }
 \arguments{
 \item{schema}{Named list: The schema.}
@@ -13,11 +19,9 @@ write_JSONSchema(schema, file, overwrite = FALSE, digits = NA, verbosity = 1L)
 
 \item{overwrite}{Logical: If TRUE, overwrite an existing file.}
 
-\item{digits}{Integer or NA: Significant digits for numeric values, passed to
-\code{jsonlite::toJSON()}. \code{NA} writes each number at full precision as R prints
-it. Pass \code{I(17)} where a value must round-trip an IEEE 754 double exactly:
-jsonlite's own default is 4 \emph{decimal places}, which rounds without a
-warning.}
+\item{digits}{NULL, or Integer or NA: NULL writes through \code{\link[=to_JSON]{to_JSON()}}, which
+writes each double in the shortest form that reads back identical. An
+integer or \code{NA} is passed to \code{jsonlite::toJSON()} as its \code{digits}.}
 
 \item{verbosity}{Integer: Verbosity level.}
 }

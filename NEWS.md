@@ -1,11 +1,21 @@
 # rtemis.core 0.5.0
 
-- New structural property factories: `prop_object()`, `prop_collection()`, `prop_array()`, `prop_map()`, `prop_struct()`, `prop_union()`, and `prop_matrix()`.
+- The `prop_*` factories follow one grammar: one factory per JSON Schema node, one argument per keyword, and containers by composition.
+- New structural factories: `prop_array()`, `prop_map()`, `prop_struct()`, `prop_union()`, `prop_matrix()`, `prop_instance()`, and `prop_any()`.
+- New `prop_number()`; `prop_float()` remains for released callers.
+- Arguments after `default`, or after a structural factory's structure arguments, are passed by name.
+- `enum` applies to integer and number declarations, and `const` to every scalar declaration; `prop_const()` remains for released callers.
+- `prop_string()` gains `pattern`, `min_length`, and `max_length`; `min_length = 0L` admits `""`, and a string of spaces is valid unless a `pattern` excludes it.
+- `prop_boolean()` has no default unless given, constant, or nullable.
+- A value carries no attribute its declaration excludes: a factor, a `Date`, a named scalar, or a subclass instance is invalid; a string may carry a class.
+- A struct member and an array, map, or union item take no `default`.
+- `vector`, `map`, and `allow_empty` of the scalar factories, and `prop_bag()`, remain for released callers.
 - New `class_to_JSONSchema()` emits a JSON Schema (draft 2020-12) from an S7 class built with the `prop_*` factories.
-- `prop_string()` gains `pattern` and `min_length`; container factories accept `min_items = 0L` and `max_items`; scalar factories accept `def_name`.
-- `prop_boolean(nullable = TRUE)` defaults to `NULL`.
+- New `to_JSON()` writes each double in the shortest form that reads back identical; `write_JSONSchema()` writes through it.
+- New `prop_encode()` and `prop_decode()` give the JSON form of a property value.
+- New `nullable()` and `check_nullable_*()`; `optional()` and `check_optional_*()` remain for released callers.
 - A map key is valid when it is non-missing, non-empty, and distinct.
-- Removed `enum()` and the hand-written properties (`character_scalar`, `prob_scalar`, their `optional_` forms, and the rest); use the `prop_*` factories.
+- Removed the hand-written properties (`character_scalar`, `prob_scalar`, their `optional_` forms, and the rest) except `optional_logical_scalar`. `enum()` and `optional_logical_scalar` remain for released callers.
 - `printls()` names the class of an object it does not expand.
 
 # rtemis.core 0.4.7

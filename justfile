@@ -54,6 +54,12 @@ test:
     {{rscript}} -e "testthat::test_local(stop_on_failure = TRUE)"
     @just _msg "Done"
 
+# Check the prop_* factory signatures against the rule in rtemis-skills
+check-rule rule="~/Skills/rtemis-skills/R/prop-factories.md":
+    @just _msg "─── Checking factory signatures against the rule... ───"
+    RTEMIS_PROP_RULE={{rule}} {{rscript}} -e "testthat::test_local(filter = 'prop_factory_grammar', stop_on_failure = TRUE)"
+    @just _msg "Done"
+
 # Measure local test coverage, including tests skipped on CRAN
 coverage-local output="coverage/local":
     {{rscript}} tools/coverage-local.R {{quote(output)}}

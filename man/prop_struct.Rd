@@ -2,32 +2,37 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_struct}
 \alias{prop_struct}
-\title{Object with declared members}
+\title{Struct S7 property}
 \usage{
 prop_struct(
   members,
-  required = NULL,
-  additional = FALSE,
+  ...,
   default = NULL,
+  required = NULL,
+  additional_members = FALSE,
   nullable = FALSE,
   def_name = NULL,
   description = ""
 )
 }
 \arguments{
-\item{members}{Named list of S7 properties from \verb{prop_*} factories: The
-declared members.}
+\item{members}{Named list of S7 properties: The members, each from a
+\verb{prop_*} factory, without a \code{default}.}
 
-\item{required}{Character or NULL: Names of members that must be present.}
+\item{...}{Empty. Every argument after \code{members} is passed by name.}
 
-\item{additional}{Logical: If TRUE, undeclared members are accepted.}
+\item{default}{Named list or NULL: Default value, or a quoted call.}
 
-\item{default}{Default value, NULL for none, or a quoted call.}
+\item{required}{Character or NULL: Further members a value must contain.}
+
+\item{additional_members}{FALSE or S7 property: \code{FALSE} closes the struct;
+a declaration admits members beyond \code{members} that satisfy it, and
+\code{\link[=prop_any]{prop_any()}} admits any.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 
-\item{def_name}{Character or NULL: Name of this declaration's definition in
-an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
+\item{def_name}{Character or NULL: Name of the declaration in an emitted
+JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -35,17 +40,19 @@ an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{cla
 S7 property.
 }
 \description{
-A named list whose members are declared by name. Members listed in
-\code{required} must be present; the others may be omitted. With
-\code{additional = TRUE}, members beyond the declared ones are accepted and kept
-as they are, which describes an open record such as a variant annotation
-with source-specific fields.
+Declares a JSON Schema \code{object} with declared members. The R value is a
+named list. A struct supplies no defaults, so a member is required unless
+it is nullable or \code{prop_any()}; \code{required} names further members that a
+value must carry, such as a nullable member a document must state. A
+member declares no \code{default}.
 }
 \examples{
 variant <- prop_struct(
-  members = list(position = prop_integer(min = 1L)),
-  required = "position",
-  additional = TRUE,
+  members = list(
+    position = prop_integer(min = 1L),
+    note = prop_string(nullable = TRUE)
+  ),
+  additional_members = prop_any(),
   description = "Sequence variant record."
 )
 }

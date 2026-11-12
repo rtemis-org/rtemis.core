@@ -88,11 +88,9 @@ order_schema_keywords <- function(x) {
 #' @param schema Named list: The schema.
 #' @param file Character: Path to output JSON file.
 #' @param overwrite Logical: If TRUE, overwrite an existing file.
-#' @param digits Integer or NA: Significant digits for numeric values, passed to
-#'   `jsonlite::toJSON()`. `NA` writes each number at full precision as R prints
-#'   it. Pass `I(17)` where a value must round-trip an IEEE 754 double exactly:
-#'   jsonlite's own default is 4 *decimal places*, which rounds without a
-#'   warning.
+#' @param digits NULL, or Integer or NA: NULL writes through [to_JSON()], which
+#'   writes each double in the shortest form that reads back identical. An
+#'   integer or `NA` is passed to `jsonlite::toJSON()` as its `digits`.
 #' @param verbosity Integer: Verbosity level.
 #'
 #' @return `schema`, invisibly.
@@ -113,18 +111,23 @@ write_JSONSchema <- function(
   schema,
   file,
   overwrite = FALSE,
-  digits = NA,
+  digits = NULL,
   verbosity = 1L
 ) {
   check_dependencies("jsonlite")
-  json_str <- as.character(jsonlite::toJSON(
-    order_schema_keywords(schema),
-    auto_unbox = TRUE,
-    pretty = TRUE,
-    na = "null",
-    null = "null",
-    digits = digits
-  ))
+  ordered <- order_schema_keywords(schema)
+  json_str <- if (is.null(digits)) {
+    to_JSON(ordered, pretty = TRUE)
+  } else {
+    as.character(jsonlite::toJSON(
+      ordered,
+      auto_unbox = TRUE,
+      pretty = TRUE,
+      na = "null",
+      null = "null",
+      digits = digits
+    ))
+  }
   write_lines(
     json_str,
     file = file,
@@ -215,12 +218,10 @@ JSON_SCHEMA_DIALECT <- "https://json-schema.org/draft/2020-12/schema"
 
 
 # %% schema_leaf ----
-#' JSON Schema fragment for a scalar leaf
+#' JSON Schema fragment for a scalar
 #'
-#' The element type, before container wrapping and nullability. A non-empty
-#' string (`allow_empty = FALSE`) emits `minLength: 1` and, without an explicit
-#' `pattern`, `pattern: "\\S"`, which is what the validator enforces: at least
-#' one character that is not whitespace.
+#' The element type, before container wrapping and nullability. Each keyword
+#' is emitted from its own field; no keyword is emitted without one.
 #'
 #' @param spec Named list: A property spec.
 #'
@@ -250,20 +251,15 @@ schema_leaf <- function(spec) {
     }
   }
   if (identical(spec[["type"]], "string")) {
-    non_empty <- !isTRUE(spec[["allow_empty"]])
-    min_length <- max(
-      spec[["min_length"]] %||% 0L,
-      if (non_empty) 1L else 0L
-    )
+    min_length <- spec[["min_length"]] %||% 0L
     if (min_length > 0L) {
       out[["minLength"]] <- as.integer(min_length)
     }
+    if (!is.null(spec[["max_length"]])) {
+      out[["maxLength"]] <- as.integer(spec[["max_length"]])
+    }
     if (!is.null(spec[["pattern"]])) {
       out[["pattern"]] <- spec[["pattern"]]
-    } else if (
-      non_empty && is.null(spec[["enum"]]) && is.null(spec[["const"]])
-    ) {
-      out[["pattern"]] <- "\\S"
     }
   }
   out
@@ -328,6 +324,21 @@ schema_object_map <- function(value_schema, spec) {
 } # /rtemis.core::schema_object_map
 
 
+# %% empty_object ----
+#' The JSON object `{}`, as an R value
+#'
+#' `list()` is written as `[]`; a list with empty names is written as `{}`.
+#'
+#' @return Named list of length 0.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+empty_object <- function() {
+  structure(list(), names = character(0L))
+} # /rtemis.core::empty_object
+
+
 # %% schema_ref ----
 #' A `$ref` to a definition
 #'
@@ -359,6 +370,14 @@ schema_ref <- function(name) {
 #' @keywords internal
 #' @noRd
 schema_define <- function(defs, name, schema) {
+  if (exists(name, envir = defs_classes(defs), inherits = FALSE)) {
+    abort(
+      "A def_name and an S7 class both define '",
+      name,
+      "' in $defs.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
   if (exists(name, envir = defs, inherits = FALSE)) {
     if (!identical(get(name, envir = defs), schema)) {
       abort(
@@ -381,8 +400,8 @@ schema_define <- function(defs, name, schema) {
 #' Emits the shape (`spec_shape()`), then nullability, then the description.
 #' Never emits a `default`: a default is what an interface fills in, not a
 #' fact about the document. A spec with a `def_name` is emitted once into
-#' `defs` and referred to by `$ref`; an S7 class referenced by `prop_object()`
-#' or `prop_collection()` is emitted into `defs` under its class name.
+#' `defs` and referred to by `$ref`; an S7 class referenced by
+#' `prop_instance()` is emitted into `defs` under its class name.
 #'
 #' @param spec Named list: A property spec.
 #' @param defs Environment: Definitions collected so far, by name.
@@ -406,8 +425,11 @@ spec_to_JSONSchema <- function(spec, defs) {
       if (length(spec[["required"]]) > 0L) {
         obj[["required"]] <- I(spec[["required"]])
       }
-      if (!isTRUE(spec[["additional"]])) {
-        obj[["additionalProperties"]] <- FALSE
+      additional <- spec[["additional_members"]]
+      obj[["additionalProperties"]] <- if (is.null(additional)) {
+        FALSE
+      } else {
+        spec_to_JSONSchema(additional, defs)
       }
       obj
     },
@@ -438,7 +460,8 @@ spec_to_JSONSchema <- function(spec, defs) {
       )
       schema_counts(list(type = "array", items = row), spec)
     },
-    bag = list(type = "object"),
+    bag = schema_object_map(empty_object(), spec),
+    any = empty_object(),
     {
       if (identical(container, "array")) {
         schema_counts(list(type = "array", items = schema_leaf(spec)), spec)
@@ -458,7 +481,7 @@ spec_to_JSONSchema <- function(spec, defs) {
     schema_define(defs, def_name, out)
     out <- schema_ref(def_name)
   }
-  if (isTRUE(spec[["nullable"]])) {
+  if (isTRUE(spec[["nullable"]]) && shape != "any") {
     out <- schema_nullable(out)
   }
   out
@@ -469,8 +492,9 @@ spec_to_JSONSchema <- function(spec, defs) {
 #' Admit null in a fragment
 #'
 #' A fragment with a `type` gains `"null"` in it, and in its `enum` when it has
-#' one: a value must satisfy both keywords. A `$ref` or `anyOf` fragment is
-#' wrapped in `anyOf` with `{"type": "null"}`.
+#' one: a value must satisfy both keywords. A `const` becomes
+#' `enum: [<const>, null]`. A `$ref` or `anyOf` fragment is wrapped in `anyOf`
+#' with `{"type": "null"}`.
 #'
 #' @param out Named list: JSON Schema fragment.
 #'
@@ -484,7 +508,10 @@ schema_nullable <- function(out) {
     return(list(anyOf = list(out, list(type = "null"))))
   }
   out[["type"]] <- c(out[["type"]], "null")
-  if (!is.null(out[["enum"]])) {
+  if (!is.null(out[["const"]])) {
+    out[["enum"]] <- I(list(out[["const"]], NULL))
+    out[["const"]] <- NULL
+  } else if (!is.null(out[["enum"]])) {
     out[["enum"]] <- I(c(as.list(out[["enum"]]), list(NULL)))
   }
   out
@@ -504,20 +531,60 @@ schema_nullable <- function(out) {
 #' @noRd
 class_schema_ref <- function(cls, defs) {
   name <- cls@name
-  if (!exists(name, envir = defs, inherits = FALSE)) {
-    # A placeholder first, so that a class referring to itself terminates.
-    assign(name, list(), envir = defs)
-    assign(name, class_object_schema(cls, defs), envir = defs)
+  classes <- defs_classes(defs)
+  if (exists(name, envir = classes, inherits = FALSE)) {
+    if (!identical(get(name, envir = classes), cls)) {
+      abort(
+        "Two different S7 classes are named '",
+        name,
+        "'; $defs holds one definition per name.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    return(schema_ref(name))
   }
+  if (exists(name, envir = defs, inherits = FALSE)) {
+    abort(
+      "A def_name and an S7 class both define '",
+      name,
+      "' in $defs.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  assign(name, cls, envir = classes)
+  # A placeholder first, so that a class referring to itself terminates.
+  assign(name, list(), envir = defs)
+  assign(name, class_object_schema(cls, defs), envir = defs)
   schema_ref(name)
 } # /rtemis.core::class_schema_ref
+
+
+# %% defs_classes ----
+#' The classes defined in a `defs` environment, by name
+#'
+#' Kept under a hidden name, which `ls()` omits and no `def_name` can take.
+#'
+#' @param defs Environment: Definitions collected so far, by name.
+#'
+#' @return Environment of S7 classes, by class name.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+defs_classes <- function(defs) {
+  if (!exists(".classes", envir = defs, inherits = FALSE)) {
+    assign(".classes", new.env(parent = emptyenv()), envir = defs)
+  }
+  get(".classes", envir = defs, inherits = FALSE)
+} # /rtemis.core::defs_classes
 
 
 # %% class_object_schema ----
 #' JSON Schema object for an S7 class's properties
 #'
 #' Every property must be built by a `prop_*` factory. A property is required
-#' exactly when its declaration has no default; the object is closed.
+#' when it is not nullable and has no default, or when `required` names it;
+#' the object is closed.
 #'
 #' @param cls S7 class.
 #' @param defs Environment: Definitions collected so far, by name.
@@ -558,7 +625,18 @@ class_object_schema <- function(
     function(s) is.null(s[["default"]]) && !isTRUE(s[["nullable"]]),
     logical(1L)
   )]
-  req <- unique(c(intersect(required, names(specs)), declared_required))
+  unknown <- setdiff(required, names(specs))
+  if (length(unknown) > 0L) {
+    abort(
+      "`required` names members that ",
+      cls@name,
+      " does not have: ",
+      paste0("'", unknown, "'", collapse = ", "),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  req <- unique(c(required, declared_required))
   out <- list(type = "object", properties = properties)
   if (length(req) > 0L) {
     out[["required"]] <- I(req)
@@ -573,20 +651,21 @@ class_object_schema <- function(
 #'
 #' Emits a JSON Schema (draft 2020-12) for documents that serialize an object
 #' of `cls`: a closed object with one member per property, each typed from its
-#' `prop_*` declaration. S7 classes referenced through [prop_object()] and
-#' [prop_collection()] are defined once in `$defs` under their class names;
+#' `prop_*` declaration. S7 classes referenced through [prop_instance()] are
+#' defined once in `$defs` under their class names;
 #' declarations carrying a `def_name` are defined once under that name. Write
 #' the result with [write_JSONSchema()].
 #'
 #' @details
-#' A member is required exactly when its declaration has no default, and when
-#' it is named in `required`. No `default` keyword is emitted. Every property
-#' must be built by a `prop_*` factory.
+#' A member is required when it is not nullable and has no default, or when
+#' `required` names it. `required` applies to the document root only; a class
+#' reached through [prop_instance()] has derived presence. No `default` keyword
+#' is emitted. Every property must be built by a `prop_*` factory.
 #'
 #' `envelope` holds members that belong to the document rather than to the R
 #' object, such as a `$schema` identifier and a format version declared with
-#' [prop_const()]. They are placed first. Name them in `required` when the
-#' document must carry them; a constant has a default, so it is otherwise
+#' `const`. They are placed first. Name them in `required` when the document
+#' must carry them; a constant is its own default, so it is otherwise
 #' optional.
 #'
 #' @param cls S7 class: The document's class.
@@ -595,8 +674,8 @@ class_object_schema <- function(
 #' @param description Character: What a document of this class is.
 #' @param envelope Named list of S7 properties: Document members placed before
 #'   the class's own properties.
-#' @param required Character: Members to require in addition to those without
-#'   a default.
+#' @param required Character: Members of the document root to require in
+#'   addition to those without a default. An unknown name aborts.
 #'
 #' @return Named list: The JSON Schema.
 #'
@@ -607,15 +686,15 @@ class_object_schema <- function(
 #' Point <- S7::new_class(
 #'   "Point",
 #'   properties = list(
-#'     x = prop_float(description = "Horizontal coordinate."),
-#'     label = prop_string(default = "", allow_empty = TRUE)
+#'     x = prop_number(description = "Horizontal coordinate."),
+#'     label = prop_string("", min_length = 0L)
 #'   )
 #' )
 #' schema <- class_to_JSONSchema(
 #'   Point,
 #'   id = "https://example.org/point/v1/schema.json",
 #'   title = "Point",
-#'   envelope = list(version = prop_const("1.0.0")),
+#'   envelope = list(version = prop_string(const = "1.0.0")),
 #'   required = "version"
 #' )
 #' schema[["required"]]
@@ -654,7 +733,7 @@ class_to_JSONSchema <- function(
     out[["description"]] <- description
   }
   out <- c(out, body)
-  def_names <- sort(ls(defs, all.names = TRUE))
+  def_names <- sort(ls(defs))
   if (length(def_names) > 0L) {
     out[["$defs"]] <- mget(def_names, envir = defs)
   }

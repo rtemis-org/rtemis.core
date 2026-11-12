@@ -35,7 +35,7 @@ Check double scalar within bounds
 \details{
 For bounds not covered by the fixed-range checks (\link{check_prob_scalar} is \verb{[0, 1]},
 \link{check_pos_double_scalar} is \verb{(0, Inf)}), or where the range is not known until
-runtime. The argument-checking counterpart to \link{prop_float}, whose \code{min}/\code{max}
+runtime. The argument-checking counterpart to \code{\link[=prop_number]{prop_number()}}, whose \code{min}/\code{max}
 and \code{exclusive_min}/\code{exclusive_max} describe the same intervals for a config
 class. Finite like it: \code{Inf}/\code{-Inf} are rejected even where the matching bound
 is unbounded, since an infinite bound is always an open one.

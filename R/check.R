@@ -31,36 +31,36 @@
 #   check_enum
 # S7-parallel scalar checks
 #   check_character_scalar
-#   check_optional_character_scalar
+#   check_nullable_character_scalar
 #   check_double_scalar
-#   check_optional_double_scalar
+#   check_nullable_double_scalar
 #   check_integer_scalar
-#   check_optional_integer_scalar
+#   check_nullable_integer_scalar
 #   check_pos_integer_scalar
-#   check_optional_pos_integer_scalar
+#   check_nullable_pos_integer_scalar
 #   check_bounded_integer_scalar
-#   check_optional_bounded_integer_scalar
+#   check_nullable_bounded_integer_scalar
 #   check_logical_scalar
-#   check_optional_logical_scalar
+#   check_nullable_logical_scalar
 #   check_prob_scalar
-#   check_optional_prob_scalar
+#   check_nullable_prob_scalar
 #   check_unit_open_scalar
 #   check_pos_double_scalar
-#   check_optional_pos_double_scalar
+#   check_nullable_pos_double_scalar
 #   check_nonneg_double_scalar
-#   check_optional_nonneg_double_scalar
+#   check_nullable_nonneg_double_scalar
 #   check_bounded_double_scalar
-#   check_optional_bounded_double_scalar
+#   check_nullable_bounded_double_scalar
 # S7-parallel vector checks
 #   check_prob_vector
-#   check_optional_prob_vector
+#   check_nullable_prob_vector
 #   check_unit_open_vector
-#   check_optional_unit_open_vector
+#   check_nullable_unit_open_vector
 #   check_pos_double_vector
-#   check_optional_pos_double_vector
+#   check_nullable_pos_double_vector
 #   check_nonneg_double_vector
-#   check_optional_nonneg_double_vector
-# Legacy (superseded by check_*_scalar equivalents above)
+#   check_nullable_nonneg_double_vector
+# Scalar checks with the type before the shape
 #   check_scalar_logical
 #   check_scalar_character
 #   check_optional_scalar_character
@@ -367,9 +367,8 @@ check_character <- function(
 #' Check positive float
 #'
 #' @details
-#' Checking with `is.numeric()` allows integer inputs as well, which should be ok since it is
-#' unlikely the function that consumes this will enforce double type only, but instead is most
-#' likely to allow implicit coercion from integer to numeric.
+#' Checks with `is.numeric()`, so integer inputs pass and are coerced by the
+#' consumer where it requires a double.
 #'
 #' @param x Numeric vector.
 #' @param allow_null Logical: If TRUE, NULL values are allowed and return early.
@@ -944,8 +943,8 @@ check_character_scalar <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_character_scalar
 
 
-# %% check_optional_character_scalar ----
-#' Check optional character scalar
+# %% check_nullable_character_scalar ----
+#' Check nullable character scalar
 #'
 #' @param x Optional Character: Value to check. Must be `NULL` or a single non-NA, non-empty string.
 #' @param arg_name Character: Argument name to use in error messages.
@@ -956,12 +955,12 @@ check_character_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_character_scalar(NULL)
-#' check_optional_character_scalar("hello")
+#' check_nullable_character_scalar(NULL)
+#' check_nullable_character_scalar("hello")
 #' # Throw error:
-#' try(check_optional_character_scalar(""))
-#' try(check_optional_character_scalar(c("a", "b")))
-check_optional_character_scalar <- function(
+#' try(check_nullable_character_scalar(""))
+#' try(check_nullable_character_scalar(c("a", "b")))
+check_nullable_character_scalar <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -970,7 +969,7 @@ check_optional_character_scalar <- function(
   }
   check_character_scalar(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_character_scalar
+} # /rtemis.core::check_nullable_character_scalar
 
 
 # %% check_double_scalar ----
@@ -1011,8 +1010,8 @@ check_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_double_scalar
 
 
-# %% check_optional_double_scalar ----
-#' Check optional double scalar
+# %% check_nullable_double_scalar ----
+#' Check nullable double scalar
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single non-NA number.
 #' @param arg_name Character: Argument name to use in error messages.
@@ -1023,17 +1022,17 @@ check_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_double_scalar(NULL)
-#' check_optional_double_scalar(2.5)
+#' check_nullable_double_scalar(NULL)
+#' check_nullable_double_scalar(2.5)
 #' # Throw error:
-#' try(check_optional_double_scalar(NA_real_))
-check_optional_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
+#' try(check_nullable_double_scalar(NA_real_))
+check_nullable_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
   if (is.null(x)) {
     return(invisible())
   }
   check_double_scalar(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_double_scalar
+} # /rtemis.core::check_nullable_double_scalar
 
 
 # %% check_integer_scalar ----
@@ -1086,8 +1085,8 @@ check_integer_scalar <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_integer_scalar
 
 
-# %% check_optional_integer_scalar ----
-#' Check optional integer scalar
+# %% check_nullable_integer_scalar ----
+#' Check nullable integer scalar
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single non-NA whole number.
 #' @param arg_name Character: Argument name to use in error messages.
@@ -1098,11 +1097,11 @@ check_integer_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_integer_scalar(NULL)
-#' check_optional_integer_scalar(10L)
+#' check_nullable_integer_scalar(NULL)
+#' check_nullable_integer_scalar(10L)
 #' # Throw error:
-#' try(check_optional_integer_scalar(1.5))
-check_optional_integer_scalar <- function(
+#' try(check_nullable_integer_scalar(1.5))
+check_nullable_integer_scalar <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -1111,7 +1110,7 @@ check_optional_integer_scalar <- function(
   }
   check_integer_scalar(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_integer_scalar
+} # /rtemis.core::check_nullable_integer_scalar
 
 
 # %% check_pos_integer_scalar ----
@@ -1151,8 +1150,8 @@ check_pos_integer_scalar <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_pos_integer_scalar
 
 
-# %% check_optional_pos_integer_scalar ----
-#' Check optional positive integer scalar
+# %% check_nullable_pos_integer_scalar ----
+#' Check nullable positive integer scalar
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single non-NA whole number
 #'   greater than zero.
@@ -1164,11 +1163,11 @@ check_pos_integer_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_pos_integer_scalar(NULL)
-#' check_optional_pos_integer_scalar(5L)
+#' check_nullable_pos_integer_scalar(NULL)
+#' check_nullable_pos_integer_scalar(5L)
 #' # Throw error:
-#' try(check_optional_pos_integer_scalar(0))
-check_optional_pos_integer_scalar <- function(
+#' try(check_nullable_pos_integer_scalar(0))
+check_nullable_pos_integer_scalar <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -1177,7 +1176,7 @@ check_optional_pos_integer_scalar <- function(
   }
   check_pos_integer_scalar(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_pos_integer_scalar
+} # /rtemis.core::check_nullable_pos_integer_scalar
 
 
 # %% check_bounded_integer_scalar ----
@@ -1230,8 +1229,8 @@ check_bounded_integer_scalar <- function(
 } # /rtemis.core::check_bounded_integer_scalar
 
 
-# %% check_optional_bounded_integer_scalar ----
-#' Check optional integer scalar within bounds
+# %% check_nullable_bounded_integer_scalar ----
+#' Check nullable integer scalar within bounds
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single non-NA whole
 #'   number within bounds.
@@ -1245,11 +1244,11 @@ check_bounded_integer_scalar <- function(
 #' @export
 #'
 #' @examples
-#' check_optional_bounded_integer_scalar(NULL)
-#' check_optional_bounded_integer_scalar(5L, lower = 0, upper = 20)
+#' check_nullable_bounded_integer_scalar(NULL)
+#' check_nullable_bounded_integer_scalar(5L, lower = 0, upper = 20)
 #' # Throw error:
-#' try(check_optional_bounded_integer_scalar(25, lower = 0, upper = 20))
-check_optional_bounded_integer_scalar <- function(
+#' try(check_nullable_bounded_integer_scalar(25, lower = 0, upper = 20))
+check_nullable_bounded_integer_scalar <- function(
   x,
   lower = -Inf,
   upper = Inf,
@@ -1265,7 +1264,7 @@ check_optional_bounded_integer_scalar <- function(
     arg_name = arg_name
   )
   invisible()
-} # /rtemis.core::check_optional_bounded_integer_scalar
+} # /rtemis.core::check_nullable_bounded_integer_scalar
 
 
 # %% check_logical_scalar ----
@@ -1307,8 +1306,8 @@ check_logical_scalar <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_logical_scalar
 
 
-# %% check_optional_logical_scalar ----
-#' Check optional logical scalar
+# %% check_nullable_logical_scalar ----
+#' Check nullable logical scalar
 #'
 #' @param x Optional Logical: Value to check. Must be `NULL` or a single non-NA `TRUE` or `FALSE`.
 #' @param arg_name Character: Argument name to use in error messages.
@@ -1319,11 +1318,11 @@ check_logical_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_logical_scalar(NULL)
-#' check_optional_logical_scalar(FALSE)
+#' check_nullable_logical_scalar(NULL)
+#' check_nullable_logical_scalar(FALSE)
 #' # Throw error:
-#' try(check_optional_logical_scalar(NA))
-check_optional_logical_scalar <- function(
+#' try(check_nullable_logical_scalar(NA))
+check_nullable_logical_scalar <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -1332,7 +1331,7 @@ check_optional_logical_scalar <- function(
   }
   check_logical_scalar(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_logical_scalar
+} # /rtemis.core::check_nullable_logical_scalar
 
 
 # %% check_prob_scalar ----
@@ -1367,8 +1366,8 @@ check_prob_scalar <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_prob_scalar
 
 
-# %% check_optional_prob_scalar ----
-#' Check optional probability scalar
+# %% check_nullable_prob_scalar ----
+#' Check nullable probability scalar
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single finite number in \eqn{[0, 1]}.
 #' @param arg_name Character: Argument name to use in error messages.
@@ -1379,17 +1378,17 @@ check_prob_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_prob_scalar(NULL)
-#' check_optional_prob_scalar(0.5)
+#' check_nullable_prob_scalar(NULL)
+#' check_nullable_prob_scalar(0.5)
 #' # Throw error:
-#' try(check_optional_prob_scalar(2.0))
-check_optional_prob_scalar <- function(x, arg_name = deparse(substitute(x))) {
+#' try(check_nullable_prob_scalar(2.0))
+check_nullable_prob_scalar <- function(x, arg_name = deparse(substitute(x))) {
   if (is.null(x)) {
     return(invisible())
   }
   check_prob_scalar(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_prob_scalar
+} # /rtemis.core::check_nullable_prob_scalar
 
 
 # %% check_unit_open_scalar ----
@@ -1454,8 +1453,8 @@ check_pos_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_pos_double_scalar
 
 
-# %% check_optional_pos_double_scalar ----
-#' Check optional positive double scalar
+# %% check_nullable_pos_double_scalar ----
+#' Check nullable positive double scalar
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single finite number
 #'   strictly greater than zero.
@@ -1467,11 +1466,11 @@ check_pos_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_pos_double_scalar(NULL)
-#' check_optional_pos_double_scalar(2.5)
+#' check_nullable_pos_double_scalar(NULL)
+#' check_nullable_pos_double_scalar(2.5)
 #' # Throw error:
-#' try(check_optional_pos_double_scalar(0))
-check_optional_pos_double_scalar <- function(
+#' try(check_nullable_pos_double_scalar(0))
+check_nullable_pos_double_scalar <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -1480,7 +1479,7 @@ check_optional_pos_double_scalar <- function(
   }
   check_pos_double_scalar(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_pos_double_scalar
+} # /rtemis.core::check_nullable_pos_double_scalar
 
 
 # %% check_nonneg_double_scalar ----
@@ -1514,8 +1513,8 @@ check_nonneg_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_nonneg_double_scalar
 
 
-# %% check_optional_nonneg_double_scalar ----
-#' Check optional non-negative double scalar
+# %% check_nullable_nonneg_double_scalar ----
+#' Check nullable non-negative double scalar
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single finite number
 #'   greater than or equal to zero.
@@ -1527,11 +1526,11 @@ check_nonneg_double_scalar <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_nonneg_double_scalar(NULL)
-#' check_optional_nonneg_double_scalar(0)
+#' check_nullable_nonneg_double_scalar(NULL)
+#' check_nullable_nonneg_double_scalar(0)
 #' # Throw error:
-#' try(check_optional_nonneg_double_scalar(-1))
-check_optional_nonneg_double_scalar <- function(
+#' try(check_nullable_nonneg_double_scalar(-1))
+check_nullable_nonneg_double_scalar <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -1540,7 +1539,7 @@ check_optional_nonneg_double_scalar <- function(
   }
   check_nonneg_double_scalar(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_nonneg_double_scalar
+} # /rtemis.core::check_nullable_nonneg_double_scalar
 
 
 # %% check_bounded_double_scalar ----
@@ -1549,7 +1548,7 @@ check_optional_nonneg_double_scalar <- function(
 #' @details
 #' For bounds not covered by the fixed-range checks ([check_prob_scalar] is `[0, 1]`,
 #' [check_pos_double_scalar] is `(0, Inf)`), or where the range is not known until
-#' runtime. The argument-checking counterpart to [prop_float], whose `min`/`max`
+#' runtime. The argument-checking counterpart to [prop_number()], whose `min`/`max`
 #' and `exclusive_min`/`exclusive_max` describe the same intervals for a config
 #' class. Finite like it: `Inf`/`-Inf` are rejected even where the matching bound
 #' is unbounded, since an infinite bound is always an open one.
@@ -1613,8 +1612,8 @@ check_bounded_double_scalar <- function(
 } # /rtemis.core::check_bounded_double_scalar
 
 
-# %% check_optional_bounded_double_scalar ----
-#' Check optional double scalar within bounds
+# %% check_nullable_bounded_double_scalar ----
+#' Check nullable double scalar within bounds
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a single finite non-NA
 #'   number within bounds.
@@ -1630,11 +1629,11 @@ check_bounded_double_scalar <- function(
 #' @export
 #'
 #' @examples
-#' check_optional_bounded_double_scalar(NULL)
-#' check_optional_bounded_double_scalar(0.7, lower = 0, upper = 2)
+#' check_nullable_bounded_double_scalar(NULL)
+#' check_nullable_bounded_double_scalar(0.7, lower = 0, upper = 2)
 #' # Throw error:
-#' try(check_optional_bounded_double_scalar(5, lower = 0, upper = 2))
-check_optional_bounded_double_scalar <- function(
+#' try(check_nullable_bounded_double_scalar(5, lower = 0, upper = 2))
+check_nullable_bounded_double_scalar <- function(
   x,
   lower = -Inf,
   upper = Inf,
@@ -1654,7 +1653,7 @@ check_optional_bounded_double_scalar <- function(
     arg_name = arg_name
   )
   invisible()
-} # /rtemis.core::check_optional_bounded_double_scalar
+} # /rtemis.core::check_nullable_bounded_double_scalar
 
 
 # %% S7-parallel vector checks ----
@@ -1713,8 +1712,8 @@ check_prob_vector <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_prob_vector
 
 
-# %% check_optional_prob_vector ----
-#' Check optional probability vector
+# %% check_nullable_prob_vector ----
+#' Check nullable probability vector
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a non-empty vector with all
 #'   elements in \eqn{[0, 1]} and no NAs.
@@ -1726,17 +1725,17 @@ check_prob_vector <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_prob_vector(NULL)
-#' check_optional_prob_vector(c(0.2, 0.8))
+#' check_nullable_prob_vector(NULL)
+#' check_nullable_prob_vector(c(0.2, 0.8))
 #' # Throw error:
-#' try(check_optional_prob_vector(c(0.5, 2)))
-check_optional_prob_vector <- function(x, arg_name = deparse(substitute(x))) {
+#' try(check_nullable_prob_vector(c(0.5, 2)))
+check_nullable_prob_vector <- function(x, arg_name = deparse(substitute(x))) {
   if (is.null(x)) {
     return(invisible())
   }
   check_prob_vector(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_prob_vector
+} # /rtemis.core::check_nullable_prob_vector
 
 
 # %% check_unit_open_vector ----
@@ -1793,8 +1792,8 @@ check_unit_open_vector <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_unit_open_vector
 
 
-# %% check_optional_unit_open_vector ----
-#' Check optional open-unit-interval vector
+# %% check_nullable_unit_open_vector ----
+#' Check nullable open-unit-interval vector
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a non-empty vector with all
 #'   elements strictly in \eqn{(0, 1)} and no NAs.
@@ -1806,11 +1805,11 @@ check_unit_open_vector <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_unit_open_vector(NULL)
-#' check_optional_unit_open_vector(c(0.1, 0.9))
+#' check_nullable_unit_open_vector(NULL)
+#' check_nullable_unit_open_vector(c(0.1, 0.9))
 #' # Throw error:
-#' try(check_optional_unit_open_vector(c(0, 0.5)))
-check_optional_unit_open_vector <- function(
+#' try(check_nullable_unit_open_vector(c(0, 0.5)))
+check_nullable_unit_open_vector <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -1819,7 +1818,7 @@ check_optional_unit_open_vector <- function(
   }
   check_unit_open_vector(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_unit_open_vector
+} # /rtemis.core::check_nullable_unit_open_vector
 
 
 # %% check_pos_double_vector ----
@@ -1876,8 +1875,8 @@ check_pos_double_vector <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_pos_double_vector
 
 
-# %% check_optional_pos_double_vector ----
-#' Check optional positive double vector
+# %% check_nullable_pos_double_vector ----
+#' Check nullable positive double vector
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a non-empty vector with all
 #'   elements finite, strictly greater than zero, and no NAs.
@@ -1889,11 +1888,11 @@ check_pos_double_vector <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_pos_double_vector(NULL)
-#' check_optional_pos_double_vector(c(0.5, 2))
+#' check_nullable_pos_double_vector(NULL)
+#' check_nullable_pos_double_vector(c(0.5, 2))
 #' # Throw error:
-#' try(check_optional_pos_double_vector(c(0, 1)))
-check_optional_pos_double_vector <- function(
+#' try(check_nullable_pos_double_vector(c(0, 1)))
+check_nullable_pos_double_vector <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -1902,7 +1901,7 @@ check_optional_pos_double_vector <- function(
   }
   check_pos_double_vector(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_pos_double_vector
+} # /rtemis.core::check_nullable_pos_double_vector
 
 
 # %% check_nonneg_double_vector ----
@@ -1959,8 +1958,8 @@ check_nonneg_double_vector <- function(x, arg_name = deparse(substitute(x))) {
 } # /rtemis.core::check_nonneg_double_vector
 
 
-# %% check_optional_nonneg_double_vector ----
-#' Check optional non-negative double vector
+# %% check_nullable_nonneg_double_vector ----
+#' Check nullable non-negative double vector
 #'
 #' @param x Optional Numeric: Value to check. Must be `NULL` or a non-empty vector with all
 #'   elements finite, greater than or equal to zero, and no NAs.
@@ -1972,11 +1971,11 @@ check_nonneg_double_vector <- function(x, arg_name = deparse(substitute(x))) {
 #' @export
 #'
 #' @examples
-#' check_optional_nonneg_double_vector(NULL)
-#' check_optional_nonneg_double_vector(c(0, 1, 5))
+#' check_nullable_nonneg_double_vector(NULL)
+#' check_nullable_nonneg_double_vector(c(0, 1, 5))
 #' # Throw error:
-#' try(check_optional_nonneg_double_vector(c(-1, 0)))
-check_optional_nonneg_double_vector <- function(
+#' try(check_nullable_nonneg_double_vector(c(-1, 0)))
+check_nullable_nonneg_double_vector <- function(
   x,
   arg_name = deparse(substitute(x))
 ) {
@@ -1985,11 +1984,13 @@ check_optional_nonneg_double_vector <- function(
   }
   check_nonneg_double_vector(x, arg_name = arg_name)
   invisible()
-} # /rtemis.core::check_optional_nonneg_double_vector
+} # /rtemis.core::check_nullable_nonneg_double_vector
 
 
-# %% Legacy - to be removed ----
-# check_scalar_* are superseded by the check_*_scalar equivalents above.
+# %% Scalar checks with the type before the shape ----
+# `check_scalar_character()` and `check_optional_scalar_character()` admit
+# `""`; `check_character_scalar()` and `check_nullable_character_scalar()`
+# reject it.
 
 # %% check_scalar_logical ----
 #' Check Scalar Logical

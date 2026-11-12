@@ -2,32 +2,37 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_map}
 \alias{prop_map}
-\title{Map of a nested declaration}
+\title{Map S7 property}
 \usage{
 prop_map(
   values,
+  ...,
   default = NULL,
+  min_members = 1L,
+  max_members = NULL,
   nullable = FALSE,
-  min_items = 1L,
-  max_items = NULL,
   def_name = NULL,
   description = ""
 )
 }
 \arguments{
-\item{values}{S7 property from a \verb{prop_*} factory: Declaration of each value.}
+\item{values}{S7 property: Declaration of each value, from a \verb{prop_*}
+factory, without a \code{default}. \code{\link[=prop_any]{prop_any()}} admits any value.}
 
-\item{default}{Default value, NULL for none, or a quoted call. An empty
-\code{list()} is a valid default when \code{min_items} is \code{0L}.}
+\item{...}{Empty. Every argument after \code{values} is passed by name.}
+
+\item{default}{Named vector, named list, or NULL: Default value, or a
+quoted call.}
+
+\item{min_members}{Integer [0, Inf): Fewest members. \code{0L} admits an empty
+map.}
+
+\item{max_members}{Integer or NULL: Most members.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 
-\item{min_items}{Integer: Fewest entries. \code{0L} admits an empty map.}
-
-\item{max_items}{Integer or NULL: Most entries.}
-
-\item{def_name}{Character or NULL: Name of this declaration's definition in
-an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
+\item{def_name}{Character or NULL: Name of the declaration in an emitted
+JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -35,12 +40,13 @@ an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{cla
 S7 property.
 }
 \description{
-A named list whose every value satisfies \code{values}. Keys must be non-empty
-and distinct. For a map of strings held as a named character vector, use
-\code{prop_string(map = TRUE)} instead.
+Declares a JSON Schema \code{object} whose members, under any non-empty distinct
+names, all satisfy \code{values}. Values that are non-nullable scalars form a
+named atomic vector; other values form a named list.
 }
 \examples{
-thresholds <- prop_map(prop_float(min = 0, max = 1), min_items = 0L)
+weights <- prop_map(prop_number(min = 0, max = 1), min_members = 0L)
+extra_headers <- prop_map(prop_any(), nullable = TRUE, description = "Extra headers.")
 }
 \author{
 EDG

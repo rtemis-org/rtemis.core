@@ -20,9 +20,8 @@ Called for side effects. Throws an error if checks fail.
 Check positive float
 }
 \details{
-Checking with \code{is.numeric()} allows integer inputs as well, which should be ok since it is
-unlikely the function that consumes this will enforce double type only, but instead is most
-likely to allow implicit coercion from integer to numeric.
+Checks with \code{is.numeric()}, so integer inputs pass and are coerced by the
+consumer where it requires a double.
 }
 \examples{
 check_floatpos(c(0.5, 1.5))
