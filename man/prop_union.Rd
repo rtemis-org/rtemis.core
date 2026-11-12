@@ -2,10 +2,11 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_union}
 \alias{prop_union}
-\title{Union of declarations}
+\title{Union S7 property}
 \usage{
 prop_union(
   alternatives,
+  ...,
   default = NULL,
   nullable = FALSE,
   def_name = NULL,
@@ -13,15 +14,17 @@ prop_union(
 )
 }
 \arguments{
-\item{alternatives}{List of S7 properties from \verb{prop_*} factories: The
-alternatives, at least two.}
+\item{alternatives}{List of S7 properties: At least two declarations, each
+from a \verb{prop_*} factory, without a \code{default}.}
 
-\item{default}{Default value, NULL for none, or a quoted call.}
+\item{...}{Empty. Every argument after \code{alternatives} is passed by name.}
+
+\item{default}{Default value, or a quoted call, or NULL.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 
-\item{def_name}{Character or NULL: Name of this declaration's definition in
-an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
+\item{def_name}{Character or NULL: Name of the declaration in an emitted
+JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -29,13 +32,15 @@ an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{cla
 S7 property.
 }
 \description{
-A value is valid when it satisfies at least one alternative. The emitted
-JSON Schema is \code{anyOf} the alternatives.
+Declares a value that satisfies at least one of \code{alternatives}, emitted as
+JSON Schema \code{anyOf}. The alternatives of a union of \code{\link[=prop_instance]{prop_instance()}}
+declarations share a \code{const} property whose value differs between their
+classes, so that a document names its class.
 }
 \examples{
 # 1-based positions, or [start, end] ranges
 index <- prop_union(list(
-  prop_integer(min = 1L, vector = TRUE, min_items = 0L),
+  prop_array(prop_integer(min = 1L), min_items = 0L),
   prop_matrix(prop_integer(min = 1L), ncol = 2L, min_items = 0L)
 ))
 }

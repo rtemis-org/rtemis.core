@@ -2,35 +2,39 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_matrix}
 \alias{prop_matrix}
-\title{Fixed-width integer or numeric matrix}
+\title{Fixed-width matrix S7 property}
 \usage{
 prop_matrix(
   items,
   ncol,
+  ...,
   default = NULL,
-  nullable = FALSE,
   min_items = 1L,
   max_items = NULL,
+  nullable = FALSE,
   def_name = NULL,
   description = ""
 )
 }
 \arguments{
-\item{items}{S7 property from \code{\link[=prop_integer]{prop_integer()}} or \code{\link[=prop_float]{prop_float()}}, scalar:
-Declaration of each cell, including its bounds.}
+\item{items}{S7 property: Declaration of each cell, a non-nullable
+\code{\link[=prop_integer]{prop_integer()}} or \code{\link[=prop_number]{prop_number()}} without a \code{default}.}
 
-\item{ncol}{Integer: Number of columns.}
+\item{ncol}{Integer [1, Inf): Column count.}
 
-\item{default}{Default value, NULL for none, or a quoted call.}
+\item{...}{Empty. Every argument after \code{ncol} is passed by name.}
 
-\item{nullable}{Logical: If TRUE, NULL is a valid value.}
+\item{default}{Matrix or NULL: Default value, or a quoted call.}
 
-\item{min_items}{Integer: Fewest rows. \code{0L} admits a matrix with no rows.}
+\item{min_items}{Integer [0, Inf): Fewest rows. \code{0L} admits a matrix of
+zero rows.}
 
 \item{max_items}{Integer or NULL: Most rows.}
 
-\item{def_name}{Character or NULL: Name of this declaration's definition in
-an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
+\item{nullable}{Logical: If TRUE, NULL is a valid value.}
+
+\item{def_name}{Character or NULL: Name of the declaration in an emitted
+JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -38,9 +42,10 @@ an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{cla
 S7 property.
 }
 \description{
-A matrix with exactly \code{ncol} columns, emitted as a JSON array of
-\code{ncol}-element arrays, one per row. Every cell satisfies \code{items}. Use it for
-a set of fixed-length tuples, such as \verb{[start, end]} ranges.
+Declares a JSON Schema \code{array} of \code{ncol}-element arrays, one per row, whose
+every cell satisfies \code{items}. The R value is an integer or double matrix
+with \code{ncol} columns and no attribute other than \code{dim}. Use it for a set of
+fixed-length tuples, such as \verb{[start, end]} ranges.
 }
 \examples{
 ranges <- prop_matrix(prop_integer(min = 1L), ncol = 2L, min_items = 0L)

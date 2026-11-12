@@ -38,22 +38,23 @@ abbreviate_class <- function(x, n = 4L) {
 } # /rtemis.core::abbreviate_class
 
 
-# %% optional ----
-#' Create an optional S7 type
+# %% nullable ----
+#' Create a nullable S7 type
 #'
-#' Creates an S7 union type that allows for the specified type or `NULL`.
+#' Creates an S7 union type that admits the specified type or `NULL`, with
+#' `NULL` first, so that S7 prototypes a property of this type to `NULL`.
 #'
-#' Use it when the S7 class already validates the non-NULL case. For a value
-#' with its own constraints, use a `prop_*` factory with `nullable = TRUE`.
+#' Use it when the S7 class already validates the non-NULL case. A value with
+#' its own constraints is declared with a `prop_*` factory and
+#' `nullable = TRUE`.
 #'
 #' @param type S7 base class or S7 class.
-#' @return An S7 union type that allows for the specified type or `NULL`.
+#' @return S7 union of `NULL` and `type`.
 #' @author EDG
 #' @export
 #' @examples
-#' # Create an optional character type
-#' optional(S7::class_character)
-optional <- function(type) {
+#' nullable(S7::class_character)
+nullable <- function(type) {
   if (!inherits(type, "S7_base_class") && !inherits(type, "S7_class")) {
     abort(
       "`type` must be an S7 base class or S7 class.",
@@ -61,4 +62,4 @@ optional <- function(type) {
     )
   }
   S7::new_union(NULL, type)
-}
+} # /rtemis.core::nullable

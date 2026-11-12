@@ -233,16 +233,16 @@ test_that("check_prob_vector rejects non-numeric", {
   expect_error(check_prob_vector("0.5"))
 })
 
-test_that("check_optional_prob_vector accepts NULL", {
-  expect_invisible(check_optional_prob_vector(NULL))
+test_that("check_nullable_prob_vector accepts NULL", {
+  expect_invisible(check_nullable_prob_vector(NULL))
 })
 
-test_that("check_optional_prob_vector passes for valid vector", {
-  expect_invisible(check_optional_prob_vector(c(0.2, 0.8)))
+test_that("check_nullable_prob_vector passes for valid vector", {
+  expect_invisible(check_nullable_prob_vector(c(0.2, 0.8)))
 })
 
-test_that("check_optional_prob_vector rejects out-of-range values", {
-  expect_error(check_optional_prob_vector(c(0.5, 2)))
+test_that("check_nullable_prob_vector rejects out-of-range values", {
+  expect_error(check_nullable_prob_vector(c(0.5, 2)))
 })
 
 # check_unit_open_vector ----
@@ -266,17 +266,17 @@ test_that("check_unit_open_vector rejects NA", {
   expect_error(check_unit_open_vector(c(0.5, NA)))
 })
 
-test_that("check_optional_unit_open_vector accepts NULL", {
-  expect_invisible(check_optional_unit_open_vector(NULL))
+test_that("check_nullable_unit_open_vector accepts NULL", {
+  expect_invisible(check_nullable_unit_open_vector(NULL))
 })
 
-test_that("check_optional_unit_open_vector passes for valid vector", {
-  expect_invisible(check_optional_unit_open_vector(c(0.2, 0.8)))
+test_that("check_nullable_unit_open_vector passes for valid vector", {
+  expect_invisible(check_nullable_unit_open_vector(c(0.2, 0.8)))
 })
 
-test_that("check_optional_unit_open_vector rejects endpoints", {
-  expect_error(check_optional_unit_open_vector(c(0, 0.5)))
-  expect_error(check_optional_unit_open_vector(c(0.5, 1)))
+test_that("check_nullable_unit_open_vector rejects endpoints", {
+  expect_error(check_nullable_unit_open_vector(c(0, 0.5)))
+  expect_error(check_nullable_unit_open_vector(c(0.5, 1)))
 })
 
 # check_pos_double_vector ----
@@ -304,16 +304,16 @@ test_that("check_pos_double_vector rejects NA", {
   expect_error(check_pos_double_vector(c(1, NA)))
 })
 
-test_that("check_optional_pos_double_vector accepts NULL", {
-  expect_invisible(check_optional_pos_double_vector(NULL))
+test_that("check_nullable_pos_double_vector accepts NULL", {
+  expect_invisible(check_nullable_pos_double_vector(NULL))
 })
 
-test_that("check_optional_pos_double_vector passes for positive values", {
-  expect_invisible(check_optional_pos_double_vector(c(0.5, 2)))
+test_that("check_nullable_pos_double_vector passes for positive values", {
+  expect_invisible(check_nullable_pos_double_vector(c(0.5, 2)))
 })
 
-test_that("check_optional_pos_double_vector rejects 0", {
-  expect_error(check_optional_pos_double_vector(c(0, 1)))
+test_that("check_nullable_pos_double_vector rejects 0", {
+  expect_error(check_nullable_pos_double_vector(c(0, 1)))
 })
 
 # check_nonneg_double_vector ----
@@ -337,16 +337,16 @@ test_that("check_nonneg_double_vector rejects NA", {
   expect_error(check_nonneg_double_vector(c(0, NA)))
 })
 
-test_that("check_optional_nonneg_double_vector accepts NULL", {
-  expect_invisible(check_optional_nonneg_double_vector(NULL))
+test_that("check_nullable_nonneg_double_vector accepts NULL", {
+  expect_invisible(check_nullable_nonneg_double_vector(NULL))
 })
 
-test_that("check_optional_nonneg_double_vector passes for valid values", {
-  expect_invisible(check_optional_nonneg_double_vector(c(0, 1, 5)))
+test_that("check_nullable_nonneg_double_vector passes for valid values", {
+  expect_invisible(check_nullable_nonneg_double_vector(c(0, 1, 5)))
 })
 
-test_that("check_optional_nonneg_double_vector rejects negative values", {
-  expect_error(check_optional_nonneg_double_vector(c(-1, 0)))
+test_that("check_nullable_nonneg_double_vector rejects negative values", {
+  expect_error(check_nullable_nonneg_double_vector(c(-1, 0)))
 })
 
 # check_pos_integer_scalar ----
@@ -371,16 +371,16 @@ test_that("check_pos_integer_scalar rejects NA", {
   expect_error(check_pos_integer_scalar(NA_integer_))
 })
 
-test_that("check_optional_pos_integer_scalar accepts NULL", {
-  expect_invisible(check_optional_pos_integer_scalar(NULL))
+test_that("check_nullable_pos_integer_scalar accepts NULL", {
+  expect_invisible(check_nullable_pos_integer_scalar(NULL))
 })
 
-test_that("check_optional_pos_integer_scalar passes for valid values", {
-  expect_invisible(check_optional_pos_integer_scalar(5L))
+test_that("check_nullable_pos_integer_scalar passes for valid values", {
+  expect_invisible(check_nullable_pos_integer_scalar(5L))
 })
 
-test_that("check_optional_pos_integer_scalar rejects 0", {
-  expect_error(check_optional_pos_integer_scalar(0L))
+test_that("check_nullable_pos_integer_scalar rejects 0", {
+  expect_error(check_nullable_pos_integer_scalar(0L))
 })
 
 # check_bounded_integer_scalar ----
@@ -422,17 +422,17 @@ test_that("check_bounded_integer_scalar names an infinite bound as open", {
   )
 })
 
-test_that("check_optional_bounded_integer_scalar accepts NULL", {
-  expect_invisible(check_optional_bounded_integer_scalar(NULL))
+test_that("check_nullable_bounded_integer_scalar accepts NULL", {
+  expect_invisible(check_nullable_bounded_integer_scalar(NULL))
   expect_invisible(
-    check_optional_bounded_integer_scalar(NULL, lower = 0, upper = 20)
+    check_nullable_bounded_integer_scalar(NULL, lower = 0, upper = 20)
   )
 })
 
-test_that("check_optional_bounded_integer_scalar checks a supplied value", {
-  expect_invisible(check_optional_bounded_integer_scalar(5L, lower = 0))
+test_that("check_nullable_bounded_integer_scalar checks a supplied value", {
+  expect_invisible(check_nullable_bounded_integer_scalar(5L, lower = 0))
   expect_error(
-    check_optional_bounded_integer_scalar(25, lower = 0, upper = 20),
+    check_nullable_bounded_integer_scalar(25, lower = 0, upper = 20),
     class = "rtemis_range_error"
   )
 })
@@ -458,16 +458,16 @@ test_that("check_character_scalar rejects non-character", {
   expect_error(check_character_scalar(1))
 })
 
-test_that("check_optional_character_scalar accepts NULL", {
-  expect_invisible(check_optional_character_scalar(NULL))
+test_that("check_nullable_character_scalar accepts NULL", {
+  expect_invisible(check_nullable_character_scalar(NULL))
 })
 
-test_that("check_optional_character_scalar passes for non-empty string", {
-  expect_invisible(check_optional_character_scalar("hello"))
+test_that("check_nullable_character_scalar passes for non-empty string", {
+  expect_invisible(check_nullable_character_scalar("hello"))
 })
 
-test_that("check_optional_character_scalar rejects empty string", {
-  expect_error(check_optional_character_scalar(""))
+test_that("check_nullable_character_scalar rejects empty string", {
+  expect_error(check_nullable_character_scalar(""))
 })
 
 # check_double_scalar ----
@@ -488,16 +488,16 @@ test_that("check_double_scalar rejects non-numeric", {
   expect_error(check_double_scalar("a"))
 })
 
-test_that("check_optional_double_scalar accepts NULL", {
-  expect_invisible(check_optional_double_scalar(NULL))
+test_that("check_nullable_double_scalar accepts NULL", {
+  expect_invisible(check_nullable_double_scalar(NULL))
 })
 
-test_that("check_optional_double_scalar passes for single numeric", {
-  expect_invisible(check_optional_double_scalar(2.5))
+test_that("check_nullable_double_scalar passes for single numeric", {
+  expect_invisible(check_nullable_double_scalar(2.5))
 })
 
-test_that("check_optional_double_scalar rejects NA", {
-  expect_error(check_optional_double_scalar(NA_real_))
+test_that("check_nullable_double_scalar rejects NA", {
+  expect_error(check_nullable_double_scalar(NA_real_))
 })
 
 # check_integer_scalar ----
@@ -519,16 +519,16 @@ test_that("check_integer_scalar rejects Inf", {
   expect_error(check_integer_scalar(-Inf))
 })
 
-test_that("check_optional_integer_scalar accepts NULL", {
-  expect_invisible(check_optional_integer_scalar(NULL))
+test_that("check_nullable_integer_scalar accepts NULL", {
+  expect_invisible(check_nullable_integer_scalar(NULL))
 })
 
-test_that("check_optional_integer_scalar passes for whole number", {
-  expect_invisible(check_optional_integer_scalar(10L))
+test_that("check_nullable_integer_scalar passes for whole number", {
+  expect_invisible(check_nullable_integer_scalar(10L))
 })
 
-test_that("check_optional_integer_scalar rejects non-whole number", {
-  expect_error(check_optional_integer_scalar(1.5))
+test_that("check_nullable_integer_scalar rejects non-whole number", {
+  expect_error(check_nullable_integer_scalar(1.5))
 })
 
 # check_logical_scalar ----
@@ -549,16 +549,16 @@ test_that("check_logical_scalar rejects length > 1", {
   expect_error(check_logical_scalar(c(TRUE, FALSE)))
 })
 
-test_that("check_optional_logical_scalar accepts NULL", {
-  expect_invisible(check_optional_logical_scalar(NULL))
+test_that("check_nullable_logical_scalar accepts NULL", {
+  expect_invisible(check_nullable_logical_scalar(NULL))
 })
 
-test_that("check_optional_logical_scalar passes for FALSE", {
-  expect_invisible(check_optional_logical_scalar(FALSE))
+test_that("check_nullable_logical_scalar passes for FALSE", {
+  expect_invisible(check_nullable_logical_scalar(FALSE))
 })
 
-test_that("check_optional_logical_scalar rejects NA", {
-  expect_error(check_optional_logical_scalar(NA))
+test_that("check_nullable_logical_scalar rejects NA", {
+  expect_error(check_nullable_logical_scalar(NA))
 })
 
 # check_prob_scalar ----
@@ -652,7 +652,7 @@ test_that("check_bounded_double_scalar rejects infinite values", {
     "\\[0, Inf\\)"
   )
   expect_error(
-    check_optional_bounded_double_scalar(Inf, lower = 0),
+    check_nullable_bounded_double_scalar(Inf, lower = 0),
     class = "rtemis_value_error"
   )
 })
@@ -687,21 +687,21 @@ test_that("bounded checks reject unusable bounds", {
   )
 })
 
-test_that("check_optional_bounded_double_scalar accepts NULL", {
-  expect_invisible(check_optional_bounded_double_scalar(NULL))
+test_that("check_nullable_bounded_double_scalar accepts NULL", {
+  expect_invisible(check_nullable_bounded_double_scalar(NULL))
   expect_invisible(
-    check_optional_bounded_double_scalar(NULL, lower = 0, upper = 2)
+    check_nullable_bounded_double_scalar(NULL, lower = 0, upper = 2)
   )
 })
 
-test_that("check_optional_bounded_double_scalar checks a supplied value", {
-  expect_invisible(check_optional_bounded_double_scalar(
+test_that("check_nullable_bounded_double_scalar checks a supplied value", {
+  expect_invisible(check_nullable_bounded_double_scalar(
     0.7,
     lower = 0,
     upper = 2
   ))
   expect_error(
-    check_optional_bounded_double_scalar(5, lower = 0, upper = 2),
+    check_nullable_bounded_double_scalar(5, lower = 0, upper = 2),
     class = "rtemis_range_error"
   )
 })
@@ -710,16 +710,16 @@ test_that("check_prob_scalar rejects NA", {
   expect_error(check_prob_scalar(NA_real_))
 })
 
-test_that("check_optional_prob_scalar accepts NULL", {
-  expect_invisible(check_optional_prob_scalar(NULL))
+test_that("check_nullable_prob_scalar accepts NULL", {
+  expect_invisible(check_nullable_prob_scalar(NULL))
 })
 
-test_that("check_optional_prob_scalar passes for 0.5", {
-  expect_invisible(check_optional_prob_scalar(0.5))
+test_that("check_nullable_prob_scalar passes for 0.5", {
+  expect_invisible(check_nullable_prob_scalar(0.5))
 })
 
-test_that("check_optional_prob_scalar rejects values > 1", {
-  expect_error(check_optional_prob_scalar(2.0))
+test_that("check_nullable_prob_scalar rejects values > 1", {
+  expect_error(check_nullable_prob_scalar(2.0))
 })
 
 # check_unit_open_scalar ----
@@ -756,16 +756,16 @@ test_that("check_pos_double_scalar rejects NA", {
   expect_error(check_pos_double_scalar(NA_real_))
 })
 
-test_that("check_optional_pos_double_scalar accepts NULL", {
-  expect_invisible(check_optional_pos_double_scalar(NULL))
+test_that("check_nullable_pos_double_scalar accepts NULL", {
+  expect_invisible(check_nullable_pos_double_scalar(NULL))
 })
 
-test_that("check_optional_pos_double_scalar passes for positive value", {
-  expect_invisible(check_optional_pos_double_scalar(2.5))
+test_that("check_nullable_pos_double_scalar passes for positive value", {
+  expect_invisible(check_nullable_pos_double_scalar(2.5))
 })
 
-test_that("check_optional_pos_double_scalar rejects 0", {
-  expect_error(check_optional_pos_double_scalar(0))
+test_that("check_nullable_pos_double_scalar rejects 0", {
+  expect_error(check_nullable_pos_double_scalar(0))
 })
 
 # check_nonneg_double_scalar ----
@@ -786,14 +786,14 @@ test_that("check_nonneg_double_scalar rejects NA", {
   expect_error(check_nonneg_double_scalar(NA_real_))
 })
 
-test_that("check_optional_nonneg_double_scalar accepts NULL", {
-  expect_invisible(check_optional_nonneg_double_scalar(NULL))
+test_that("check_nullable_nonneg_double_scalar accepts NULL", {
+  expect_invisible(check_nullable_nonneg_double_scalar(NULL))
 })
 
-test_that("check_optional_nonneg_double_scalar passes for 0", {
-  expect_invisible(check_optional_nonneg_double_scalar(0))
+test_that("check_nullable_nonneg_double_scalar passes for 0", {
+  expect_invisible(check_nullable_nonneg_double_scalar(0))
 })
 
-test_that("check_optional_nonneg_double_scalar rejects negative values", {
-  expect_error(check_optional_nonneg_double_scalar(-1))
+test_that("check_nullable_nonneg_double_scalar rejects negative values", {
+  expect_error(check_nullable_nonneg_double_scalar(-1))
 })

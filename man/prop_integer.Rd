@@ -6,44 +6,39 @@
 \usage{
 prop_integer(
   default = NULL,
+  ...,
+  enum = NULL,
+  const = NULL,
   min = NULL,
   max = NULL,
   exclusive_min = NULL,
   exclusive_max = NULL,
   nullable = FALSE,
-  vector = FALSE,
-  min_items = 1L,
-  max_items = NULL,
-  unique_items = FALSE,
   def_name = NULL,
   description = ""
 )
 }
 \arguments{
-\item{default}{Integer: Default value (NULL for none, or if \code{nullable}).
-Use a quoted call for a default that needs construction. The call is
-evaluated once in the caller's environment to validate
-the default and record it in \code{\link[=prop_spec]{prop_spec()}}, then again for each object in
-the class's environment.}
+\item{default}{Integer or NULL: Default value. NULL gives no default unless
+\code{const} is given or \code{nullable} is TRUE. A quoted call is evaluated once in
+the caller's environment at declaration and again for each object.}
 
-\item{min, max}{Integer or NULL: Inclusive bounds.}
+\item{...}{Empty, except for the released arguments \code{vector}, \code{min_items},
+and \code{unique_items}, which build the declaration of
+\code{prop_array(prop_integer(...))}.}
 
-\item{exclusive_min, exclusive_max}{Integer or NULL: Exclusive bounds.}
+\item{enum}{Integer or NULL: Allowed values.}
+
+\item{const}{Integer or NULL: The single allowed value.}
+
+\item{min, max}{Numeric or NULL: Inclusive bounds.}
+
+\item{exclusive_min, exclusive_max}{Numeric or NULL: Exclusive bounds.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 
-\item{vector}{Logical: If TRUE, the value is vector-valued (a JSON array).}
-
-\item{min_items}{Integer: Fewest elements a \code{vector} value may hold. \code{0L}
-admits an empty vector.}
-
-\item{max_items}{Integer or NULL: Most elements a \code{vector} value may hold.}
-
-\item{unique_items}{Logical: If TRUE, a \code{vector} value's elements must be
-distinct.}
-
-\item{def_name}{Character or NULL: Name of this declaration's definition in
-an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
+\item{def_name}{Character or NULL: Name of the declaration in an emitted
+JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -51,18 +46,13 @@ an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{cla
 S7 property.
 }
 \description{
-Accepts R integers only (\code{3L}, not \code{3}), so that a whole-number contract is
-enforced by the type rather than by a rounding check.
+Declares a property whose value is one R integer, emitted as a JSON Schema
+\code{integer}. R integers range from -2147483647 to 2147483647; a declaration
+that must admit larger whole numbers is a \code{\link[=prop_number]{prop_number()}}.
 }
 \examples{
-n_iter <- prop_integer(default = 100L, min = 1L, description = "Iterations")
-# Distinct 1-based positions; an empty set is valid
-positions <- prop_integer(
-  min = 1L,
-  vector = TRUE,
-  min_items = 0L,
-  unique_items = TRUE
-)
+n_iter <- prop_integer(100L, min = 1L, description = "Iterations.")
+folds <- prop_integer(5L, enum = c(5L, 10L))
 }
 \author{
 EDG

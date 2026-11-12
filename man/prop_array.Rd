@@ -2,36 +2,39 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_array}
 \alias{prop_array}
-\title{Array of a nested declaration}
+\title{Array S7 property}
 \usage{
 prop_array(
   items,
+  ...,
   default = NULL,
-  nullable = FALSE,
   min_items = 1L,
   max_items = NULL,
   unique_items = FALSE,
+  nullable = FALSE,
   def_name = NULL,
   description = ""
 )
 }
 \arguments{
-\item{items}{S7 property from a \verb{prop_*} factory: Declaration of each
-element.}
+\item{items}{S7 property: Declaration of each element, from a \verb{prop_*}
+factory, without a \code{default}.}
 
-\item{default}{Default value, NULL for none, or a quoted call. An empty
-\code{list()} is a valid default when \code{min_items} is \code{0L}.}
+\item{...}{Empty. Every argument after \code{items} is passed by name.}
 
-\item{nullable}{Logical: If TRUE, NULL is a valid value.}
+\item{default}{Vector, list, or NULL: Default value, or a quoted call.}
 
-\item{min_items}{Integer: Fewest elements. \code{0L} admits an empty list.}
+\item{min_items}{Integer [0, Inf): Fewest elements. \code{0L} admits an empty
+array.}
 
 \item{max_items}{Integer or NULL: Most elements.}
 
 \item{unique_items}{Logical: If TRUE, elements must be distinct.}
 
-\item{def_name}{Character or NULL: Name of this declaration's definition in
-an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
+\item{nullable}{Logical: If TRUE, NULL is a valid value.}
+
+\item{def_name}{Character or NULL: Name of the declaration in an emitted
+JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -39,17 +42,14 @@ an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{cla
 S7 property.
 }
 \description{
-A list whose every element satisfies \code{items}: a struct, union, matrix, map,
-another array, or any scalar factory. For an array of scalars held as an R
-vector, use the scalar factory's \code{vector = TRUE} instead.
+Declares a JSON Schema \code{array} whose every element satisfies \code{items}.
+Elements that are non-nullable scalars form an atomic vector; other
+elements form an unnamed list.
 }
 \examples{
-record <- prop_struct(
-  members = list(position = prop_integer(min = 1L)),
-  required = "position",
-  additional = TRUE
-)
-variants <- prop_array(record, default = list(), min_items = 0L)
+tags <- prop_array(prop_string(), unique_items = TRUE, description = "Tags.")
+# Distinct 1-based positions; an empty set is valid
+positions <- prop_array(prop_integer(min = 1L), min_items = 0L, unique_items = TRUE)
 }
 \author{
 EDG

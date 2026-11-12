@@ -43,14 +43,14 @@ test_that("collapse_head collapses vector with ellipsis", {
 })
 
 
-# %% optional ----
-test_that("optional() returns a union of NULL and the type", {
-  u <- optional(S7::class_character)
+# %% nullable ----
+test_that("nullable() returns a union of NULL and the type", {
+  u <- nullable(S7::class_character)
   expect_true(inherits(u, "S7_union"))
-  Cls <- S7::new_class("UT_optional", properties = list(x = u))
+  Cls <- S7::new_class("UT_nullable", properties = list(x = u))
   expect_null(Cls()@x)
   expect_identical(Cls(x = "a")@x, "a")
-  expect_error(optional("character"), "S7 base class or S7 class")
+  expect_error(nullable("character"), "S7 base class or S7 class")
 })
 
 
