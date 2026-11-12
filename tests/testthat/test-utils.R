@@ -41,3 +41,22 @@ test_that("collapse_head collapses vector with ellipsis", {
     "A, B, ..."
   )
 })
+
+
+# %% optional ----
+test_that("optional() returns a union of NULL and the type", {
+  u <- optional(S7::class_character)
+  expect_true(inherits(u, "S7_union"))
+  Cls <- S7::new_class("UT_optional", properties = list(x = u))
+  expect_null(Cls()@x)
+  expect_identical(Cls(x = "a")@x, "a")
+  expect_error(optional("character"), "S7 base class or S7 class")
+})
+
+
+# %% printls ----
+test_that("printls() names the class of an element it does not expand", {
+  pc <- stats::prcomp(matrix(c(1, 2, 3, 4, 2, 4, 1, 3), 4))
+  expect_output(printls(list(a = pc)), "object of class 'prcomp'")
+  expect_output(printls(pc), "object of class 'prcomp'")
+})

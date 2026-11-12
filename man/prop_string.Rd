@@ -7,12 +7,16 @@
 prop_string(
   default = NULL,
   enum = NULL,
+  pattern = NULL,
+  min_length = NULL,
   nullable = FALSE,
   vector = FALSE,
   map = FALSE,
   min_items = 1L,
+  max_items = NULL,
   unique_items = FALSE,
   allow_empty = FALSE,
+  def_name = NULL,
   description = ""
 )
 }
@@ -25,6 +29,13 @@ the class's environment.}
 
 \item{enum}{Character or NULL: Allowed values.}
 
+\item{pattern}{Character or NULL: Regular expression every value must match,
+evaluated with \code{perl = TRUE} and emitted as JSON Schema \code{pattern}. Anchor
+it (\verb{^...$}) to constrain the whole string. Write it in the syntax common
+to PCRE and ECMA-262, the dialect JSON Schema validators use.}
+
+\item{min_length}{Integer or NULL: Fewest characters a value may have.}
+
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 
 \item{vector}{Logical: If TRUE, the value is vector-valued (a JSON array).}
@@ -32,12 +43,19 @@ the class's environment.}
 \item{map}{Logical: If TRUE, the value is a \emph{named} vector (a JSON object
 with string values). Mutually exclusive with \code{vector}.}
 
-\item{min_items}{Integer: Fewest elements a \code{vector} or \code{map} value may hold.}
+\item{min_items}{Integer: Fewest elements a \code{vector} or \code{map} value may hold.
+\code{0L} admits an empty value.}
+
+\item{max_items}{Integer or NULL: Most elements a \code{vector} or \code{map} value may
+hold.}
 
 \item{unique_items}{Logical: If TRUE, a \code{vector} value's elements must be
 distinct.}
 
 \item{allow_empty}{Logical: If TRUE, \code{""} is a valid value.}
+
+\item{def_name}{Character or NULL: Name of this declaration's definition in
+an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -53,6 +71,8 @@ deliberate empty name. Pass \code{allow_empty = TRUE} where it is meaningful.
 model_name <- prop_string(description = "Model name")
 backend <- prop_string(default = "ollama", enum = c("ollama", "openai"))
 api_key <- prop_string(nullable = TRUE, description = "API key")
+# One-letter amino acid codes, at least two residues
+sequence <- prop_string(pattern = "^[A-Za-z*]+$", min_length = 2L)
 }
 \author{
 EDG

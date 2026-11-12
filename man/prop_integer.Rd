@@ -13,7 +13,9 @@ prop_integer(
   nullable = FALSE,
   vector = FALSE,
   min_items = 1L,
+  max_items = NULL,
   unique_items = FALSE,
+  def_name = NULL,
   description = ""
 )
 }
@@ -32,10 +34,16 @@ the class's environment.}
 
 \item{vector}{Logical: If TRUE, the value is vector-valued (a JSON array).}
 
-\item{min_items}{Integer: Fewest elements a \code{vector} value may hold.}
+\item{min_items}{Integer: Fewest elements a \code{vector} value may hold. \code{0L}
+admits an empty vector.}
+
+\item{max_items}{Integer or NULL: Most elements a \code{vector} value may hold.}
 
 \item{unique_items}{Logical: If TRUE, a \code{vector} value's elements must be
 distinct.}
+
+\item{def_name}{Character or NULL: Name of this declaration's definition in
+an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -48,6 +56,13 @@ enforced by the type rather than by a rounding check.
 }
 \examples{
 n_iter <- prop_integer(default = 100L, min = 1L, description = "Iterations")
+# Distinct 1-based positions; an empty set is valid
+positions <- prop_integer(
+  min = 1L,
+  vector = TRUE,
+  min_items = 0L,
+  unique_items = TRUE
+)
 }
 \author{
 EDG

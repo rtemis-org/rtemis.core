@@ -1,11 +1,12 @@
 Package: rtemis.core
 Title: Core Utilities for the 'rtemis' Ecosystem
-Version: 0.4.7
-Date: 2026-10-09
+Version: 0.5.0
+Date: 2026-11-11
 Authors@R: person(given = "E.D.", family = "Gennatas", role = c("aut", "cre", "cph"), 
     email = "gennatas@gmail.com", comment = c(ORCID = "0000-0001-9280-3609"))
 Description: Utilities used across packages of the 'rtemis' ecosystem. Includes the msg() 
-    messaging system and the fmt() formatting system. Provides a library of 'S7' properties,
+    messaging system and the fmt() formatting system. Provides 'S7' property factories whose
+    declarations generate both the property validators and 'JSON Schema' documents,
     test_* functions that return logical values, check_* functions that throw informative errors, 
     and clean_* functions that return validated and coerced values. This code began as part of the 
     'rtemis' package (<doi:10.32614/CRAN.package.rtemis>).

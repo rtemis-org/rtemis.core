@@ -156,9 +156,14 @@ test_that("prop_string map requires names", {
   expect_error(.PC$str_map(x = c("1", "2")))
 })
 
-test_that("prop_string map rejects blank and missing keys", {
+test_that("prop_string map rejects empty and missing keys", {
   expect_error(.PC$str_map(x = c(a = "1", "2")))
-  expect_error(.PC$str_map(x = c(a = "1", `  ` = "2")))
+  # A key of spaces is a non-empty JSON key, as the emitted
+  # `propertyNames: {minLength: 1}` states.
+  expect_identical(
+    .PC$str_map(x = c(a = "1", `  ` = "2"))@x,
+    c(a = "1", `  ` = "2")
+  )
   na_named <- c("1", "2")
   names(na_named) <- c("a", NA)
   expect_error(.PC$str_map(x = na_named))
@@ -179,7 +184,9 @@ test_that("prop_bag carries a named list as one value", {
 test_that("prop_bag requires a key on every element", {
   expect_error(.PC$bag(x = list(1, 2)))
   expect_error(.PC$bag(x = list(a = 1, 2)))
-  expect_error(.PC$bag(x = list(a = 1, ` ` = 2)))
+  bag <- list(a = 1, 2)
+  names(bag) <- c("a", "")
+  expect_error(.PC$bag(x = bag))
 })
 
 test_that("prop_bag rejects an empty list, NULL being the unset value", {
@@ -198,8 +205,8 @@ test_that("prop_bag rejects repeated keys", {
 })
 
 test_that("prop_bag holds a value its keys do not describe", {
-  # The contents past the keys are the consumer's contract, not ours: mixed
-  # types, nested lists and NULL elements all pass.
+  # The contents past the keys are the consumer's contract: mixed types,
+  # nested lists, and NULL elements all pass.
   nested <- list(a = 1, b = "two", c = list(d = TRUE), e = NULL)
   expect_identical(.PC$bag(x = nested)@x, nested)
 })
@@ -249,7 +256,7 @@ test_that("prop_spec exposes the declaration", {
 })
 
 test_that("prop_spec returns NULL for a hand-written property", {
-  expect_null(prop_spec(character_scalar))
+  expect_null(prop_spec(S7::new_property(S7::class_character)))
 })
 
 test_that("prop_spec rejects a non-property", {

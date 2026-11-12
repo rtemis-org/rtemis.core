@@ -21,7 +21,7 @@ the class's environment.}
 S7 property.
 }
 \description{
-A pass-through for values with no per-key contract of our own -- extra
+A pass-through for values whose keys carry no declared contract -- extra
 request headers, backend-specific options -- carried as one value however
 many keys it holds. The keys are required: the value becomes a JSON object,
 so every element must carry a name, and the names must be distinct. Use

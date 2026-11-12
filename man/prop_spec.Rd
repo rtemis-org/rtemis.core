@@ -14,9 +14,9 @@ Named list of spec fields, or NULL if the property was not built by
 a \verb{prop_*} factory.
 }
 \description{
-The machine-readable declaration behind a property: type, default, bounds,
-enum and description. Read it to generate documentation, a JSON Schema, or a
-defaults artifact from the class definition itself.
+The machine-readable declaration behind a property: type, shape, default,
+bounds, enum, and description. Read it to generate documentation, a JSON
+Schema, or a defaults artifact from the class definition itself.
 }
 \examples{
 temperature <- prop_float(default = 0.3, min = 0, max = 2)

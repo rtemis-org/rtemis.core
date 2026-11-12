@@ -16,8 +16,8 @@ write_JSONSchema(schema, file, overwrite = FALSE, digits = NA, verbosity = 1L)
 \item{digits}{Integer or NA: Significant digits for numeric values, passed to
 \code{jsonlite::toJSON()}. \code{NA} writes each number at full precision as R prints
 it. Pass \code{I(17)} where a value must round-trip an IEEE 754 double exactly:
-jsonlite's own default is 4 \emph{decimal places}, which silently rounds, and a
-document that is nearly right is worse than one that is obviously wrong.}
+jsonlite's own default is 4 \emph{decimal places}, which rounds without a
+warning.}
 
 \item{verbosity}{Integer: Verbosity level.}
 }
