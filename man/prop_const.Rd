@@ -7,7 +7,7 @@
 prop_const(value, description = "")
 }
 \arguments{
-\item{value}{Logical, numeric or character scalar: The value.}
+\item{value}{Logical, numeric, or character scalar: The value.}
 
 \item{description}{Character: Human-readable description.}
 }

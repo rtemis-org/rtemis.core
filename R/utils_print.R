@@ -97,7 +97,7 @@ printls <- function(
       "columns.\n"
     )
   } else if (!is_common_struct(x)) {
-    cat("object of class '", class(x)[1], "'\n")
+    cat("object of class '", class(x)[1], "'\n", sep = "")
   } else {
     x <- as.list(x)
     # Get class of each element
@@ -194,7 +194,7 @@ printls <- function(
             )
           } else {
             cat(
-              italic("object of class '", class(x[[i]])[1], "'"),
+              italic(paste0("object of class '", class(x[[i]])[1], "'")),
               "\n"
             )
           }
@@ -272,7 +272,7 @@ printls <- function(
           if (print_class) {
             gray(paste0("<", abbreviate(classes_[[i]], abbrev_class_n), "> "))
           },
-          italic("object of class '", class(x[[i]]), "'"),
+          italic(paste0("object of class '", class(x[[i]])[1], "'")),
           "\n"
         ))
       } else {
@@ -1006,7 +1006,7 @@ repr_ls <- function(
               x[[i]],
               pad = lhs + 2,
               item_format = item_format,
-              newline_pre = TRUE, # important
+              newline_pre = TRUE,
               format_fn_rhs = format_fn_rhs,
               print_class = print_class,
               limit = limit,
@@ -1140,8 +1140,7 @@ repr_ls <- function(
         # Print S4 object
         if (print_S4) {
           result <- paste0(result, "\n")
-          # For S4 objects, we would need to capture their print output
-          # This is complex, so for now we'll just show the class
+          # An S4 object is shown by its class.
           result <- paste0(
             result,
             "(S4 object of class '",

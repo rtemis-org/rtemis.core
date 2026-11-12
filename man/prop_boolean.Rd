@@ -4,16 +4,25 @@
 \alias{prop_boolean}
 \title{Logical (boolean) S7 property}
 \usage{
-prop_boolean(default = FALSE, nullable = FALSE, description = "")
+prop_boolean(
+  default = if (nullable) NULL else FALSE,
+  nullable = FALSE,
+  def_name = NULL,
+  description = ""
+)
 }
 \arguments{
-\item{default}{Logical: Default value (NULL only if \code{nullable}).
+\item{default}{Logical: Default value. \code{FALSE} unless \code{nullable}, in which
+case NULL (unset), as for every other factory.
 Use a quoted call for a default that needs construction. The call is
 evaluated once in the caller's environment to validate
 the default and record it in \code{\link[=prop_spec]{prop_spec()}}, then again for each object in
 the class's environment.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
+
+\item{def_name}{Character or NULL: Name of this declaration's definition in
+an emitted JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONSchema()}}.}
 
 \item{description}{Character: Human-readable description.}
 }
@@ -25,6 +34,9 @@ Logical (boolean) S7 property
 }
 \examples{
 verbose <- prop_boolean(default = TRUE, description = "Print progress")
+# Unset until the user chooses
+shuffle <- prop_boolean(nullable = TRUE)
+prop_spec(shuffle)[["default"]]
 }
 \author{
 EDG
