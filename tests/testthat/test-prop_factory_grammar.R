@@ -1,8 +1,7 @@
 # test-prop_factory_grammar.R
 
-# The signatures of the canonical factories, as the rule in rtemis-skills
-# `R/prop-factories.md` fixes them. A change to a signature is made in the rule
-# first, then here and in the factory.
+# The signatures of the canonical factories. A change to a signature is made
+# here and in the factory together.
 .GRAMMAR <- list(
   prop_boolean = alist(
     default = NULL,

@@ -650,7 +650,7 @@ decode_spec <- function(x, spec) {
       })
       named_list(out, keys)
     },
-    object = decode_instance(x, spec[["target"]]),
+    object = decode_instance(x, spec_target(spec)),
     union = {
       for (alt in spec[["alternatives"]]) {
         # Any error, the validation error of an instance's constructor
