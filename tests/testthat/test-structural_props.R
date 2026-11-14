@@ -374,7 +374,8 @@ test_that("prop_instance requires an object of exactly the class", {
     "entry 'a' must be a SP_Point"
   )
   expect_error(.SP$coll(points = list(p)), "named")
-  expect_error(prop_instance("Point"), "S7 class")
+  expect_error(prop_instance(1), "S7 class or a class name")
+  expect_error(prop_instance("not a name"), "S7 class or a class name")
 })
 
 

@@ -10,7 +10,9 @@ class_to_JSONSchema(
   title = cls@name,
   description = class_description(cls) \%||\% "",
   envelope = list(),
-  required = character(0L)
+  required = character(0L),
+  refs = NULL,
+  annotate = NULL
 )
 }
 \arguments{
@@ -29,6 +31,14 @@ the class's own properties.}
 
 \item{required}{Character: Members of the document root to require in
 addition to those without a default. An unknown name aborts.}
+
+\item{refs}{Named character vector or NULL: Absolute URIs, by qualified
+class name (\code{"pkg::Class"}) or by \code{def_name}. A class or a \code{def_name}
+named here is referred to by its URI and defined nowhere in the document;
+see \code{\link[=new_JSONSchema_defs]{new_JSONSchema_defs()}}.}
+
+\item{annotate}{Function or NULL: Adds annotations to each fragment; see
+\code{\link[=new_JSONSchema_defs]{new_JSONSchema_defs()}}.}
 }
 \value{
 Named list: The JSON Schema.

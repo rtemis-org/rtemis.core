@@ -1,7 +1,13 @@
 # rtemis.core 0.5.0
 
 - The `prop_*` factories follow one grammar: one factory per JSON Schema node, one argument per keyword, and containers by composition.
-- New structural factories: `prop_array()`, `prop_map()`, `prop_struct()`, `prop_union()`, `prop_matrix()`, `prop_instance()`, and `prop_any()`.
+- New structural factories: `prop_array()`, `prop_map()`, `prop_struct()`, `prop_table()`, `prop_factor()`, `prop_union()`, `prop_matrix()`, `prop_instance()`, and `prop_any()`.
+- `prop_instance()` takes an S7 class or a class name, `"pkg::Class"` or `"Class"`, resolved at first use, so a class may refer to itself or to a class declared later; `check_class_references()` resolves every name a package's classes use. An instance has no implicit default. `members` constrains named properties of the instance at one use.
+- `prop_array()` gains `contains`, `min_contains`, and `max_contains`; `prop_map()` gains `keys`; `prop_struct()` gains `min_members` and `max_members`.
+- A union whose alternatives are all instances decodes by its discriminator.
+- New `new_JSONSchema_defs()`, `prop_to_JSONSchema()`, and `JSONSchema_defs()` emit schema fragments for a producer that assembles its own class objects; `refs` maps a class or a `def_name` to another document, `annotate` adds annotations at each declaration, and `class_schema` supplies the object schema of a class.
+- New `prop_extend()` and `prop_extension()` store and read a producer's fields on a declaration; `prop_declaration()` returns a declaration as data, and `prop_build()` builds it.
+- A bound of `prop_integer()` is a whole number.
 - New `prop_number()`; `prop_float()` remains for released callers.
 - Arguments after `default`, or after a structural factory's structure arguments, are passed by name.
 - `enum` applies to integer and number declarations, and `const` to every scalar declaration; `prop_const()` remains for released callers.
@@ -14,8 +20,8 @@
 - `vector`, `map`, and `allow_empty` of the scalar factories, and `prop_bag()`, remain for released callers.
 - New `class_to_JSONSchema()` emits a JSON Schema (draft 2020-12) from an S7 class built with the `prop_*` factories.
 - New `schema_class()` declares an S7 class with a description and an optional `SchemaPublication`; `class_description()`, `class_publication()`, and `class_extension()` read them.
-- `class_to_JSONSchema()` writes each class's description and the `x-rtemis.publication` of a published root class.
-- New `to_JSON()` writes each double in the shortest form that reads back identical; `write_JSONSchema()` writes through it.
+- `class_to_JSONSchema()` writes each class's description and the `x-rtemis.publication` of a published root class. Each class entry in `$defs` carries `x-rtemis.class`, and each matrix, table, and factor fragment `x-rtemis.node`; a nullable union adds `{"type": "null"}` to its own `anyOf`.
+- New `to_JSON()` writes each double in the shortest form that reads back identical, and a data frame as an array of row objects; `write_JSONSchema()` writes through it.
 - New `prop_encode()` and `prop_decode()` give the JSON form of a property value.
 - New `nullable()` and `check_nullable_*()`; `optional()` and `check_optional_*()` remain for released callers.
 - A map key is valid when it is non-missing, non-empty, and distinct.

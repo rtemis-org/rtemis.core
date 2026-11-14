@@ -20,7 +20,9 @@ results, chart configs, and schemas. Each double is written as the shortest
 of its 15-, 16-, and 17-significant-digit forms that reads back identical,
 so \code{0.1} is written \code{0.1} and \code{0.1 + 0.2} is written \code{0.30000000000000004}.
 A length-1 vector is written as a scalar, \code{NULL} and \code{NA} as \code{null}, and a
-value wrapped in \code{I()} as an array.
+value wrapped in \code{I()} as an array. A data frame is written as an array of
+row objects, each with every column, without row names; a column that is
+not a double is written as jsonlite writes its elements.
 }
 \examples{
 \dontshow{if (requireNamespace("jsonlite", quietly = TRUE)) withAutoprint(\{ # examplesIf}

@@ -8,6 +8,9 @@ prop_array(
   items,
   ...,
   default = NULL,
+  contains = NULL,
+  min_contains = 1L,
+  max_contains = NULL,
   min_items = 1L,
   max_items = NULL,
   unique_items = FALSE,
@@ -23,6 +26,16 @@ factory, without a \code{default}.}
 \item{...}{Empty. Every argument after \code{items} is passed by name.}
 
 \item{default}{Vector, list, or NULL: Default value, or a quoted call.}
+
+\item{contains}{S7 property or NULL: Declaration that at least
+\code{min_contains} and at most \code{max_contains} elements satisfy, without a
+\code{default}. Each element of an atomic vector is checked as a scalar.}
+
+\item{min_contains}{Integer [0, Inf): Fewest elements that satisfy
+\code{contains}.}
+
+\item{max_contains}{Integer or NULL: Most elements that satisfy
+\code{contains}.}
 
 \item{min_items}{Integer [0, Inf): Fewest elements. \code{0L} admits an empty
 array.}
@@ -50,6 +63,8 @@ elements form an unnamed list.
 tags <- prop_array(prop_string(), unique_items = TRUE, description = "Tags.")
 # Distinct 1-based positions; an empty set is valid
 positions <- prop_array(prop_integer(min = 1L), min_items = 0L, unique_items = TRUE)
+# Weights of which at least one is positive
+weights <- prop_array(prop_number(min = 0), contains = prop_number(exclusive_min = 0))
 }
 \author{
 EDG

@@ -4,16 +4,29 @@
 \alias{prop_instance}
 \title{S7 instance property}
 \usage{
-prop_instance(cls, ..., default = NULL, nullable = FALSE, description = "")
+prop_instance(
+  cls,
+  ...,
+  default = NULL,
+  members = NULL,
+  nullable = FALSE,
+  description = ""
+)
 }
 \arguments{
-\item{cls}{S7 class: The class of the value.}
+\item{cls}{S7 class, or Character: \code{"pkg::Class"} or \code{"Class"}.}
 
 \item{...}{Empty. Every argument after \code{cls} is passed by name.}
 
 \item{default}{S7 object or NULL: Default value. Use a quoted call, such as
 \code{quote(Settings())}, evaluated once at declaration and again for each
-object.}
+object; a class named by a string must exist at declaration to take one.}
+
+\item{members}{Named list of S7 properties or NULL: Declarations that the
+named properties of the instance also satisfy at this use, each from a
+\verb{prop_*} factory, without a \code{default}. A non-nullable declaration requires
+its property to be set. Emitted as \code{properties} and \code{required} beside the
+\verb{$ref}.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 
@@ -25,9 +38,23 @@ S7 property.
 \description{
 Declares a property whose value is an object of exactly \code{cls}. The class
 validates its own properties; an emitted JSON Schema defines the class once
-in \verb{$defs}, under its class name, and refers to it. A value that may be an
-object of one of several classes is a \code{\link[=prop_union]{prop_union()}} of their
-\code{prop_instance()} declarations.
+in \verb{$defs}, under its class name, and refers to it, or refers to the URI
+that the emitter's \code{refs} maps the class to. A value that may be an object
+of one of several classes is a \code{\link[=prop_union]{prop_union()}} of their \code{prop_instance()}
+declarations.
+}
+\details{
+A class named by a string is resolved when a value is emitted, encoded, or
+decoded, so a declaration may name the class it is declared in or a class
+declared later. \code{"pkg::Class"} names a class in the namespace of \code{pkg}, the
+declaring package or a package it imports; \code{"Class"} names a class where
+the call is written, as an R symbol there would. A function that forwards a
+name to \code{prop_instance()} forwards a qualified name. A value is checked by
+its class's qualified name, without resolving it. \code{\link[=check_class_references]{check_class_references()}}
+resolves every name a package's classes use.
+
+The property has no implicit default: without \code{default}, a non-nullable
+instance is given at construction.
 }
 \examples{
 Point <- S7::new_class("Point", properties = list(x = prop_number(0)))
@@ -36,6 +63,16 @@ Shape <- S7::new_class(
   properties = list(origin = prop_instance(Point, default = quote(Point())))
 )
 Shape()@origin@x
+# A tree: each node holds nodes of its own class
+Node <- S7::new_class(
+  "Node",
+  properties = list(
+    children = prop_array(prop_instance("Node"), min_items = 0L, default = list())
+  )
+)
+length(Node(children = list(Node()))@children)
+# A use that admits only points on the vertical axis
+on_axis <- prop_instance(Point, members = list(x = prop_number(const = 0)))
 }
 \author{
 EDG
