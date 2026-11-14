@@ -79,8 +79,27 @@ test_that("arrays round-trip at lengths 0, 1, and 2", {
     '["a"]'
   )
   expect_identical(
-    .rt(prop_array(prop_string(nullable = TRUE)), list("a", NULL)),
-    list("a", NULL)
+    .rt(prop_array(prop_string(nullable = TRUE)), c("a", NA)),
+    c("a", NA)
+  )
+  expect_identical(
+    to_JSON(prop_encode(prop_array(prop_number(nullable = TRUE)), c(0.5, NA))),
+    "[0.5,null]"
+  )
+  expect_identical(
+    .rt(prop_array(prop_integer(nullable = TRUE)), c(NA, 2L)),
+    c(NA, 2L)
+  )
+  expect_identical(
+    .rt(prop_array(prop_boolean(nullable = TRUE)), c(TRUE, NA)),
+    c(TRUE, NA)
+  )
+  expect_identical(
+    .rt(
+      prop_array(prop_array(prop_integer(), nullable = TRUE)),
+      list(1L, NULL)
+    ),
+    list(1L, NULL)
   )
   expect_identical(
     .rt(prop_array(prop_string(description = "t")), c("a", "b")),
@@ -97,6 +116,8 @@ test_that("maps round-trip and an empty map reads in the named form", {
   set.seed(3)
   m <- c(a = 0.25, b = runif(1))
   expect_identical(.rt(prop_map(prop_number()), m), m)
+  mn <- c(a = "x", b = NA)
+  expect_identical(.rt(prop_map(prop_string(nullable = TRUE)), mn), mn)
   p0 <- prop_map(prop_number(), min_members = 0L)
   expect_identical(to_JSON(prop_encode(p0, numeric(0))), "{}")
   expect_identical(
@@ -115,6 +136,18 @@ test_that("matrices round-trip, zero rows included", {
   p0 <- prop_matrix(prop_integer(), ncol = 2L, min_items = 0L)
   m0 <- matrix(integer(0), ncol = 2L)
   expect_identical(.rt(p0, m0), m0)
+  pn <- prop_matrix(prop_number(nullable = TRUE))
+  mn <- matrix(c(0.25, NA, runif(4)), nrow = 2L)
+  expect_identical(.rt(pn, mn), mn)
+  expect_identical(
+    to_JSON(prop_encode(pn, matrix(c(0.5, NA), 1L))),
+    "[[0.5,null]]"
+  )
+  pw <- prop_matrix(prop_number(), min_items = 0L)
+  expect_identical(
+    .rt(pw, matrix(numeric(0), 0L, 3L)),
+    matrix(numeric(0), 0L, 0L)
+  )
 })
 
 test_that("struct presence round-trips: absent, null, and a value", {

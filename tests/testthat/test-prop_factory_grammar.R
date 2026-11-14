@@ -73,7 +73,7 @@
   ),
   prop_matrix = alist(
     items = ,
-    ncol = ,
+    ncol = NULL,
     ... = ,
     default = NULL,
     min_items = 1L,

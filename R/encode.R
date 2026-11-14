@@ -481,51 +481,55 @@ is_json_object <- function(x) {
 #'
 #' @param x List of parsed scalars, or one parsed scalar.
 #' @param type Character: Scalar type.
+#' @param na Logical: If TRUE, a JSON `null` element is a missing element and
+#'   becomes `NA` (grammar 4).
 #'
 #' @return Atomic vector of `type`, attribute-free.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-decode_scalars <- function(x, type) {
+decode_scalars <- function(x, type, na = FALSE) {
   parts <- if (is.list(x)) x else list(x)
+  missing <- vapply(parts, is.null, logical(1L))
+  if (na && any(missing)) {
+    parts[missing] <- list(NA)
+  }
   ok <- vapply(
     parts,
-    function(e) is.atomic(e) && length(e) == 1L && !is.null(e),
+    function(e) is.atomic(e) && length(e) == 1L,
     logical(1L)
   )
   if (!all(ok)) {
     decode_error(paste0(type, " values"))
   }
   v <- unlist(parts, use.names = FALSE)
+  present <- v[!is.na(v)]
+  check <- function(ok, what) {
+    if (length(present) > 0L && !ok) {
+      decode_error(what)
+    }
+  }
   switch(
     type,
     boolean = {
-      if (length(v) > 0L && !is.logical(v)) {
-        decode_error("true or false")
-      }
+      check(is.logical(present), "true or false")
       as.logical(v)
     },
     integer = {
-      if (length(v) > 0L && !is.numeric(v)) {
-        decode_error("an integer")
-      }
-      v <- as.double(v)
-      if (any(v != round(v) | abs(v) > 2147483647)) {
+      check(is.numeric(present), "an integer")
+      whole <- as.double(present)
+      if (any(whole != round(whole) | abs(whole) > 2147483647)) {
         decode_error("a whole number from -2147483647 to 2147483647")
       }
       as.integer(v)
     },
     number = {
-      if (length(v) > 0L && !is.numeric(v)) {
-        decode_error("a number")
-      }
+      check(is.numeric(present), "a number")
       as.double(v)
     },
     string = {
-      if (length(v) > 0L && !is.character(v)) {
-        decode_error("a string")
-      }
+      check(is.character(present), "a string")
       as.character(v)
     }
   )
@@ -583,12 +587,14 @@ decode_spec <- function(x, spec) {
       if (!is.list(x) || is_json_object(x)) {
         decode_error("an array of rows")
       }
-      n_col <- spec[["ncol"]]
+      n_col <- spec[["ncol"]] %||%
+        if (length(x) > 0L && is.list(x[[1L]])) length(x[[1L]]) else 0L
+      na <- isTRUE(spec[["items"]][["nullable"]])
       rows <- lapply(x, function(r) {
         if (!is.list(r) || length(r) != n_col) {
           decode_error(paste0("an array of ", n_col, "-element arrays"))
         }
-        decode_scalars(r, type)
+        decode_scalars(r, type, na = na)
       })
       empty <- if (type == "integer") integer(0L) else double(0L)
       matrix(
@@ -608,7 +614,7 @@ decode_spec <- function(x, spec) {
         decode_error("an array")
       }
       if (!is.null(scalar_items(spec, item))) {
-        v <- decode_scalars(x, item[["type"]])
+        v <- decode_scalars(x, item[["type"]], na = isTRUE(item[["nullable"]]))
         if (map) stats::setNames(v, names(x)) else v
       } else {
         out <- lapply(x, function(e) decode_spec(e, item))

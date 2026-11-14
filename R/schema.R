@@ -426,10 +426,12 @@ spec_to_JSONSchema <- function(spec, defs) {
         obj[["required"]] <- I(spec[["required"]])
       }
       additional <- spec[["additional_members"]]
-      obj[["additionalProperties"]] <- if (is.null(additional)) {
-        FALSE
+      if (is.null(additional)) {
+        obj[["additionalProperties"]] <- FALSE
       } else {
-        spec_to_JSONSchema(additional, defs)
+        # Undeclared member names are keys, held to the rule of map keys.
+        obj[["propertyNames"]] <- list(minLength = 1L)
+        obj[["additionalProperties"]] <- spec_to_JSONSchema(additional, defs)
       }
       obj
     },
@@ -451,13 +453,16 @@ spec_to_JSONSchema <- function(spec, defs) {
       spec
     ),
     matrix = {
-      ncol <- spec[["ncol"]]
-      row <- list(
-        type = "array",
-        items = schema_leaf(spec[["items"]]),
-        minItems = ncol,
-        maxItems = ncol
-      )
+      cells <- spec[["items"]]
+      cell <- schema_leaf(cells)
+      if (isTRUE(cells[["nullable"]])) {
+        cell <- schema_nullable(cell)
+      }
+      row <- list(type = "array", items = cell)
+      if (!is.null(spec[["ncol"]])) {
+        row[["minItems"]] <- spec[["ncol"]]
+        row[["maxItems"]] <- spec[["ncol"]]
+      }
       schema_counts(list(type = "array", items = row), spec)
     },
     bag = schema_object_map(empty_object(), spec),
@@ -492,9 +497,8 @@ spec_to_JSONSchema <- function(spec, defs) {
 #' Admit null in a fragment
 #'
 #' A fragment with a `type` gains `"null"` in it, and in its `enum` when it has
-#' one: a value must satisfy both keywords. A `const` becomes
-#' `enum: [<const>, null]`. A `$ref` or `anyOf` fragment is wrapped in `anyOf`
-#' with `{"type": "null"}`.
+#' one: a value must satisfy both keywords. A fragment with a `const`, a
+#' `$ref`, or an `anyOf` is wrapped in `anyOf` with `{"type": "null"}`.
 #'
 #' @param out Named list: JSON Schema fragment.
 #'
@@ -504,14 +508,13 @@ spec_to_JSONSchema <- function(spec, defs) {
 #' @keywords internal
 #' @noRd
 schema_nullable <- function(out) {
-  if (is.null(out[["type"]])) {
+  # A `const` fragment keeps its `const`, so that a nullable constant and a
+  # nullable one-member `enum` emit different schemas.
+  if (is.null(out[["type"]]) || !is.null(out[["const"]])) {
     return(list(anyOf = list(out, list(type = "null"))))
   }
   out[["type"]] <- c(out[["type"]], "null")
-  if (!is.null(out[["const"]])) {
-    out[["enum"]] <- I(list(out[["const"]], NULL))
-    out[["const"]] <- NULL
-  } else if (!is.null(out[["enum"]])) {
+  if (!is.null(out[["enum"]])) {
     out[["enum"]] <- I(c(as.list(out[["enum"]]), list(NULL)))
   }
   out
@@ -584,7 +587,8 @@ defs_classes <- function(defs) {
 #'
 #' Every property must be built by a `prop_*` factory. A property is required
 #' when it is not nullable and has no default, or when `required` names it;
-#' the object is closed.
+#' the object is closed. A class declared by `schema_class()` carries its
+#' description.
 #'
 #' @param cls S7 class.
 #' @param defs Environment: Definitions collected so far, by name.
@@ -637,7 +641,13 @@ class_object_schema <- function(
     )
   }
   req <- unique(c(required, declared_required))
-  out <- list(type = "object", properties = properties)
+  out <- list()
+  description <- class_description(cls)
+  if (!is.null(description)) {
+    out[["description"]] <- description
+  }
+  out[["type"]] <- "object"
+  out[["properties"]] <- properties
   if (length(req) > 0L) {
     out[["required"]] <- I(req)
   }
@@ -656,6 +666,12 @@ class_object_schema <- function(
 #' declarations carrying a `def_name` are defined once under that name. Write
 #' the result with [write_JSONSchema()].
 #'
+#' A class declared by [schema_class()] supplies its description: the root
+#' class's as the default of `description`, and every other class's in its
+#' `$defs` entry. The [SchemaPublication] of a published root class is written
+#' as `x-rtemis.publication`, with the producer package, the language `"r"`,
+#' and the qualified class name.
+#'
 #' @details
 #' A member is required when it is not nullable and has no default, or when
 #' `required` names it. `required` applies to the document root only; a class
@@ -671,7 +687,9 @@ class_object_schema <- function(
 #' @param cls S7 class: The document's class.
 #' @param id Character: The schema's `$id` URL.
 #' @param title Character: Schema title.
-#' @param description Character: What a document of this class is.
+#' @param description Character: What a document of this class is. Defaults to
+#'   the description declared by [schema_class()], or `""`, which emits no
+#'   `description`.
 #' @param envelope Named list of S7 properties: Document members placed before
 #'   the class's own properties.
 #' @param required Character: Members of the document root to require in
@@ -702,13 +720,23 @@ class_to_JSONSchema <- function(
   cls,
   id,
   title = cls@name,
-  description = "",
+  description = class_description(cls) %||% "",
   envelope = list(),
   required = character(0L)
 ) {
   check_target_class(cls)
   check_character_scalar(id)
   check_character_scalar(title)
+  if (
+    !is.character(description) ||
+      length(description) != 1L ||
+      is.na(description)
+  ) {
+    abort(
+      "`description` must be a character string.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
   if (
     !is.list(envelope) || (length(envelope) > 0L && is.null(names(envelope)))
   ) {
@@ -732,8 +760,13 @@ class_to_JSONSchema <- function(
   if (nzchar(description)) {
     out[["description"]] <- description
   }
+  body[["description"]] <- NULL
   out <- c(out, body)
-  def_names <- sort(ls(defs))
+  publication <- publication_annotation(cls)
+  if (!is.null(publication)) {
+    out[["x-rtemis"]] <- list(publication = publication)
+  }
+  def_names <- sort(ls(defs), method = "radix")
   if (length(def_names) > 0L) {
     out[["$defs"]] <- mget(def_names, envir = defs)
   }

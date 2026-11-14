@@ -2,11 +2,11 @@
 % Please edit documentation in R/02_S7_prop_factories.R
 \name{prop_matrix}
 \alias{prop_matrix}
-\title{Fixed-width matrix S7 property}
+\title{Matrix S7 property}
 \usage{
 prop_matrix(
   items,
-  ncol,
+  ncol = NULL,
   ...,
   default = NULL,
   min_items = 1L,
@@ -17,10 +17,10 @@ prop_matrix(
 )
 }
 \arguments{
-\item{items}{S7 property: Declaration of each cell, a non-nullable
-\code{\link[=prop_integer]{prop_integer()}} or \code{\link[=prop_number]{prop_number()}} without a \code{default}.}
+\item{items}{S7 property: Declaration of each cell, a \code{\link[=prop_integer]{prop_integer()}} or
+\code{\link[=prop_number]{prop_number()}} without a \code{default}.}
 
-\item{ncol}{Integer [1, Inf): Column count.}
+\item{ncol}{Integer [1, Inf) or NULL: Column count; NULL for any width.}
 
 \item{...}{Empty. Every argument after \code{ncol} is passed by name.}
 
@@ -42,10 +42,12 @@ JSON Schema's \verb{$defs}; see \code{\link[=class_to_JSONSchema]{class_to_JSONS
 S7 property.
 }
 \description{
-Declares a JSON Schema \code{array} of \code{ncol}-element arrays, one per row, whose
-every cell satisfies \code{items}. The R value is an integer or double matrix
-with \code{ncol} columns and no attribute other than \code{dim}. Use it for a set of
-fixed-length tuples, such as \verb{[start, end]} ranges.
+Declares a JSON Schema \code{array} of arrays, one per row, whose every cell
+satisfies \code{items}. The R value is an integer or double matrix with no
+attribute other than \code{dim}. With \code{ncol}, every row has \code{ncol} cells, as for
+a set of fixed-length tuples such as \verb{[start, end]} ranges; without it, the
+width is free and every row has the same width. A nullable cell declaration
+admits \code{NA} cells, written as \code{null}.
 }
 \examples{
 ranges <- prop_matrix(prop_integer(min = 1L), ncol = 2L, min_items = 0L)

@@ -8,7 +8,7 @@ class_to_JSONSchema(
   cls,
   id,
   title = cls@name,
-  description = "",
+  description = class_description(cls) \%||\% "",
   envelope = list(),
   required = character(0L)
 )
@@ -20,7 +20,9 @@ class_to_JSONSchema(
 
 \item{title}{Character: Schema title.}
 
-\item{description}{Character: What a document of this class is.}
+\item{description}{Character: What a document of this class is. Defaults to
+the description declared by \code{\link[=schema_class]{schema_class()}}, or \code{""}, which emits no
+\code{description}.}
 
 \item{envelope}{Named list of S7 properties: Document members placed before
 the class's own properties.}
@@ -40,6 +42,12 @@ declarations carrying a \code{def_name} are defined once under that name. Write
 the result with \code{\link[=write_JSONSchema]{write_JSONSchema()}}.
 }
 \details{
+A class declared by \code{\link[=schema_class]{schema_class()}} supplies its description: the root
+class's as the default of \code{description}, and every other class's in its
+\verb{$defs} entry. The \link{SchemaPublication} of a published root class is written
+as \code{x-rtemis.publication}, with the producer package, the language \code{"r"},
+and the qualified class name.
+
 A member is required when it is not nullable and has no default, or when
 \code{required} names it. \code{required} applies to the document root only; a class
 reached through \code{\link[=prop_instance]{prop_instance()}} has derived presence. No \code{default} keyword
