@@ -53,6 +53,9 @@
     items = ,
     ... = ,
     default = NULL,
+    contains = NULL,
+    min_contains = 1L,
+    max_contains = NULL,
     min_items = 1L,
     max_items = NULL,
     unique_items = FALSE,
@@ -64,6 +67,7 @@
     values = ,
     ... = ,
     default = NULL,
+    keys = NULL,
     min_members = 1L,
     max_members = NULL,
     nullable = FALSE,
@@ -87,6 +91,31 @@
     default = NULL,
     required = NULL,
     additional_members = FALSE,
+    min_members = 0L,
+    max_members = NULL,
+    nullable = FALSE,
+    def_name = NULL,
+    description = ""
+  ),
+  prop_table = alist(
+    columns = ,
+    ... = ,
+    default = NULL,
+    required = NULL,
+    additional_columns = FALSE,
+    min_items = 1L,
+    max_items = NULL,
+    nullable = FALSE,
+    def_name = NULL,
+    description = ""
+  ),
+  prop_factor = alist(
+    ... = ,
+    default = NULL,
+    enum = NULL,
+    nullable_codes = FALSE,
+    min_items = 1L,
+    max_items = NULL,
     nullable = FALSE,
     def_name = NULL,
     description = ""
@@ -103,6 +132,7 @@
     cls = ,
     ... = ,
     default = NULL,
+    members = NULL,
     nullable = FALSE,
     description = ""
   ),
@@ -110,7 +140,16 @@
 )
 
 .COMPAT_PROPS <- c("prop_float", "prop_bag", "prop_const")
-.NON_FACTORIES <- c("prop_spec", "prop_encode", "prop_decode")
+.NON_FACTORIES <- c(
+  "prop_spec",
+  "prop_encode",
+  "prop_decode",
+  "prop_extend",
+  "prop_extension",
+  "prop_declaration",
+  "prop_build",
+  "prop_to_JSONSchema"
+)
 
 
 # %% Formals ----

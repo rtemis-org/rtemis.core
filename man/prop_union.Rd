@@ -33,9 +33,13 @@ S7 property.
 }
 \description{
 Declares a value that satisfies at least one of \code{alternatives}, emitted as
-JSON Schema \code{anyOf}. The alternatives of a union of \code{\link[=prop_instance]{prop_instance()}}
-declarations share a \code{const} property whose value differs between their
-classes, so that a document names its class.
+JSON Schema \code{anyOf}. The alternatives of a union whose alternatives are all
+\code{\link[=prop_instance]{prop_instance()}} declarations share a \code{const} property whose value differs
+between their classes, so that a document names its class; the union is
+checked at declaration, or when its classes resolve for a class named by a
+string, and \code{\link[=prop_decode]{prop_decode()}} reads a document by that property. A family of
+classes is a union of its leaves with a \code{def_name}, which the \code{refs} of
+\code{\link[=new_JSONSchema_defs]{new_JSONSchema_defs()}} may map to the family's own document.
 }
 \examples{
 # 1-based positions, or [start, end] ranges

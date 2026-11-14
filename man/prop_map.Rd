@@ -8,6 +8,7 @@ prop_map(
   values,
   ...,
   default = NULL,
+  keys = NULL,
   min_members = 1L,
   max_members = NULL,
   nullable = FALSE,
@@ -23,6 +24,10 @@ factory, without a \code{default}. \code{\link[=prop_any]{prop_any()}} admits an
 
 \item{default}{Named vector, named list, or NULL: Default value, or a
 quoted call.}
+
+\item{keys}{S7 property or NULL: Declaration of each key, a non-nullable
+\code{\link[=prop_string]{prop_string()}} with \code{min_length} at least 1 and without a \code{default},
+emitted as \code{propertyNames}. NULL admits any non-empty key.}
 
 \item{min_members}{Integer [0, Inf): Fewest members. \code{0L} admits an empty
 map.}
@@ -47,6 +52,8 @@ named atomic vector; other values form a named list.
 \examples{
 weights <- prop_map(prop_number(min = 0, max = 1), min_members = 0L)
 extra_headers <- prop_map(prop_any(), nullable = TRUE, description = "Extra headers.")
+# Keys that name R objects
+scores <- prop_map(prop_number(), keys = prop_string(pattern = "^[A-Za-z][A-Za-z0-9_.]*$"))
 }
 \author{
 EDG

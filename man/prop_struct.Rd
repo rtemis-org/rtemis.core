@@ -10,6 +10,8 @@ prop_struct(
   default = NULL,
   required = NULL,
   additional_members = FALSE,
+  min_members = 0L,
+  max_members = NULL,
   nullable = FALSE,
   def_name = NULL,
   description = ""
@@ -28,6 +30,10 @@ prop_struct(
 \item{additional_members}{FALSE or S7 property: \code{FALSE} closes the struct;
 a declaration admits members beyond \code{members} that satisfy it, and
 \code{\link[=prop_any]{prop_any()}} admits any.}
+
+\item{min_members}{Integer [0, Inf): Fewest members present.}
+
+\item{max_members}{Integer or NULL: Most members present.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 

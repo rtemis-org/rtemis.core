@@ -31,9 +31,10 @@ and \code{unique_items}, which build the declaration of
 
 \item{const}{Integer or NULL: The single allowed value.}
 
-\item{min, max}{Numeric or NULL: Inclusive bounds.}
+\item{min, max}{Numeric or NULL: Inclusive bounds, whole numbers.}
 
-\item{exclusive_min, exclusive_max}{Numeric or NULL: Exclusive bounds.}
+\item{exclusive_min, exclusive_max}{Numeric or NULL: Exclusive bounds, whole
+numbers.}
 
 \item{nullable}{Logical: If TRUE, NULL is a valid value.}
 

@@ -303,18 +303,24 @@ schema_counts <- function(
 #' JSON Schema fragment for a string-keyed object of one value schema
 #'
 #' @param value_schema Named list: Schema of each value.
-#' @param spec Named list: A property spec, for the entry counts.
+#' @param spec Named list: A property spec, for the entry counts and `keys`.
+#' @param defs Environment: The emission's collector.
 #'
 #' @return Named list: JSON Schema fragment.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-schema_object_map <- function(value_schema, spec) {
+schema_object_map <- function(value_schema, spec, defs) {
+  keys <- spec[["keys"]]
   schema_counts(
     list(
       type = "object",
-      propertyNames = list(minLength = 1L),
+      propertyNames = if (is.null(keys)) {
+        list(minLength = 1L)
+      } else {
+        spec_to_JSONSchema(keys, defs)
+      },
       additionalProperties = value_schema
     ),
     spec,
@@ -397,14 +403,17 @@ schema_define <- function(defs, name, schema) {
 # %% spec_to_JSONSchema ----
 #' JSON Schema fragment for a property spec
 #'
-#' Emits the shape (`spec_shape()`), then nullability, then the description.
-#' Never emits a `default`: a default is what an interface fills in, not a
-#' fact about the document. A spec with a `def_name` is emitted once into
-#' `defs` and referred to by `$ref`; an S7 class referenced by
-#' `prop_instance()` is emitted into `defs` under its class name.
+#' Emits the shape (`spec_shape()`), its description, and its node marker,
+#' calls the definition site of `annotate`, then applies `def_name` and
+#' nullability. Never emits a `default`: a default is what an interface fills
+#' in, not a fact about the document. A spec with a `def_name` is emitted once
+#' into `defs` and referred to by `$ref`, or refers to the URI that `refs`
+#' maps the name to; an S7 class referenced by `prop_instance()` is emitted
+#' into `defs` under its class name, or referred to by its URI in `refs`.
 #'
 #' @param spec Named list: A property spec.
-#' @param defs Environment: Definitions collected so far, by name.
+#' @param defs Environment: The emission's collector, from
+#'   `new_JSONSchema_defs()`.
 #'
 #' @return Named list: JSON Schema fragment.
 #'
@@ -412,6 +421,15 @@ schema_define <- function(defs, name, schema) {
 #' @keywords internal
 #' @noRd
 spec_to_JSONSchema <- function(spec, defs) {
+  def_name <- spec[["def_name"]]
+  external <- if (is.null(def_name)) NULL else defs_refs(defs)[def_name]
+  if (!is.null(external) && !is.na(external)) {
+    out <- list(`$ref` = unname(external))
+    if (isTRUE(spec[["nullable"]])) {
+      out <- schema_nullable(out)
+    }
+    return(out)
+  }
   shape <- spec_shape(spec)
   container <- spec[["container"]]
   out <- switch(
@@ -420,7 +438,10 @@ spec_to_JSONSchema <- function(spec, defs) {
       anyOf = unname(lapply(spec[["alternatives"]], spec_to_JSONSchema, defs))
     ),
     struct = {
-      members <- lapply(spec[["members"]], spec_to_JSONSchema, defs)
+      members <- lapply(names(spec[["members"]]), function(nm) {
+        member_to_JSONSchema(spec[["members"]][[nm]], defs, nm, NULL)
+      })
+      names(members) <- names(spec[["members"]])
       obj <- list(type = "object", properties = members)
       if (length(spec[["required"]]) > 0L) {
         obj[["required"]] <- I(spec[["required"]])
@@ -433,13 +454,24 @@ spec_to_JSONSchema <- function(spec, defs) {
         obj[["propertyNames"]] <- list(minLength = 1L)
         obj[["additionalProperties"]] <- spec_to_JSONSchema(additional, defs)
       }
+      min_members <- spec[["min_members"]] %||% 0L
+      if (min_members > 0L) {
+        obj[["minProperties"]] <- as.integer(min_members)
+      }
+      if (!is.null(spec[["max_members"]])) {
+        obj[["maxProperties"]] <- as.integer(spec[["max_members"]])
+      }
       obj
     },
-    object = class_schema_ref(spec_target(spec), defs),
+    object = instance_to_JSONSchema(spec, defs),
     collection = {
-      ref <- class_schema_ref(spec_target(spec), defs)
+      ref <- annotate_fragment(
+        class_schema_ref(spec_target(spec), defs),
+        container_item_spec(spec),
+        defs
+      )
       if (identical(container, "map")) {
-        schema_object_map(ref, spec)
+        schema_object_map(ref, spec, defs)
       } else {
         schema_counts(list(type = "array", items = ref), spec)
       }
@@ -450,7 +482,8 @@ spec_to_JSONSchema <- function(spec, defs) {
     ),
     nested_map = schema_object_map(
       spec_to_JSONSchema(spec[["values"]], defs),
-      spec
+      spec,
+      defs
     ),
     matrix = {
       cells <- spec[["items"]]
@@ -458,6 +491,7 @@ spec_to_JSONSchema <- function(spec, defs) {
       if (isTRUE(cells[["nullable"]])) {
         cell <- schema_nullable(cell)
       }
+      cell <- annotate_fragment(cell, cells, defs)
       row <- list(type = "array", items = cell)
       if (!is.null(spec[["ncol"]])) {
         row[["minItems"]] <- spec[["ncol"]]
@@ -465,23 +499,50 @@ spec_to_JSONSchema <- function(spec, defs) {
       }
       schema_counts(list(type = "array", items = row), spec)
     },
-    bag = schema_object_map(empty_object(), spec),
+    table = table_to_JSONSchema(spec, defs),
+    factor = factor_to_JSONSchema(spec),
+    bag = schema_object_map(
+      annotate_fragment(empty_object(), container_item_spec(spec), defs),
+      spec,
+      defs
+    ),
     any = empty_object(),
     {
-      if (identical(container, "array")) {
-        schema_counts(list(type = "array", items = schema_leaf(spec)), spec)
-      } else if (identical(container, "map")) {
-        schema_object_map(schema_leaf(spec), spec)
-      } else {
+      if (identical(container, "none")) {
         schema_leaf(spec)
+      } else {
+        item <- annotate_fragment(
+          schema_leaf(spec),
+          container_item_spec(spec),
+          defs
+        )
+        if (identical(container, "array")) {
+          schema_counts(list(type = "array", items = item), spec)
+        } else {
+          schema_object_map(item, spec, defs)
+        }
       }
     }
   )
+  contains <- spec[["contains"]]
+  if (!is.null(contains)) {
+    out[["contains"]] <- spec_to_JSONSchema(contains, defs)
+    min_contains <- spec[["min_contains"]] %||% 1L
+    if (min_contains != 1L) {
+      out[["minContains"]] <- as.integer(min_contains)
+    }
+    if (!is.null(spec[["max_contains"]])) {
+      out[["maxContains"]] <- as.integer(spec[["max_contains"]])
+    }
+  }
   description <- spec[["description"]] %||% ""
   if (nzchar(description)) {
     out[["description"]] <- description
   }
-  def_name <- spec[["def_name"]]
+  if (shape %in% c("matrix", "table", "factor")) {
+    out[["x-rtemis"]] <- list(node = shape)
+  }
+  out <- annotate_fragment(out, spec, defs)
   if (!is.null(def_name)) {
     schema_define(defs, def_name, out)
     out <- schema_ref(def_name)
@@ -493,12 +554,176 @@ spec_to_JSONSchema <- function(spec, defs) {
 } # /rtemis.core::spec_to_JSONSchema
 
 
+# %% member_to_JSONSchema ----
+#' JSON Schema fragment of a member, with the member site of `annotate`
+#'
+#' @param spec Named list: The member's spec.
+#' @param defs Environment: The emission's collector.
+#' @param name Character: Member name.
+#' @param owner Character or NULL: Qualified name of the class that holds the
+#'   member, or NULL for a struct or table member.
+#'
+#' @return Named list: JSON Schema fragment.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+member_to_JSONSchema <- function(spec, defs, name, owner) {
+  annotate_fragment(
+    spec_to_JSONSchema(spec, defs),
+    spec,
+    defs,
+    site = list(kind = "member", name = name, owner = owner)
+  )
+} # /rtemis.core::member_to_JSONSchema
+
+
+# %% instance_to_JSONSchema ----
+#' JSON Schema fragment of an instance, with its use-site members
+#'
+#' @param spec Named list: Instance spec.
+#' @param defs Environment: The emission's collector.
+#'
+#' @return Named list: `$ref` to the class, with `properties` and `required`
+#'   beside it for the use-site members.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+instance_to_JSONSchema <- function(spec, defs) {
+  cls <- spec_target(spec)
+  out <- class_schema_ref(cls, defs)
+  members <- spec[["members"]]
+  if (length(members) > 0L) {
+    check_instance_members(spec, cls)
+    owner <- target_class_name(cls)
+    props <- lapply(names(members), function(nm) {
+      member_to_JSONSchema(members[[nm]], defs, nm, owner)
+    })
+    names(props) <- names(members)
+    out[["properties"]] <- props
+    req <- names(members)[
+      !vapply(members, function(m) isTRUE(m[["nullable"]]), logical(1L))
+    ]
+    if (length(req) > 0L) {
+      out[["required"]] <- I(req)
+    }
+  }
+  out
+} # /rtemis.core::instance_to_JSONSchema
+
+
+# %% table_to_JSONSchema ----
+#' JSON Schema fragment of a table: an array of row objects
+#'
+#' @param spec Named list: Table spec.
+#' @param defs Environment: The emission's collector.
+#'
+#' @return Named list: JSON Schema fragment.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+table_to_JSONSchema <- function(spec, defs) {
+  columns <- spec[["columns"]]
+  props <- lapply(names(columns), function(nm) {
+    member_to_JSONSchema(columns[[nm]], defs, nm, NULL)
+  })
+  names(props) <- names(columns)
+  row <- list(type = "object", properties = props)
+  if (length(spec[["required"]]) > 0L) {
+    row[["required"]] <- I(spec[["required"]])
+  }
+  additional <- spec[["additional_columns"]]
+  if (is.null(additional)) {
+    row[["additionalProperties"]] <- FALSE
+  } else {
+    row[["propertyNames"]] <- list(minLength = 1L)
+    row[["additionalProperties"]] <- spec_to_JSONSchema(additional, defs)
+  }
+  schema_counts(list(type = "array", items = row), spec)
+} # /rtemis.core::table_to_JSONSchema
+
+
+# %% factor_to_JSONSchema ----
+#' JSON Schema fragment of a factor: its levels and codes
+#'
+#' @param spec Named list: Factor spec.
+#'
+#' @return Named list: JSON Schema fragment.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+factor_to_JSONSchema <- function(spec) {
+  level <- list(type = "string", minLength = 1L)
+  if (!is.null(spec[["enum"]])) {
+    level[["enum"]] <- I(spec[["enum"]])
+  }
+  code <- list(
+    type = if (isTRUE(spec[["nullable_codes"]])) {
+      c("integer", "null")
+    } else {
+      "integer"
+    },
+    minimum = 1L
+  )
+  list(
+    type = "object",
+    properties = list(
+      levels = list(
+        type = "array",
+        items = level,
+        minItems = 1L,
+        uniqueItems = TRUE
+      ),
+      codes = schema_counts(list(type = "array", items = code), spec)
+    ),
+    required = I(c("levels", "codes")),
+    additionalProperties = FALSE
+  )
+} # /rtemis.core::factor_to_JSONSchema
+
+
+# %% container_item_spec ----
+#' The item declaration of a container stored in the released layout
+#'
+#' @param spec Named list: Array or map spec in the scalar, collection, or bag
+#'   layout.
+#'
+#' @return Named list: The item's spec.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+container_item_spec <- function(spec) {
+  shape <- spec_shape(spec)
+  if (shape == "bag") {
+    return(prop_spec(prop_any()))
+  }
+  item <- spec
+  item[["container"]] <- "none"
+  item[["nullable"]] <- FALSE
+  item[["min_items"]] <- 1L
+  item["max_items"] <- list(NULL)
+  item[["unique_items"]] <- FALSE
+  item["default"] <- list(NULL)
+  item["def_name"] <- list(NULL)
+  item[["description"]] <- ""
+  for (nm in c("contains", "min_contains", "max_contains", "keys")) {
+    item[[nm]] <- NULL
+  }
+  item
+} # /rtemis.core::container_item_spec
+
+
 # %% schema_nullable ----
 #' Admit null in a fragment
 #'
 #' A fragment with a `type` gains `"null"` in it, and in its `enum` when it has
-#' one: a value must satisfy both keywords. A fragment with a `const`, a
-#' `$ref`, or an `anyOf` is wrapped in `anyOf` with `{"type": "null"}`.
+#' one: a value must satisfy both keywords. A union's `anyOf` gains
+#' `{"type": "null"}` as its last alternative. A fragment with a `const` or a
+#' `$ref` is wrapped in `anyOf` with `{"type": "null"}`.
 #'
 #' @param out Named list: JSON Schema fragment.
 #'
@@ -508,6 +733,14 @@ spec_to_JSONSchema <- function(spec, defs) {
 #' @keywords internal
 #' @noRd
 schema_nullable <- function(out) {
+  if (
+    !is.null(out[["anyOf"]]) &&
+      is.null(out[["type"]]) &&
+      is.null(out[["$ref"]])
+  ) {
+    out[["anyOf"]] <- c(out[["anyOf"]], list(list(type = "null")))
+    return(out)
+  }
   # A `const` fragment keeps its `const`, so that a nullable constant and a
   # nullable one-member `enum` emit different schemas.
   if (is.null(out[["type"]]) || !is.null(out[["const"]])) {
@@ -524,15 +757,29 @@ schema_nullable <- function(out) {
 # %% class_schema_ref ----
 #' A `$ref` to an S7 class's definition, emitting the definition once
 #'
-#' @param cls S7 class.
-#' @param defs Environment: Definitions collected so far, by name.
+#' A class that the collector's `refs` maps to a URI is referred to by that
+#' URI, marked with its qualified name, and defined nowhere. Any other class
+#' is defined in `$defs` under its class name, by the collector's
+#' `class_schema` function or by `class_object_schema()`, and marked with its
+#' qualified name.
 #'
-#' @return Named list: `{"$ref": "#/$defs/<Class>"}`.
+#' @param cls S7 class.
+#' @param defs Environment: The emission's collector.
+#'
+#' @return Named list: `{"$ref": "#/$defs/<Class>"}`, or the mapped `$ref`.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
 class_schema_ref <- function(cls, defs) {
+  qualified <- target_class_name(cls)
+  external <- defs_refs(defs)[qualified]
+  if (!is.na(external)) {
+    return(list(
+      `$ref` = unname(external),
+      `x-rtemis` = list(class = qualified)
+    ))
+  }
   name <- cls@name
   classes <- defs_classes(defs)
   if (exists(name, envir = classes, inherits = FALSE)) {
@@ -557,7 +804,15 @@ class_schema_ref <- function(cls, defs) {
   assign(name, cls, envir = classes)
   # A placeholder first, so that a class referring to itself terminates.
   assign(name, list(), envir = defs)
-  assign(name, class_object_schema(cls, defs), envir = defs)
+  hook <- defs_option(defs, "class_schema")
+  body <- if (is.null(hook)) NULL else hook(cls, defs)
+  if (is.null(body)) {
+    body <- class_object_schema(cls, defs)
+  }
+  marker <- body[["x-rtemis"]] %||% list()
+  marker[["class"]] <- qualified
+  body[["x-rtemis"]] <- marker
+  assign(name, body, envir = defs)
   schema_ref(name)
 } # /rtemis.core::class_schema_ref
 
@@ -580,6 +835,144 @@ defs_classes <- function(defs) {
   }
   get(".classes", envir = defs, inherits = FALSE)
 } # /rtemis.core::defs_classes
+
+
+# %% defs_option ----
+#' An emission option held by a collector
+#'
+#' @param defs Environment: The emission's collector.
+#' @param name Character: `"refs"`, `"annotate"`, or `"class_schema"`.
+#'
+#' @return The option, or NULL.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+defs_option <- function(defs, name) {
+  get0(paste0(".", name), envir = defs, inherits = FALSE)
+} # /rtemis.core::defs_option
+
+
+# %% defs_refs ----
+#' The `refs` map of a collector
+#'
+#' @param defs Environment: The emission's collector.
+#'
+#' @return Named character vector, empty when the collector has none.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+defs_refs <- function(defs) {
+  defs_option(defs, "refs") %||% stats::setNames(character(0L), character(0L))
+} # /rtemis.core::defs_refs
+
+
+# %% annotate_fragment ----
+#' Call a collector's `annotate` function on a fragment
+#'
+#' @param fragment Named list: JSON Schema fragment.
+#' @param spec Named list: The declaration's spec.
+#' @param defs Environment: The emission's collector.
+#' @param site Named list: `list(kind = "definition")` or
+#'   `list(kind = "member", name = , owner = )`.
+#'
+#' @return The annotated fragment. Aborts when `annotate` changes anything it
+#'   may not.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+annotate_fragment <- function(
+  fragment,
+  spec,
+  defs,
+  site = list(kind = "definition")
+) {
+  force(fragment)
+  annotate <- defs_option(defs, "annotate")
+  if (is.null(annotate)) {
+    return(fragment)
+  }
+  out <- annotate(fragment, spec_declaration(spec), site)
+  check_annotation(fragment, out)
+  out
+} # /rtemis.core::annotate_fragment
+
+
+# %% ANNOTATION_KEYWORDS ----
+# Keywords `annotate` may add to a fragment, beside any `x-` keyword.
+ANNOTATION_KEYWORDS <- c(
+  "$comment",
+  "readOnly",
+  "writeOnly",
+  "deprecated",
+  "examples",
+  "title",
+  "description"
+)
+
+
+# %% check_annotation ----
+#' Check what an `annotate` function changed
+#'
+#' It may add annotation keywords and `x-` keywords, add members to
+#' `x-rtemis` other than `node` and `class`, and change `description`.
+#'
+#' @param before Named list: The fragment given.
+#' @param after Value returned.
+#'
+#' @return NULL, invisibly. Aborts on any other change.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+check_annotation <- function(before, after) {
+  fail <- function(what) {
+    abort(
+      "`annotate` ",
+      what,
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  if (!is.list(after) || (length(after) > 0L && is.null(names(after)))) {
+    fail("must return a named list.")
+  }
+  for (nm in setdiff(names(before), "description")) {
+    if (!nm %in% names(after)) {
+      fail(paste0("removed '", nm, "'."))
+    }
+    if (nm == "x-rtemis") {
+      inner <- before[[nm]]
+      for (k in names(inner)) {
+        if (!identical(after[[nm]][[k]], inner[[k]])) {
+          fail(paste0("changed 'x-rtemis' member '", k, "'."))
+        }
+      }
+      for (k in c("node", "class")) {
+        if (is.null(inner[[k]]) && !is.null(after[[nm]][[k]])) {
+          fail(paste0("added the 'x-rtemis' member '", k, "'."))
+        }
+      }
+    } else if (!identical(after[[nm]], before[[nm]])) {
+      fail(paste0("changed '", nm, "'."))
+    }
+  }
+  added <- setdiff(names(after), names(before))
+  bad <- added[!added %in% ANNOTATION_KEYWORDS & !startsWith(added, "x-")]
+  if (length(bad) > 0L) {
+    fail(paste0("added '", bad[[1L]], "', which is not an annotation."))
+  }
+  rtemis <- after[["x-rtemis"]]
+  if (
+    is.null(before[["x-rtemis"]]) &&
+      !is.null(rtemis) &&
+      any(c("node", "class") %in% names(rtemis))
+  ) {
+    fail("added an 'x-rtemis' member 'node' or 'class'.")
+  }
+  invisible(NULL)
+} # /rtemis.core::check_annotation
 
 
 # %% class_object_schema ----
@@ -623,7 +1016,11 @@ class_object_schema <- function(
     spec
   })
   names(specs) <- names(props)
-  properties <- lapply(specs, spec_to_JSONSchema, defs)
+  owner <- target_class_name(cls)
+  properties <- lapply(names(specs), function(nm) {
+    member_to_JSONSchema(specs[[nm]], defs, nm, owner)
+  })
+  names(properties) <- names(specs)
   declared_required <- names(specs)[vapply(
     specs,
     function(s) is.null(s[["default"]]) && !isTRUE(s[["nullable"]]),
@@ -694,6 +1091,12 @@ class_object_schema <- function(
 #'   the class's own properties.
 #' @param required Character: Members of the document root to require in
 #'   addition to those without a default. An unknown name aborts.
+#' @param refs Named character vector or NULL: Absolute URIs, by qualified
+#'   class name (`"pkg::Class"`) or by `def_name`. A class or a `def_name`
+#'   named here is referred to by its URI and defined nowhere in the document;
+#'   see [new_JSONSchema_defs()].
+#' @param annotate Function or NULL: Adds annotations to each fragment; see
+#'   [new_JSONSchema_defs()].
 #'
 #' @return Named list: The JSON Schema.
 #'
@@ -722,7 +1125,9 @@ class_to_JSONSchema <- function(
   title = cls@name,
   description = class_description(cls) %||% "",
   envelope = list(),
-  required = character(0L)
+  required = character(0L),
+  refs = NULL,
+  annotate = NULL
 ) {
   check_target_class(cls)
   check_character_scalar(id)
@@ -745,7 +1150,7 @@ class_to_JSONSchema <- function(
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
-  defs <- new.env(parent = emptyenv())
+  defs <- new_JSONSchema_defs(refs = refs, annotate = annotate)
   body <- class_object_schema(
     cls,
     defs,
@@ -766,9 +1171,189 @@ class_to_JSONSchema <- function(
   if (!is.null(publication)) {
     out[["x-rtemis"]] <- list(publication = publication)
   }
-  def_names <- sort(ls(defs), method = "radix")
-  if (length(def_names) > 0L) {
-    out[["$defs"]] <- mget(def_names, envir = defs)
+  entries <- JSONSchema_defs(defs)
+  if (length(entries) > 0L) {
+    out[["$defs"]] <- entries
   }
   out
 } # /rtemis.core::class_to_JSONSchema
+
+
+# %% new_JSONSchema_defs ----
+#' Start a JSON Schema emission
+#'
+#' Returns the collector that one emission threads through
+#' [prop_to_JSONSchema()]: it gathers the `$defs` entries the fragments refer
+#' to and holds the options of the emission. A producer that assembles its
+#' own class objects, under its own presence and membership rules, emits each
+#' member with [prop_to_JSONSchema()] and writes [JSONSchema_defs()] as the
+#' document's `$defs`.
+#'
+#' `annotate(fragment, declaration, site)` is called for every declaration,
+#' including the item of a container and each envelope member, and not for
+#' matrix rows, table row objects, the `levels` and `codes` of a factor, or
+#' class objects. `declaration` is the declaration's [prop_declaration()].
+#' `site` is `list(kind = "definition")` before `def_name` and `nullable`
+#' apply, and `list(kind = "member", name = , owner = )` on a member's
+#' fragment after them, where `owner` is the qualified name of the class that
+#' holds the member, or NULL for a struct or table member. `annotate` returns
+#' the fragment with keywords added from `x-*`, `$comment`, `readOnly`,
+#' `writeOnly`, `deprecated`, `examples`, and `title`, with members added to
+#' `x-rtemis` other than `node` and `class`, or with `description` changed;
+#' any other change aborts. A fact about one member, such as `readOnly`, is
+#' added at the member site, so that a `$defs` entry shared by several
+#' members carries none.
+#'
+#' @param refs Named character vector or NULL: Absolute URIs, by qualified
+#'   class name (`"pkg::Class"`) or by `def_name`. An instance of a class named
+#'   here emits `{"$ref": <URI>}`, marked with `x-rtemis.class`, and a
+#'   declaration with a `def_name` named here emits `{"$ref": <URI>}`; neither
+#'   is defined in `$defs`.
+#' @param annotate Function or NULL: `function(fragment, declaration, site)`,
+#'   as described above.
+#' @param class_schema Function or NULL: `function(cls, defs)` returning the
+#'   object schema of a class that enters `$defs`, or NULL for the class
+#'   object that [class_to_JSONSchema()] writes: one member per property,
+#'   required when not nullable and without a default, closed. Core adds the
+#'   class's `x-rtemis.class` marker to either.
+#'
+#' @return Environment: The collector.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' Point <- S7::new_class("Point", properties = list(x = prop_number(0)))
+#' defs <- new_JSONSchema_defs(
+#'   annotate = function(fragment, declaration, site) {
+#'     if (identical(site[["kind"]], "member")) {
+#'       fragment[["readOnly"]] <- TRUE
+#'     }
+#'     fragment
+#'   }
+#' )
+#' prop_to_JSONSchema(prop_instance(Point), defs, name = "origin")
+#' names(JSONSchema_defs(defs))
+new_JSONSchema_defs <- function(
+  refs = NULL,
+  annotate = NULL,
+  class_schema = NULL
+) {
+  if (!is.null(refs)) {
+    if (
+      !is.character(refs) ||
+        anyNA(refs) ||
+        is.null(names(refs)) ||
+        !is.null(validate_keys(refs))
+    ) {
+      abort(
+        "`refs` must be a character vector with distinct, non-empty names.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
+    }
+    relative <- refs[!grepl("^[A-Za-z][A-Za-z0-9+.-]*:", refs)]
+    if (length(relative) > 0L) {
+      abort(
+        "`refs` must hold absolute URIs; '",
+        relative[[1L]],
+        "' has no scheme.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+  }
+  for (f in list(annotate = annotate, class_schema = class_schema)) {
+    if (!is.null(f) && !is.function(f)) {
+      abort(
+        "`annotate` and `class_schema` must be functions or NULL.",
+        class = c("rtemis_type_error", "rtemis_input_error")
+      )
+    }
+  }
+  defs <- new.env(parent = emptyenv())
+  assign(".refs", refs, envir = defs)
+  assign(".annotate", annotate, envir = defs)
+  assign(".class_schema", class_schema, envir = defs)
+  defs
+} # /rtemis.core::new_JSONSchema_defs
+
+
+# %% JSONSchema_defs ----
+#' The `$defs` entries an emission collected
+#'
+#' @param defs Environment: A collector from [new_JSONSchema_defs()].
+#'
+#' @return Named list: The entries, sorted by name in code-point order, as
+#'   [class_to_JSONSchema()] writes them.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' Point <- S7::new_class("Point", properties = list(x = prop_number(0)))
+#' defs <- new_JSONSchema_defs()
+#' prop_to_JSONSchema(prop_instance(Point), defs)
+#' JSONSchema_defs(defs)[["Point"]][["type"]]
+JSONSchema_defs <- function(defs) {
+  check_defs(defs)
+  def_names <- sort(ls(defs), method = "radix")
+  mget(def_names, envir = defs)
+} # /rtemis.core::JSONSchema_defs
+
+
+# %% prop_to_JSONSchema ----
+#' JSON Schema fragment of a property
+#'
+#' Emits the fragment of one declaration, adding to `defs` every definition
+#' it refers to: the classes reached through [prop_instance()] and the
+#' declarations with a `def_name`.
+#'
+#' @param property S7 property: A declaration from a `prop_*` factory.
+#' @param defs Environment: A collector from [new_JSONSchema_defs()].
+#' @param name Character or NULL: The member name, which calls the member site
+#'   of the collector's `annotate`.
+#' @param owner Character or NULL: Qualified name of the class that holds the
+#'   member, or NULL for a member of a struct or of a producer's own object.
+#'
+#' @return Named list: JSON Schema fragment.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' defs <- new_JSONSchema_defs()
+#' prop_to_JSONSchema(prop_array(prop_integer(min = 1L)), defs)
+prop_to_JSONSchema <- function(property, defs, name = NULL, owner = NULL) {
+  spec <- encode_spec_of(property)
+  check_defs(defs)
+  if (is.null(name)) {
+    return(spec_to_JSONSchema(spec, defs))
+  }
+  check_character_scalar(name)
+  if (!is.null(owner)) {
+    check_character_scalar(owner)
+  }
+  member_to_JSONSchema(spec, defs, name, owner)
+} # /rtemis.core::prop_to_JSONSchema
+
+
+# %% check_defs ----
+#' Check a collector argument
+#'
+#' @param defs Value to check.
+#'
+#' @return NULL, invisibly.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+check_defs <- function(defs) {
+  if (
+    !is.environment(defs) || !exists(".refs", envir = defs, inherits = FALSE)
+  ) {
+    abort(
+      "`defs` must be a collector from new_JSONSchema_defs().",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  invisible(NULL)
+} # /rtemis.core::check_defs

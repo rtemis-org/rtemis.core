@@ -36,13 +36,21 @@ library(S7)
     package = "example",
     parent = Record,
     description = "A record with a source.",
-    publication = SchemaPublication(domain = "domain", kind = "data", order = 2L)
+    publication = SchemaPublication(
+      domain = "domain",
+      kind = "data",
+      order = 2L
+    )
   )
   list(Part = Part, Plain = Plain, Record = Record, Child = Child)
 })
 
 .sc_schema <- function(cls = .SC$Record, ...) {
-  class_to_JSONSchema(cls, id = "https://example.org/record/v1/schema.json", ...)
+  class_to_JSONSchema(
+    cls,
+    id = "https://example.org/record/v1/schema.json",
+    ...
+  )
 }
 
 
@@ -90,7 +98,10 @@ test_that("metadata does not inherit and an instance reads its class's metadata"
 })
 
 test_that("schema_class keeps the validator it is given", {
-  expect_error(.SC$Record(part = .SC$Part(label = "invalid")), "@part is invalid")
+  expect_error(
+    .SC$Record(part = .SC$Part(label = "invalid")),
+    "@part is invalid"
+  )
   expect_true(S7_inherits(.SC$Part(), .SC$Part))
 })
 
@@ -148,7 +159,10 @@ test_that("the root description defaults to the class description", {
 
 test_that("each $defs class carries its own description", {
   defs <- .sc_schema()[["$defs"]]
-  expect_identical(defs[["SC_Part"]][["description"]], "One labeled part of a record.")
+  expect_identical(
+    defs[["SC_Part"]][["description"]],
+    "One labeled part of a record."
+  )
   expect_identical(names(defs[["SC_Part"]])[[1L]], "description")
   expect_null(defs[["SC_Plain"]][["description"]])
 })
@@ -181,11 +195,16 @@ test_that("a document whose parent is a published document names the parent", {
 test_that("only the root class writes a publication", {
   Holder <- new_class(
     "SC_Holder",
-    properties = list(record = prop_instance(.SC$Record, default = quote(.SC$Record())))
+    properties = list(
+      record = prop_instance(.SC$Record, default = quote(.SC$Record()))
+    )
   )
   schema <- .sc_schema(Holder)
   expect_null(schema[["x-rtemis"]])
-  expect_null(schema[["$defs"]][["SC_Record"]][["x-rtemis"]])
+  expect_identical(
+    schema[["$defs"]][["SC_Record"]][["x-rtemis"]],
+    list(class = "example::SC_Record")
+  )
   expect_identical(
     schema[["$defs"]][["SC_Record"]][["description"]],
     "A record about one entity."

@@ -20,7 +20,9 @@
 #' of its 15-, 16-, and 17-significant-digit forms that reads back identical,
 #' so `0.1` is written `0.1` and `0.1 + 0.2` is written `0.30000000000000004`.
 #' A length-1 vector is written as a scalar, `NULL` and `NA` as `null`, and a
-#' value wrapped in `I()` as an array.
+#' value wrapped in `I()` as an array. A data frame is written as an array of
+#' row objects, each with every column, without row names; a column that is
+#' not a double is written as jsonlite writes its elements.
 #'
 #' @param x R value: A list, vector, or scalar.
 #' @param pretty Logical: If TRUE, indent the output.
@@ -54,8 +56,8 @@ to_JSON <- function(x, pretty = FALSE) {
 #' `json`-classed strings that `jsonlite::toJSON(json_verbatim = TRUE)` writes
 #' as they are. A double scalar becomes one string; a vector of any other
 #' length, or one wrapped in `I()`, becomes a list, which is written as an
-#' array, and a matrix becomes a list of rows. Missing and non-finite values
-#' are left for jsonlite.
+#' array, a matrix becomes a list of rows, and a data frame a list of row
+#' lists. Missing and non-finite values are left for jsonlite.
 #'
 #' @param x R value.
 #'
@@ -65,7 +67,13 @@ to_JSON <- function(x, pretty = FALSE) {
 #' @keywords internal
 #' @noRd
 json_doubles <- function(x) {
-  if (is.list(x) && !is.data.frame(x)) {
+  if (is.data.frame(x)) {
+    rows <- lapply(seq_len(nrow(x)), function(i) {
+      lapply(x, function(col) if (is.list(col)) col[[i]] else col[i])
+    })
+    return(json_doubles(rows))
+  }
+  if (is.list(x)) {
     if (length(x) > 0L) {
       x[] <- lapply(x, json_doubles)
     }
@@ -323,7 +331,12 @@ encode_spec <- function(value, spec) {
       })
       named_list(out, keys)
     },
-    object = encode_instance(value),
+    object = encode_instance(value, spec[["members"]]),
+    table = encode_table(value),
+    factor = list(
+      levels = I(levels(value)),
+      codes = I(scalar_vector(unclass(value)))
+    ),
     union = {
       for (alt in spec[["alternatives"]]) {
         if (is.null(validate_with_spec(value, alt))) {
@@ -355,17 +368,19 @@ unname_list <- function(x) {
 #' Encode an S7 instance as an object of its properties
 #'
 #' @param value S7 object whose every property is built by a factory.
+#' @param members Named list of specs or NULL: Use-site declarations, which
+#'   encode the properties they name.
 #'
 #' @return Named list.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-encode_instance <- function(value) {
+encode_instance <- function(value, members = NULL) {
   props <- S7::S7_class(value)@properties
   keys <- names(props)
   out <- lapply(keys, function(nm) {
-    spec <- prop_spec(props[[nm]])
+    spec <- members[[nm]] %||% prop_spec(props[[nm]])
     if (is.null(spec)) {
       abort(
         "Property '",
@@ -380,6 +395,33 @@ encode_instance <- function(value) {
   })
   named_list(out, keys)
 } # /rtemis.core::encode_instance
+
+
+# %% encode_table ----
+#' Encode a data frame as an array of row objects
+#'
+#' Every row holds every column; a missing cell is written as `null`.
+#'
+#' @param value Data frame.
+#'
+#' @return Unnamed list of named lists.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+encode_table <- function(value) {
+  keys <- names(value)
+  cols <- lapply(value, scalar_vector)
+  lapply(seq_len(nrow(value)), function(i) {
+    named_list(
+      lapply(cols, function(col) {
+        v <- col[[i]]
+        if (is.na(v)) NULL else v
+      }),
+      keys
+    )
+  })
+} # /rtemis.core::encode_table
 
 
 # %% prop_decode ----
@@ -650,8 +692,14 @@ decode_spec <- function(x, spec) {
       })
       named_list(out, keys)
     },
-    object = decode_instance(x, spec_target(spec)),
+    object = decode_instance(x, spec_target(spec), spec[["members"]]),
+    table = decode_table(x, spec),
+    factor = decode_factor(x, spec),
     union = {
+      disc <- union_discriminator(spec)
+      if (!is.null(disc) && is_json_object(x) && !is.null(x[[disc]])) {
+        return(decode_by_discriminator(x, spec, disc))
+      }
       for (alt in spec[["alternatives"]]) {
         # Any error, the validation error of an instance's constructor
         # included, means the JSON form does not match this alternative.
@@ -679,13 +727,15 @@ decode_spec <- function(x, spec) {
 #'
 #' @param x Parsed JSON object.
 #' @param cls S7 class.
+#' @param members Named list of specs or NULL: Use-site declarations, which
+#'   decode the properties they name.
 #'
 #' @return S7 object of `cls`.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-decode_instance <- function(x, cls) {
+decode_instance <- function(x, cls, members = NULL) {
   if (!is_json_object(x)) {
     decode_error("an object")
   }
@@ -702,7 +752,7 @@ decode_instance <- function(x, cls) {
     )
   }
   args <- lapply(names(x), function(nm) {
-    spec <- prop_spec(props[[nm]])
+    spec <- members[[nm]] %||% prop_spec(props[[nm]])
     if (is.null(spec)) {
       abort(
         "Property '",
@@ -717,3 +767,159 @@ decode_instance <- function(x, cls) {
   })
   do.call(cls, named_list(args, names(x)))
 } # /rtemis.core::decode_instance
+
+
+# %% decode_by_discriminator ----
+#' Decode a union of instances by the value of its discriminator
+#'
+#' @param x Parsed JSON object.
+#' @param spec Named list: Union spec.
+#' @param disc Character: Discriminator property.
+#'
+#' @return S7 object of the alternative whose `const` equals the member.
+#'   Errors of that alternative are its own; a value that names no
+#'   alternative aborts.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+decode_by_discriminator <- function(x, spec, disc) {
+  v <- x[[disc]]
+  for (alt in spec[["alternatives"]]) {
+    const <- prop_spec(spec_target(alt)@properties[[disc]])[["const"]]
+    if (
+      is.atomic(v) &&
+        length(v) == 1L &&
+        !is.na(v) &&
+        is.character(v) == is.character(const) &&
+        v == const
+    ) {
+      return(decode_spec(x, alt))
+    }
+  }
+  abort(
+    "The member '",
+    disc,
+    "' of the JSON value is ",
+    paste(deparse(v), collapse = ""),
+    ", which names none of the union's classes.",
+    class = c("rtemis_value_error", "rtemis_input_error")
+  )
+} # /rtemis.core::decode_by_discriminator
+
+
+# %% decode_table ----
+#' Decode an array of row objects into a data frame
+#'
+#' Rows hold one set of columns, read in the order of the first row. An empty
+#' array reads as zero rows of the required columns in declared order.
+#'
+#' @param x Parsed JSON array.
+#' @param spec Named list: Table spec.
+#'
+#' @return Data frame.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+decode_table <- function(x, spec) {
+  if (!is.list(x) || is_json_object(x)) {
+    decode_error("an array of row objects")
+  }
+  columns <- spec[["columns"]]
+  keys <- if (length(x) == 0L) {
+    intersect(names(columns), spec[["required"]])
+  } else {
+    if (!all(vapply(x, is_json_object, logical(1L)))) {
+      decode_error("an array of row objects")
+    }
+    first <- names(x[[1L]])
+    for (row in x) {
+      if (!setequal(names(row), first) || length(row) != length(first)) {
+        abort(
+          "The rows of the JSON table hold different columns.",
+          class = c("rtemis_value_error", "rtemis_input_error")
+        )
+      }
+    }
+    first
+  }
+  cols <- lapply(keys, function(nm) {
+    col <- columns[[nm]] %||% spec[["additional_columns"]]
+    if (is.null(col)) {
+      abort(
+        "The JSON table holds the undeclared column '",
+        nm,
+        "'.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    cells <- lapply(x, function(row) row[[nm]])
+    decode_scalars(cells, col[["type"]], na = isTRUE(col[["nullable"]]))
+  })
+  if (length(x) == 0L) {
+    cols <- lapply(keys, function(nm) {
+      switch(
+        columns[[nm]][["type"]],
+        boolean = logical(0L),
+        integer = integer(0L),
+        number = double(0L),
+        string = character(0L)
+      )
+    })
+  }
+  structure(
+    cols,
+    names = keys,
+    class = "data.frame",
+    row.names = .set_row_names(length(x))
+  )
+} # /rtemis.core::decode_table
+
+
+# %% decode_factor ----
+#' Decode a factor from its levels and codes
+#'
+#' @param x Parsed JSON object with `levels` and `codes`.
+#' @param spec Named list: Factor spec.
+#'
+#' @return Factor.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+decode_factor <- function(x, spec) {
+  if (
+    !is_json_object(x) ||
+      !setequal(names(x), c("levels", "codes")) ||
+      length(x) != 2L ||
+      !is.list(x[["levels"]]) ||
+      !is.list(x[["codes"]])
+  ) {
+    decode_error("an object with the arrays 'levels' and 'codes'")
+  }
+  lv <- decode_scalars(x[["levels"]], "string")
+  if (anyDuplicated(lv)) {
+    abort(
+      "The levels of the JSON factor must be distinct.",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  codes <- decode_scalars(
+    x[["codes"]],
+    "integer",
+    na = isTRUE(spec[["nullable_codes"]])
+  )
+  if (length(codes) == 0L) {
+    codes <- integer(0L)
+  }
+  if (any(codes < 1L | codes > length(lv), na.rm = TRUE)) {
+    abort(
+      "Each code of the JSON factor must index its levels, from 1 to ",
+      length(lv),
+      ".",
+      class = c("rtemis_value_error", "rtemis_input_error")
+    )
+  }
+  structure(codes, levels = lv, class = "factor")
+} # /rtemis.core::decode_factor
