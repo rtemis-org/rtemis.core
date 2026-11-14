@@ -120,13 +120,47 @@ test_that("an item with a description keeps its declaration and its R value", {
   expect_identical(Cls(x = c("a", "b"))@x, c("a", "b"))
 })
 
-test_that("an array of nullable scalars holds a list with NULL elements", {
+test_that("an array of nullable scalars holds NA for a missing element", {
   Cls <- new_class(
     "SP_nullable_items",
-    properties = list(x = prop_array(prop_string(nullable = TRUE)))
+    properties = list(
+      s = prop_array(prop_string(nullable = TRUE)),
+      n = prop_array(prop_number(min = 0, nullable = TRUE)),
+      m = prop_map(prop_integer(nullable = TRUE))
+    )
   )
-  expect_identical(Cls(x = list("a", NULL))@x, list("a", NULL))
-  expect_error(Cls(x = c("a", "b")))
+  v <- Cls(s = c("a", NA), n = c(1, NA), m = c(a = 1L, b = NA))
+  expect_identical(v@s, c("a", NA))
+  expect_identical(v@n, c(1, NA))
+  expect_identical(v@m, c(a = 1L, b = NA))
+  # NULL is the absence of a value, not a missing element.
+  expect_error(Cls(s = list("a", NULL), n = 1, m = c(a = 1L)))
+  expect_error(Cls(s = "a", n = c(1, NaN), m = c(a = 1L)), "finite")
+  expect_error(Cls(s = "a", n = c(-1, NA), m = c(a = 1L)), ">= 0")
+  Strict <- new_class(
+    "SP_strict_items",
+    properties = list(x = prop_array(prop_string()))
+  )
+  expect_error(Strict(x = c("a", NA)), "missing values")
+})
+
+test_that("an array of nullable non-scalars holds NULL for an absent element", {
+  Cls <- new_class(
+    "SP_nullable_nested",
+    properties = list(
+      x = prop_array(prop_array(prop_integer(), nullable = TRUE))
+    )
+  )
+  expect_identical(Cls(x = list(1:2, NULL))@x, list(1:2, NULL))
+})
+
+test_that("a nullable scalar value is NULL, never NA", {
+  Cls <- new_class(
+    "SP_scalar_na",
+    properties = list(x = prop_number(nullable = TRUE))
+  )
+  expect_null(Cls(x = NULL)@x)
+  expect_error(Cls(x = NA_real_), "missing values")
 })
 
 test_that("nullable applies at the level it is declared", {
@@ -172,6 +206,20 @@ test_that("prop_matrix enforces column count, rows and cell bounds", {
     prop_matrix(prop_string(), ncol = 2L),
     "prop_integer\\(\\) or prop_number\\(\\)"
   )
+})
+
+test_that("a matrix without ncol has any width and admits NA in nullable cells", {
+  Cls <- new_class(
+    "SP_prob",
+    properties = list(
+      x = prop_matrix(prop_number(min = 0, max = 1, nullable = TRUE))
+    )
+  )
+  m <- matrix(c(0.1, NA, 0.9, 0.5, 0.2, 0.3), nrow = 2L)
+  expect_identical(Cls(x = m)@x, m)
+  expect_identical(Cls(x = matrix(0.5, 1L, 1L))@x, matrix(0.5, 1L, 1L))
+  expect_error(Cls(x = matrix(c(0.1, 2), 1L)), "cells")
+  expect_error(.SP$rng(x = rbind(c(1L, NA))), "missing values")
 })
 
 

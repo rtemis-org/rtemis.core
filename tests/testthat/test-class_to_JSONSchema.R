@@ -102,7 +102,7 @@ test_that("a string emits only the keywords it declares", {
   expect_null(note[["pattern"]])
 })
 
-test_that("a nullable constant admits null through enum", {
+test_that("a nullable constant admits null through anyOf", {
   Cls <- new_class(
     "CS_const_null",
     properties = list(k = prop_string(const = "doc", nullable = TRUE))
@@ -110,9 +110,35 @@ test_that("a nullable constant admits null through enum", {
   k <- class_to_JSONSchema(Cls, id = "https://example.org/k.json")[[
     "properties"
   ]][["k"]]
-  expect_identical(k[["type"]], c("string", "null"))
-  expect_null(k[["const"]])
-  expect_identical(k[["enum"]], I(list("doc", NULL)))
+  expect_identical(
+    k[["anyOf"]],
+    list(
+      list(type = "string", const = "doc", minLength = 1L),
+      list(type = "null")
+    )
+  )
+  e <- class_to_JSONSchema(
+    new_class(
+      "CS_enum_null",
+      properties = list(k = prop_string(enum = "doc", nullable = TRUE))
+    ),
+    id = "https://example.org/e.json"
+  )[["properties"]][["k"]]
+  expect_false(identical(k, e))
+})
+
+test_that("a matrix without ncol emits rows without bounds and nullable cells", {
+  Cls <- new_class(
+    "CS_prob",
+    properties = list(p = prop_matrix(prop_number(nullable = TRUE)))
+  )
+  p <- class_to_JSONSchema(Cls, id = "https://example.org/p.json")[[
+    "properties"
+  ]][["p"]]
+  expect_identical(
+    p[["items"]],
+    list(type = "array", items = list(type = c("number", "null")))
+  )
 })
 
 test_that("a map of any values emits the map fragment", {
@@ -182,6 +208,7 @@ test_that("an open struct emits its additional_members schema", {
   expect_identical(rec[["type"]], "object")
   expect_identical(as.vector(rec[["required"]]), "position")
   expect_identical(rec[["additionalProperties"]], empty_object())
+  expect_identical(rec[["propertyNames"]], list(minLength = 1L))
 })
 
 test_that("required applies to the root and aborts on unknown names", {
@@ -267,4 +294,18 @@ test_that("write_JSONSchema writes the same text through to_JSON as through json
   write_JSONSchema(.cs_schema(), a, verbosity = 0L)
   write_JSONSchema(.cs_schema(), b, digits = NA, verbosity = 0L)
   expect_identical(readLines(a), readLines(b))
+})
+
+test_that("$defs are ordered by code point in every locale", {
+  Upper <- new_class("CS_aB", properties = list(x = prop_integer(0L)))
+  Lower <- new_class("CS_ab", properties = list(x = prop_integer(0L)))
+  Pair <- new_class(
+    "CS_Pair",
+    properties = list(
+      lower = prop_instance(Lower, default = quote(Lower())),
+      upper = prop_instance(Upper, default = quote(Upper()))
+    )
+  )
+  s <- class_to_JSONSchema(Pair, id = "https://example.org/pair.json")
+  expect_identical(names(s[["$defs"]]), c("CS_aB", "CS_ab"))
 })

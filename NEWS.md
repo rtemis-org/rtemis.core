@@ -9,8 +9,12 @@
 - `prop_boolean()` has no default unless given, constant, or nullable.
 - A value carries no attribute its declaration excludes: a factor, a `Date`, a named scalar, or a subclass instance is invalid; a string may carry a class.
 - A struct member and an array, map, or union item take no `default`.
+- An array or map of nullable scalars, and a matrix of nullable cells, holds `NA` for a missing element, written as JSON `null`; `NULL` remains the absence of a whole value.
+- `prop_matrix()` takes `ncol = NULL` for a matrix of any width.
 - `vector`, `map`, and `allow_empty` of the scalar factories, and `prop_bag()`, remain for released callers.
 - New `class_to_JSONSchema()` emits a JSON Schema (draft 2020-12) from an S7 class built with the `prop_*` factories.
+- New `schema_class()` declares an S7 class with a description and an optional `SchemaPublication`; `class_description()`, `class_publication()`, and `class_extension()` read them.
+- `class_to_JSONSchema()` writes each class's description and the `x-rtemis.publication` of a published root class.
 - New `to_JSON()` writes each double in the shortest form that reads back identical; `write_JSONSchema()` writes through it.
 - New `prop_encode()` and `prop_decode()` give the JSON form of a property value.
 - New `nullable()` and `check_nullable_*()`; `optional()` and `check_optional_*()` remain for released callers.

@@ -299,7 +299,7 @@ new_prop_spec <- function(
       )
     }
   }
-  if (container == "matrix") {
+  if (container == "matrix" && !is.null(ncol)) {
     check_nonneg_count(ncol, "ncol")
     if (ncol < 1L) {
       abort(
@@ -916,8 +916,17 @@ validate_leaf <- function(value, fields) {
   if (container == "none" && length(value) > 1L) {
     return("must be a single value.")
   }
-  if (anyNA(value)) {
-    return("must not contain missing values.")
+  # Grammar 4: `NA` is a missing element of an atomic vector, admitted when
+  # the element declaration is nullable (`na_elements`, set by
+  # `scalar_items()`). A scalar value is never `NA`.
+  missing <- is.na(value)
+  if (any(missing)) {
+    if (!isTRUE(fields[["na_elements"]])) {
+      return("must not contain missing values.")
+    }
+    if (type == "number" && any(is.nan(value))) {
+      return("must contain finite numbers or NA.")
+    }
   }
   if (container != "none") {
     msg <- validate_count(length(value), fields)
@@ -928,6 +937,7 @@ validate_leaf <- function(value, fields) {
       return("must have distinct elements.")
     }
   }
+  value <- value[!missing]
   if (type == "number" && !all(is.finite(value))) {
     return("must be finite.")
   }
@@ -1236,13 +1246,13 @@ validate_collection <- function(value, fields) {
 
 
 # %% scalar_items ----
-#' The scalar-layout spec of a container whose items are non-nullable scalars
+#' The scalar-layout spec of a container whose items are scalars
 #'
 #' @param fields Named list of spec fields of the container.
 #' @param item Named list of spec fields of the item.
 #'
-#' @return Named list of spec fields, or NULL when the item is not a
-#'   non-nullable scalar.
+#' @return Named list of spec fields, with `na_elements` TRUE when the item is
+#'   nullable, or NULL when the item is not a scalar.
 #'
 #' @author EDG
 #' @keywords internal
@@ -1250,8 +1260,7 @@ validate_collection <- function(value, fields) {
 scalar_items <- function(fields, item) {
   if (
     !item[["type"]] %in% SCALAR_TYPES ||
-      !identical(item[["container"]], "none") ||
-      isTRUE(item[["nullable"]])
+      !identical(item[["container"]], "none")
   ) {
     return(NULL)
   }
@@ -1259,6 +1268,8 @@ scalar_items <- function(fields, item) {
   for (nm in c("container", "min_items", "max_items", "unique_items")) {
     out[nm] <- list(fields[[nm]])
   }
+  # A nullable element of an atomic vector is `NA` (grammar 4).
+  out[["na_elements"]] <- isTRUE(item[["nullable"]])
   out[["nullable"]] <- FALSE
   out
 } # /rtemis.core::scalar_items
@@ -1267,8 +1278,8 @@ scalar_items <- function(fields, item) {
 # %% validate_nested_array ----
 #' Validate an array of a nested declaration
 #'
-#' Grammar 3: elements that are non-nullable scalars form an atomic vector;
-#' other elements form a list.
+#' Grammar 3: elements that are scalars form an atomic vector, with `NA` for a
+#' missing element of a nullable scalar; other elements form a list.
 #'
 #' @param value Property value being set.
 #' @param fields Named list of spec fields.
@@ -1339,7 +1350,7 @@ validate_matrix <- function(value, fields) {
     return(msg)
   }
   n_col <- fields[["ncol"]]
-  if (ncol(value) != n_col) {
+  if (!is.null(n_col) && ncol(value) != n_col) {
     return(paste0(
       "must have ",
       n_col,
@@ -1358,6 +1369,8 @@ validate_matrix <- function(value, fields) {
   cells[["min_items"]] <- 0L
   cells["max_items"] <- list(NULL)
   cells[["unique_items"]] <- FALSE
+  cells[["na_elements"]] <- isTRUE(cells[["nullable"]])
+  cells[["nullable"]] <- FALSE
   msg <- validate_leaf(as.vector(value), cells)
   if (!is.null(msg)) {
     return(paste0("cells ", msg))
@@ -2031,16 +2044,18 @@ prop_map <- function(
 
 
 # %% prop_matrix ----
-#' Fixed-width matrix S7 property
+#' Matrix S7 property
 #'
-#' Declares a JSON Schema `array` of `ncol`-element arrays, one per row, whose
-#' every cell satisfies `items`. The R value is an integer or double matrix
-#' with `ncol` columns and no attribute other than `dim`. Use it for a set of
-#' fixed-length tuples, such as `[start, end]` ranges.
+#' Declares a JSON Schema `array` of arrays, one per row, whose every cell
+#' satisfies `items`. The R value is an integer or double matrix with no
+#' attribute other than `dim`. With `ncol`, every row has `ncol` cells, as for
+#' a set of fixed-length tuples such as `[start, end]` ranges; without it, the
+#' width is free and every row has the same width. A nullable cell declaration
+#' admits `NA` cells, written as `null`.
 #'
-#' @param items S7 property: Declaration of each cell, a non-nullable
-#'   [prop_integer()] or [prop_number()] without a `default`.
-#' @param ncol Integer \[1, Inf): Column count.
+#' @param items S7 property: Declaration of each cell, a [prop_integer()] or
+#'   [prop_number()] without a `default`.
+#' @param ncol Integer \[1, Inf) or NULL: Column count; NULL for any width.
 #' @param ... Empty. Every argument after `ncol` is passed by name.
 #' @param default Matrix or NULL: Default value, or a quoted call.
 #' @param min_items Integer \[0, Inf): Fewest rows. `0L` admits a matrix of
@@ -2062,7 +2077,7 @@ prop_map <- function(
 #' Region(index = rbind(c(3L, 10L), c(15L, 22L)))@index
 prop_matrix <- function(
   items,
-  ncol,
+  ncol = NULL,
   ...,
   default = NULL,
   min_items = 1L,
@@ -2075,11 +2090,10 @@ prop_matrix <- function(
   cells <- nested_spec(items, "items")
   if (
     !cells[["type"]] %in% c("integer", "number") ||
-      !identical(cells[["container"]], "none") ||
-      isTRUE(cells[["nullable"]])
+      !identical(cells[["container"]], "none")
   ) {
     abort(
-      "`items` must be a non-nullable prop_integer() or prop_number().",
+      "`items` must be a prop_integer() or prop_number().",
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
