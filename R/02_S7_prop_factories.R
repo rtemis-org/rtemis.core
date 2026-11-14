@@ -26,9 +26,9 @@
 # Introspection ---------------------------------------------------------------
 #   prop_spec
 #
-# The factories follow the grammar in rtemis-skills `R/prop-factories.md`:
-# one factory per JSON Schema node, one argument per keyword, containers by
-# composition. One declaration carries a property's type, shape, default,
+# The factories follow one grammar: one factory per JSON Schema node, one
+# argument per keyword, containers by composition. The signatures are fixed in
+# `tests/testthat/test-prop_factory_grammar.R`. One declaration carries a property's type, shape, default,
 # bounds, and description; the S7 validator is generated from it, and the JSON
 # Schema emitter in `schema.R` reads the same declaration.
 
@@ -340,7 +340,7 @@ new_prop_spec <- function(
     additional_members = additional_members,
     alternatives = alternatives,
     ncol = if (is.null(ncol)) NULL else as.integer(ncol),
-    target = target,
+    target = if (is.null(target)) NULL else class_ref(target),
     target_class = if (is.null(target)) NULL else target_class_name(target),
     def_name = def_name,
     description = description
@@ -471,6 +471,44 @@ target_class_name <- function(cls) {
   pkg <- cls@package
   if (is.null(pkg) || !nzchar(pkg)) cls@name else paste0(pkg, "::", cls@name)
 } # /rtemis.core::target_class_name
+
+
+# %% class_ref ----
+#' A reference to an S7 class, for a spec
+#'
+#' A spec holds its class through an environment, which R never copies: a
+#' spec that held the class object would carry a copy of the class, its
+#' properties, and every class they refer to, in each declaration and in each
+#' copy of an object whose class holds the declaration.
+#'
+#' @param cls S7 class.
+#'
+#' @return Environment with `class`, the class object.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+class_ref <- function(cls) {
+  ref <- new.env(parent = emptyenv())
+  ref[["class"]] <- cls
+  ref
+} # /rtemis.core::class_ref
+
+
+# %% spec_target ----
+#' The S7 class a spec refers to
+#'
+#' @param spec Named list of spec fields.
+#'
+#' @return S7 class, or NULL for a spec without one.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+spec_target <- function(spec) {
+  ref <- spec[["target"]]
+  if (is.null(ref)) NULL else ref[["class"]]
+} # /rtemis.core::spec_target
 
 
 # %% check_target_class ----
@@ -1149,7 +1187,7 @@ validate_instance <- function(value, fields) {
     !S7_inherits(value) ||
       !identical(class(value)[[1L]], fields[["target_class"]])
   ) {
-    return(paste0("must be a ", fields[["target"]]@name, " object."))
+    return(paste0("must be a ", spec_target(fields)@name, " object."))
   }
   NULL
 } # /rtemis.core::validate_instance
@@ -1426,7 +1464,7 @@ make_prop <- function(fields, default = fields[["default"]]) {
     shape,
     any = ,
     union = class_any,
-    object = fields[["target"]],
+    object = spec_target(fields),
     nested_array = ,
     nested_map = {
       item <- fields[["items"]] %||% fields[["values"]]
@@ -1659,7 +1697,11 @@ container_prop <- function(
       new_prop_spec,
       quote = TRUE,
       c(
-        list(type = "object", container = container, target = item[["target"]]),
+        list(
+          type = "object",
+          container = container,
+          target = spec_target(item)
+        ),
         common
       )
     )
@@ -2295,7 +2337,7 @@ check_instance_discriminator <- function(specs) {
     return(invisible(NULL))
   }
   consts <- lapply(specs, function(s) {
-    props <- s[["target"]]@properties
+    props <- spec_target(s)@properties
     vals <- lapply(props, function(p) {
       if (inherits(p, "S7_property")) p[["spec"]][["const"]] else NULL
     })

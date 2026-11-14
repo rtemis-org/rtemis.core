@@ -435,9 +435,9 @@ spec_to_JSONSchema <- function(spec, defs) {
       }
       obj
     },
-    object = class_schema_ref(spec[["target"]], defs),
+    object = class_schema_ref(spec_target(spec), defs),
     collection = {
-      ref <- class_schema_ref(spec[["target"]], defs)
+      ref <- class_schema_ref(spec_target(spec), defs)
       if (identical(container, "map")) {
         schema_object_map(ref, spec)
       } else {

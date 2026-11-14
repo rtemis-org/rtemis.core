@@ -378,6 +378,14 @@ test_that("prop_instance requires an object of exactly the class", {
 })
 
 
+test_that("a declaration refers to its class without a copy of it", {
+  spec <- prop_spec(prop_array(prop_instance(.SP$Point)))
+  expect_true(is.environment(spec[["target"]]))
+  expect_identical(spec[["target"]][["class"]], .SP$Point)
+  expect_match(spec[["target_class"]], "SP_Point$")
+})
+
+
 # %% prop_any ----
 test_that("prop_any admits every value, NULL included", {
   Cls <- new_class("SP_any", properties = list(x = prop_any()))
