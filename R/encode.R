@@ -5,6 +5,7 @@
 # TOC ----
 #   to_JSON / json_doubles / shortest_doubles
 #   prop_encode / encode_spec / leaf_values / format_datetime
+#   utc_seconds_text
 #   prop_decode / decode_spec / decode_scalars / parse_datetime
 #
 # The JSON form of every factory-built value, as the rule's "Values in JSON"
@@ -433,10 +434,7 @@ format_datetime <- function(x) {
   carry <- micros >= 1e6
   seconds[carry] <- seconds[carry] + 1
   micros[carry] <- 0
-  base <- format(
-    as.POSIXct(seconds, origin = "1970-01-01", tz = "UTC"),
-    "%Y-%m-%dT%H:%M:%S"
-  )
+  base <- utc_seconds_text(seconds)
   fraction <- ifelse(
     micros > 0,
     sub("0+$", "", sprintf(".%06d", as.integer(micros))),
@@ -445,6 +443,38 @@ format_datetime <- function(x) {
   out[ok] <- paste0(base, fraction, "Z")
   out
 } # /rtemis.core::format_datetime
+
+
+# %% utc_seconds_text ----
+#' Date and time of whole seconds in UTC, as `YYYY-MM-DDThh:mm:ss`
+#'
+#' Pads every field itself: `format()` with `%Y` writes a year below 1000
+#' with four digits on macOS and without padding on Linux.
+#'
+#' @param seconds Double: Whole seconds since 1970-01-01T00:00:00Z.
+#'
+#' @return Character.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+utc_seconds_text <- function(seconds) {
+  # unclass(): `[[` on a POSIXlt selects a date-time, not a field.
+  lt <- unclass(as.POSIXlt(as.POSIXct(
+    seconds,
+    origin = "1970-01-01",
+    tz = "UTC"
+  )))
+  sprintf(
+    "%04d-%02d-%02dT%02d:%02d:%02d",
+    lt[["year"]] + 1900L,
+    lt[["mon"]] + 1L,
+    lt[["mday"]],
+    lt[["hour"]],
+    lt[["min"]],
+    as.integer(floor(lt[["sec"]]))
+  )
+} # /rtemis.core::utc_seconds_text
 
 
 # %% encode_instance ----
@@ -716,7 +746,7 @@ parse_datetime <- function(x) {
     }
     if (
       is.na(base) ||
-        format(base, "%Y-%m-%d %H:%M:%S") != paste(m[[2L]], m[[3L]]) ||
+        utc_seconds_text(as.double(base)) != paste0(m[[2L]], "T", m[[3L]]) ||
         (nzchar(m[[6L]]) &&
           (as.integer(m[[7L]]) > 23L || as.integer(m[[8L]]) > 59L))
     ) {

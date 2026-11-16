@@ -9,7 +9,10 @@ test_that("prop_datetime() admits one finite POSIXct with class and tzone only",
   ok <- as.POSIXct("2026-11-15 10:20:30", tz = "America/Los_Angeles")
   expect_null(validate_with_spec(ok, prop_spec(p)))
   expect_null(validate_with_spec(Sys.time(), prop_spec(p)))
-  expect_match(validate_with_spec(as.Date("2026-11-15"), prop_spec(p)), "POSIXct")
+  expect_match(
+    validate_with_spec(as.Date("2026-11-15"), prop_spec(p)),
+    "POSIXct"
+  )
   expect_match(validate_with_spec(1.5, prop_spec(p)), "POSIXct")
   expect_match(
     validate_with_spec(c(ok, ok), prop_spec(p)),
@@ -46,7 +49,10 @@ test_that("prop_datetime() takes a quoted default and no released arguments", {
     properties = list(created = prop_datetime(quote(Sys.time())))
   )
   expect_s3_class(M()@created, "POSIXct")
-  expect_error(prop_datetime(as.Date("2026-01-01")), class = "rtemis_value_error")
+  expect_error(
+    prop_datetime(as.Date("2026-01-01")),
+    class = "rtemis_value_error"
+  )
   expect_error(prop_datetime(vector = TRUE), class = "rtemis_value_error")
   expect_null(prop_spec(prop_datetime(nullable = TRUE))[["default"]])
 })
@@ -86,6 +92,10 @@ test_that("a date-time is written in UTC as RFC 3339, rounded to the microsecond
     prop_encode(p, .POSIXct(-62135596800, tz = "UTC")),
     "0001-01-01T00:00:00Z"
   )
+  expect_identical(
+    prop_encode(p, .POSIXct(-58979923200, tz = "UTC")),
+    "0101-01-01T00:00:00Z"
+  )
 })
 
 test_that("a date-time reads back in UTC within a microsecond, and its text is stable", {
@@ -104,6 +114,10 @@ test_that("prop_decode() reads RFC 3339 offsets and lowercase separators", {
   expect_equal(prop_decode(p, "2026-11-15T10:20:30+02:00"), utc)
   expect_equal(prop_decode(p, "2026-11-15T03:20:30-05:00"), utc)
   expect_equal(prop_decode(p, "2026-11-15t08:20:30z"), utc)
+  expect_equal(
+    prop_decode(p, "0001-01-01T00:00:00Z"),
+    .POSIXct(-62135596800, tz = "UTC")
+  )
   expect_equal(
     as.double(prop_decode(p, "2026-11-15T08:20:30.25Z")),
     as.double(utc) + 0.25
@@ -126,7 +140,10 @@ test_that("prop_decode() rejects strings that are not RFC 3339 date-times", {
 })
 
 test_that("arrays, maps, and tables of date-times round-trip", {
-  x <- as.POSIXct(c("2026-01-01 00:00:00", NA, "1970-01-01 00:00:01"), tz = "UTC")
+  x <- as.POSIXct(
+    c("2026-01-01 00:00:00", NA, "1970-01-01 00:00:01"),
+    tz = "UTC"
+  )
   a <- prop_array(prop_datetime(nullable = TRUE))
   json <- to_JSON(prop_encode(a, x))
   expect_identical(
@@ -165,7 +182,10 @@ test_that("a date-time emits a string of format date-time", {
   M <- S7::new_class(
     "M",
     properties = list(
-      created = prop_datetime(quote(Sys.time()), description = "Creation time."),
+      created = prop_datetime(
+        quote(Sys.time()),
+        description = "Creation time."
+      ),
       seen = prop_array(prop_datetime(nullable = TRUE), nullable = TRUE)
     )
   )
@@ -198,7 +218,10 @@ test_that("the declaration of prop_datetime() rebuilds itself", {
     d <- prop_declaration(p)
     expect_identical(prop_declaration(prop_build(d)), d)
   }
-  expect_identical(prop_declaration(prop_datetime())[["factory"]], "prop_datetime")
+  expect_identical(
+    prop_declaration(prop_datetime())[["factory"]],
+    "prop_datetime"
+  )
 })
 
 
@@ -275,7 +298,11 @@ test_that("a prop_r() value has no JSON form", {
 })
 
 test_that("the declaration of prop_r() holds its class and rebuilds itself", {
-  r <- prop_r(S7::class_function, nullable = TRUE, description = "Implementation.")
+  r <- prop_r(
+    S7::class_function,
+    nullable = TRUE,
+    description = "Implementation."
+  )
   d <- prop_declaration(r)
   expect_identical(d[["factory"]], "prop_r")
   expect_identical(d[["arguments"]][["cls"]], S7::class_function)
