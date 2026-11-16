@@ -231,6 +231,9 @@ JSON_SCHEMA_DIALECT <- "https://json-schema.org/draft/2020-12/schema"
 #' @keywords internal
 #' @noRd
 schema_leaf <- function(spec) {
+  if (identical(spec[["type"]], "datetime")) {
+    return(list(type = "string", format = "date-time"))
+  }
   out <- list(type = spec[["type"]])
   if (!is.null(spec[["enum"]])) {
     # I(): `enum` is an array even with one member.
@@ -431,6 +434,9 @@ spec_to_JSONSchema <- function(spec, defs) {
     return(out)
   }
   shape <- spec_shape(spec)
+  if (shape == "r") {
+    no_json_form()
+  }
   container <- spec[["container"]]
   out <- switch(
     shape,
@@ -1012,6 +1018,9 @@ class_object_schema <- function(
         " is not built by a prop_* factory, so it has no declaration to emit.",
         class = c("rtemis_value_error", "rtemis_input_error")
       )
+    }
+    if (identical(spec[["type"]], "r")) {
+      no_json_form(paste0("Property '", nm, "' of ", cls@name))
     }
     spec
   })

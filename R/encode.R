@@ -4,8 +4,9 @@
 
 # TOC ----
 #   to_JSON / json_doubles / shortest_doubles
-#   prop_encode / encode_spec
-#   prop_decode / decode_spec / decode_scalars
+#   prop_encode / encode_spec / leaf_values / format_datetime
+#   utc_seconds_text
+#   prop_decode / decode_spec / decode_scalars / parse_datetime
 #
 # The JSON form of every factory-built value, as the rule's "Values in JSON"
 # table fixes it. `prop_encode()` returns the R value that `to_JSON()` writes;
@@ -194,6 +195,25 @@ encode_spec_of <- function(property) {
 } # /rtemis.core::encode_spec_of
 
 
+# %% no_json_form ----
+#' Abort for a value with no JSON form
+#'
+#' @param where Character or NULL: The property, as `"Property 'x' of C"`.
+#'
+#' @return Does not return.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+no_json_form <- function(where = NULL) {
+  abort(
+    where %||% "The property",
+    " holds an R value with no JSON form (prop_r()).",
+    class = c("rtemis_value_error", "rtemis_input_error")
+  )
+} # /rtemis.core::no_json_form
+
+
 # %% check_encodable ----
 #' Abort when a value does not satisfy its declaration
 #'
@@ -276,6 +296,9 @@ encode_spec <- function(value, spec) {
   if (shape == "any") {
     return(value)
   }
+  if (shape == "r") {
+    no_json_form()
+  }
   if (is.null(value)) {
     return(NULL)
   }
@@ -283,7 +306,7 @@ encode_spec <- function(value, spec) {
   switch(
     shape,
     leaf = {
-      v <- scalar_vector(value)
+      v <- leaf_values(value, spec[["type"]])
       if (identical(container, "none")) {
         v
       } else if (identical(container, "map")) {
@@ -304,7 +327,7 @@ encode_spec <- function(value, spec) {
       item <- spec[["items"]] %||% spec[["values"]]
       map <- shape == "nested_map"
       if (!is.null(scalar_items(spec, item))) {
-        v <- scalar_vector(value)
+        v <- leaf_values(value, item[["type"]])
         if (map) named_list(as.list(v), names(value)) else I(v)
       } else {
         out <- lapply(value, function(e) encode_spec(e, item))
@@ -332,7 +355,7 @@ encode_spec <- function(value, spec) {
       named_list(out, keys)
     },
     object = encode_instance(value, spec[["members"]]),
-    table = encode_table(value),
+    table = encode_table(value, spec),
     factor = list(
       levels = I(levels(value)),
       codes = I(scalar_vector(unclass(value)))
@@ -364,6 +387,96 @@ unname_list <- function(x) {
 } # /rtemis.core::unname_list
 
 
+# %% leaf_values ----
+#' The JSON values of a scalar-layout value
+#'
+#' @param value Atomic vector of `type`.
+#' @param type Character: Scalar type.
+#'
+#' @return Atomic vector without attributes: RFC 3339 strings for a
+#'   date-time, the values otherwise.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+leaf_values <- function(value, type) {
+  if (identical(type, "datetime")) {
+    format_datetime(value)
+  } else {
+    scalar_vector(value)
+  }
+} # /rtemis.core::leaf_values
+
+
+# %% format_datetime ----
+#' Write date-times as RFC 3339 strings in UTC
+#'
+#' The fraction of a second is rounded to the microsecond and written without
+#' trailing zeros, and omitted when it is zero.
+#'
+#' @param x POSIXct: Finite date-times from year 1 to year 9999, or `NA`.
+#'
+#' @return Character, `NA` for a missing date-time.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+format_datetime <- function(x) {
+  v <- unclass(x)
+  attributes(v) <- NULL
+  out <- rep(NA_character_, length(v))
+  ok <- !is.na(v)
+  if (!any(ok)) {
+    return(out)
+  }
+  seconds <- floor(v[ok])
+  micros <- round((v[ok] - seconds) * 1e6)
+  carry <- micros >= 1e6
+  seconds[carry] <- seconds[carry] + 1
+  micros[carry] <- 0
+  base <- utc_seconds_text(seconds)
+  fraction <- ifelse(
+    micros > 0,
+    sub("0+$", "", sprintf(".%06d", as.integer(micros))),
+    ""
+  )
+  out[ok] <- paste0(base, fraction, "Z")
+  out
+} # /rtemis.core::format_datetime
+
+
+# %% utc_seconds_text ----
+#' Date and time of whole seconds in UTC, as `YYYY-MM-DDThh:mm:ss`
+#'
+#' Pads every field itself: `format()` with `%Y` writes a year below 1000
+#' with four digits on macOS and without padding on Linux.
+#'
+#' @param seconds Double: Whole seconds since 1970-01-01T00:00:00Z.
+#'
+#' @return Character.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+utc_seconds_text <- function(seconds) {
+  # unclass(): `[[` on a POSIXlt selects a date-time, not a field.
+  lt <- unclass(as.POSIXlt(as.POSIXct(
+    seconds,
+    origin = "1970-01-01",
+    tz = "UTC"
+  )))
+  sprintf(
+    "%04d-%02d-%02dT%02d:%02d:%02d",
+    lt[["year"]] + 1900L,
+    lt[["mon"]] + 1L,
+    lt[["mday"]],
+    lt[["hour"]],
+    lt[["min"]],
+    as.integer(floor(lt[["sec"]]))
+  )
+} # /rtemis.core::utc_seconds_text
+
+
 # %% encode_instance ----
 #' Encode an S7 instance as an object of its properties
 #'
@@ -391,6 +504,14 @@ encode_instance <- function(value, members = NULL) {
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
+    if (identical(spec[["type"]], "r")) {
+      no_json_form(paste0(
+        "Property '",
+        nm,
+        "' of ",
+        S7::S7_class(value)@name
+      ))
+    }
     encode_spec(S7::prop(value, nm), spec)
   })
   named_list(out, keys)
@@ -403,15 +524,19 @@ encode_instance <- function(value, members = NULL) {
 #' Every row holds every column; a missing cell is written as `null`.
 #'
 #' @param value Data frame.
+#' @param spec Named list: Table spec.
 #'
 #' @return Unnamed list of named lists.
 #'
 #' @author EDG
 #' @keywords internal
 #' @noRd
-encode_table <- function(value) {
+encode_table <- function(value, spec) {
   keys <- names(value)
-  cols <- lapply(value, scalar_vector)
+  cols <- lapply(keys, function(nm) {
+    column <- spec[["columns"]][[nm]] %||% spec[["additional_columns"]]
+    leaf_values(value[[nm]], column[["type"]])
+  })
   lapply(seq_len(nrow(value)), function(i) {
     named_list(
       lapply(cols, function(col) {
@@ -573,9 +698,76 @@ decode_scalars <- function(x, type, na = FALSE) {
     string = {
       check(is.character(present), "a string")
       as.character(v)
+    },
+    datetime = {
+      check(is.character(present), "an RFC 3339 date-time string")
+      parse_datetime(as.character(v))
     }
   )
 } # /rtemis.core::decode_scalars
+
+
+# %% RFC3339_DATETIME ----
+# An RFC 3339 `date-time`: date, `T`, time, an optional fraction of a second,
+# and `Z` or an offset from UTC.
+RFC3339_DATETIME <- paste0(
+  "^([0-9]{4}-[0-9]{2}-[0-9]{2})[Tt]([0-9]{2}:[0-9]{2}:[0-9]{2})",
+  "(\\.[0-9]+)?([Zz]|([+-])([0-9]{2}):([0-9]{2}))$"
+)
+
+
+# %% parse_datetime ----
+#' Read RFC 3339 date-time strings
+#'
+#' Applies each string's offset and returns the instants in UTC. A string that
+#' is not an RFC 3339 date-time, or names a date or time that does not exist,
+#' aborts with `rtemis_value_error`.
+#'
+#' @param x Character: Date-time strings, or `NA`.
+#'
+#' @return POSIXct in UTC, `NA` for a missing string.
+#'
+#' @author EDG
+#' @keywords internal
+#' @noRd
+parse_datetime <- function(x) {
+  out <- rep(NA_real_, length(x))
+  ok <- !is.na(x)
+  for (i in which(ok)) {
+    m <- regmatches(x[[i]], regexec(RFC3339_DATETIME, x[[i]]))[[1L]]
+    base <- if (length(m) == 0L) {
+      NA
+    } else {
+      as.POSIXct(
+        paste(m[[2L]], m[[3L]]),
+        format = "%Y-%m-%d %H:%M:%S",
+        tz = "UTC"
+      )
+    }
+    if (
+      is.na(base) ||
+        utc_seconds_text(as.double(base)) != paste0(m[[2L]], "T", m[[3L]]) ||
+        (nzchar(m[[6L]]) &&
+          (as.integer(m[[7L]]) > 23L || as.integer(m[[8L]]) > 59L))
+    ) {
+      abort(
+        "The JSON value '",
+        x[[i]],
+        "' is not an RFC 3339 date-time, such as 2026-11-15T18:30:00Z.",
+        class = c("rtemis_value_error", "rtemis_input_error")
+      )
+    }
+    fraction <- if (nzchar(m[[4L]])) as.double(paste0("0", m[[4L]])) else 0
+    offset <- if (nzchar(m[[6L]])) {
+      (if (m[[6L]] == "-") -1 else 1) *
+        (as.integer(m[[7L]]) * 3600 + as.integer(m[[8L]]) * 60)
+    } else {
+      0
+    }
+    out[[i]] <- as.double(base) + fraction - offset
+  }
+  as.POSIXct(out, origin = "1970-01-01", tz = "UTC")
+} # /rtemis.core::parse_datetime
 
 
 # %% decode_spec ----
@@ -593,6 +785,9 @@ decode_spec <- function(x, spec) {
   shape <- spec_shape(spec)
   if (shape == "any") {
     return(x)
+  }
+  if (shape == "r") {
+    no_json_form()
   }
   if (is.null(x)) {
     return(NULL)
@@ -763,6 +958,9 @@ decode_instance <- function(x, cls, members = NULL) {
         class = c("rtemis_value_error", "rtemis_input_error")
       )
     }
+    if (identical(spec[["type"]], "r")) {
+      no_json_form(paste0("Property '", nm, "' of ", cls@name))
+    }
     decode_spec(x[[nm]], spec)
   })
   do.call(cls, named_list(args, names(x)))
@@ -864,7 +1062,8 @@ decode_table <- function(x, spec) {
         boolean = logical(0L),
         integer = integer(0L),
         number = double(0L),
-        string = character(0L)
+        string = character(0L),
+        datetime = as.POSIXct(double(0L), origin = "1970-01-01", tz = "UTC")
       )
     })
   }

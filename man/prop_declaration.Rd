@@ -23,7 +23,8 @@ from \code{const} is NULL. \code{enum} and \code{const} are returned as stored; 
 \code{max}, \code{exclusive_min}, and \code{exclusive_max} are doubles for \code{\link[=prop_number]{prop_number()}}
 and integers for \code{\link[=prop_integer]{prop_integer()}}; \code{required} holds the names beyond those
 the declarations imply, in declared order, or NULL; \code{cls} is the class name
-as given, or the qualified name of a class object. Nothing is resolved.
+as given, or the qualified name of a class object, and the \code{cls} of
+\code{\link[=prop_r]{prop_r()}} is the class object. Nothing is resolved.
 Fields set on a property after its factory returned are not part of its
 declaration.
 }

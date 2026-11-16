@@ -90,7 +90,8 @@ prop_extension <- function(property, producer) {
 #' `max`, `exclusive_min`, and `exclusive_max` are doubles for [prop_number()]
 #' and integers for [prop_integer()]; `required` holds the names beyond those
 #' the declarations imply, in declared order, or NULL; `cls` is the class name
-#' as given, or the qualified name of a class object. Nothing is resolved.
+#' as given, or the qualified name of a class object, and the `cls` of
+#' [prop_r()] is the class object. Nothing is resolved.
 #' Fields set on a property after its factory returned are not part of its
 #' declaration.
 #'
@@ -381,6 +382,16 @@ spec_declaration <- function(spec, default = NULL) {
       "prop_any",
       arg_list(default = default, description = description),
       spec
+    ),
+    r = new_declaration(
+      "prop_r",
+      arg_list(
+        cls = spec[["r_class"]][["class"]],
+        default = default,
+        nullable = nullable,
+        description = description
+      ),
+      spec
     )
   )
 } # /rtemis.core::spec_declaration
@@ -420,6 +431,7 @@ scalar_declaration <- function(spec, default) {
       ),
       tail
     ),
+    datetime = c(arg_list(default = default), tail),
     string = c(
       arg_list(
         default = default,
@@ -483,6 +495,7 @@ DECLARATION_FACTORIES <- c(
   "prop_integer",
   "prop_number",
   "prop_string",
+  "prop_datetime",
   "prop_array",
   "prop_map",
   "prop_matrix",
@@ -491,7 +504,8 @@ DECLARATION_FACTORIES <- c(
   "prop_factor",
   "prop_union",
   "prop_instance",
-  "prop_any"
+  "prop_any",
+  "prop_r"
 )
 
 
