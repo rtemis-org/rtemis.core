@@ -19,10 +19,10 @@
 # Builders --------------------------------------------------------------------
 #   scalar_prop / container_prop
 # Scalar factories ------------------------------------------------------------
-#   prop_boolean / prop_integer / prop_number / prop_string
+#   prop_boolean / prop_integer / prop_number / prop_string / prop_datetime
 # Structural factories --------------------------------------------------------
 #   prop_array / prop_map / prop_matrix / prop_struct / prop_table
-#   prop_factor / prop_union / prop_instance / prop_any
+#   prop_factor / prop_union / prop_instance / prop_any / prop_r
 # Introspection ---------------------------------------------------------------
 #   prop_spec / check_class_references
 #
@@ -40,17 +40,22 @@
 #   map of any values (`prop_map(prop_any())`), a map of a nested declaration
 #   (`prop_map()`), or a struct (`prop_struct()`).
 # - "array": an array of a nested declaration (`prop_array()`).
+# - "datetime": a `POSIXct` point in time, a JSON Schema `string` of format
+#   `date-time` (`prop_datetime()`).
 # - "union": a value matching at least one alternative (`prop_union()`).
 # - "any": any value (`prop_any()`).
+# - "r": an R value with no JSON form (`prop_r()`).
 PROP_TYPES <- c(
   "boolean",
   "integer",
   "number",
   "string",
+  "datetime",
   "object",
   "array",
   "union",
-  "any"
+  "any",
+  "r"
 )
 
 # %% PROP_CONTAINERS ----
@@ -76,13 +81,20 @@ PROP_CONTAINERS <- c(
 )
 
 # %% SCALAR_TYPES ----
-SCALAR_TYPES <- c("boolean", "integer", "number", "string")
+SCALAR_TYPES <- c("boolean", "integer", "number", "string", "datetime")
+
+# %% DATETIME_RANGE ----
+# Seconds since 1970-01-01T00:00:00Z of the first and the last date-time a
+# `prop_datetime()` declaration admits: 0001-01-01T00:00:00Z and
+# 9999-12-31T23:59:59.999Z, the range of the four-digit years of RFC 3339.
+DATETIME_RANGE <- c(-62135596800, 253402300799.999)
 
 # %% RELEASED_DOTS ----
 # Arguments that released versions passed to the scalar factories, accepted
 # through `...` (rule: "Names kept for released dependents").
 RELEASED_DOTS <- list(
   boolean = character(0L),
+  datetime = character(0L),
   integer = c("vector", "min_items", "unique_items"),
   number = c("vector", "min_items", "unique_items"),
   string = c("vector", "map", "allow_empty", "min_items", "unique_items")
@@ -498,7 +510,7 @@ target_class_name <- function(cls) {
 
 
 # %% class_ref ----
-#' A reference to an S7 class, for a spec
+#' A reference to a class, for a spec
 #'
 #' A spec holds its class through an environment, which R never copies: a
 #' spec that held the class object would carry a copy of the class, its
@@ -506,7 +518,8 @@ target_class_name <- function(cls) {
 #' copy of an object whose class holds the declaration. A class named by a
 #' string is resolved at first use and kept in the same environment.
 #'
-#' @param cls S7 class, or Character: `"pkg::Class"` or `"Class"`.
+#' @param cls S7 class, or Character: `"pkg::Class"` or `"Class"`. The class
+#'   of a `prop_r()` declaration is any class `S7::as_class()` accepts.
 #' @param env Environment: Where a name `"Class"` is written.
 #'
 #' @return Environment with `class`, the class object, or with `name` and
@@ -791,6 +804,15 @@ nested_spec <- function(x, what) {
       class = c("rtemis_type_error", "rtemis_input_error")
     )
   }
+  if (identical(spec[["type"]], "r")) {
+    abort(
+      "`",
+      what,
+      "` must not be a prop_r() declaration: an R value with no JSON form ",
+      "is held only by a property of a class.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
   default <- spec[["default"]]
   if (!is.null(default) && !identical(default, spec[["const"]])) {
     abort(
@@ -889,7 +911,7 @@ take_dots <- function(dots, allowed, factory) {
 #'
 #' @param fields Named list of spec fields.
 #'
-#' @return Character, one of `"any"`, `"union"`, `"struct"`, `"table"`,
+#' @return Character, one of `"any"`, `"r"`, `"union"`, `"struct"`, `"table"`,
 #'   `"factor"`, `"object"`, `"collection"`, `"nested_array"`, `"nested_map"`,
 #'   `"matrix"`, `"bag"`, `"leaf"`.
 #'
@@ -901,6 +923,9 @@ spec_shape <- function(fields) {
   type <- fields[["type"]]
   if (identical(type, "any")) {
     return("any")
+  }
+  if (identical(type, "r")) {
+    return("r")
   }
   if (identical(type, "union")) {
     return("union")
@@ -1063,7 +1088,7 @@ validate_attributes <- function(value, allowed) {
 #'
 #' @param value Value being checked.
 #' @param type Character: One of `"boolean"`, `"integer"`, `"number"`,
-#'   `"string"`.
+#'   `"string"`, `"datetime"`.
 #'
 #' @return NULL if valid, otherwise character error message.
 #'
@@ -1077,10 +1102,13 @@ validate_leaf_type <- function(value, type) {
     integer = typeof(value) == "integer",
     number = typeof(value) %in% c("double", "integer"),
     string = typeof(value) == "character",
+    datetime = typeof(value) == "double" && inherits(value, "POSIXct"),
     TRUE
   )
   if (ok) {
     NULL
+  } else if (type == "datetime") {
+    "must be a POSIXct date-time."
   } else {
     paste0("must be of type ", type, ".")
   }
@@ -1113,6 +1141,11 @@ validate_with_spec <- function(value, fields) {
   }
   if (is.null(value)) {
     return(if (isTRUE(fields[["nullable"]])) NULL else "must not be NULL.")
+  }
+  # S7 checks the class of an R value; a prop_r() declaration has no other
+  # constraint.
+  if (shape == "r") {
+    return(NULL)
   }
   msg <- switch(
     shape,
@@ -1244,19 +1277,29 @@ validate_leaf <- function(value, fields) {
   container <- fields[["container"]]
   type <- fields[["type"]]
   if (is.list(value)) {
-    return(paste0("must be of type ", type, ", not a list."))
+    return(
+      if (type == "datetime") {
+        "must be a POSIXct date-time, not a list."
+      } else {
+        paste0("must be of type ", type, ", not a list.")
+      }
+    )
   }
   msg <- validate_leaf_type(value, type)
   if (!is.null(msg)) {
     return(msg)
   }
   allowed <- c(
-    if (type == "string") "class",
+    if (type %in% c("string", "datetime")) "class",
+    if (type == "datetime") "tzone",
     if (identical(container, "map")) "names"
   )
   msg <- validate_attributes(value, allowed)
   if (!is.null(msg)) {
     return(msg)
+  }
+  if (type == "datetime" && !identical(class(value), c("POSIXct", "POSIXt"))) {
+    return("must be a POSIXct date-time without further classes.")
   }
   if (length(value) == 0L) {
     if (container != "none" && identical(fields[["min_items"]], 0L)) {
@@ -1289,8 +1332,14 @@ validate_leaf <- function(value, fields) {
     if (!isTRUE(fields[["na_elements"]])) {
       return("must not contain missing values.")
     }
-    if (type == "number" && any(is.nan(value))) {
-      return("must contain finite numbers or NA.")
+    if (type %in% c("number", "datetime") && any(is.nan(unclass(value)))) {
+      return(
+        if (type == "number") {
+          "must contain finite numbers or NA."
+        } else {
+          "must contain finite date-times or NA."
+        }
+      )
     }
   }
   if (container != "none") {
@@ -1305,6 +1354,15 @@ validate_leaf <- function(value, fields) {
   value <- value[!missing]
   if (type == "number" && !all(is.finite(value))) {
     return("must be finite.")
+  }
+  if (type == "datetime") {
+    seconds <- unclass(value)
+    if (
+      !all(is.finite(seconds)) ||
+        any(seconds < DATETIME_RANGE[[1L]] | seconds > DATETIME_RANGE[[2L]])
+    ) {
+      return("must be a finite date-time from year 1 to year 9999.")
+    }
   }
   if (type == "string") {
     chars <- nchar(value, type = "chars")
@@ -1948,6 +2006,7 @@ make_prop <- function(fields, default = fields[["default"]]) {
       integer = class_integer,
       number = class_numeric,
       string = class_character,
+      datetime = class_POSIXct,
       class_any
     )
   }
@@ -1973,6 +2032,7 @@ make_prop <- function(fields, default = fields[["default"]]) {
     bag = class_list,
     table = class_data.frame,
     factor = class_factor,
+    r = fields[["r_class"]][["class"]],
     scalar_class(fields[["type"]])
   )
   if (is.call(default) && shape %in% c("leaf", "matrix")) {
@@ -1981,7 +2041,8 @@ make_prop <- function(fields, default = fields[["default"]]) {
       boolean = "logical",
       integer = "integer",
       number = c("integer", "double"),
-      string = "character"
+      string = "character",
+      datetime = "double"
     )
     if (fields[["nullable"]]) {
       types <- c(types, "NULL")
@@ -2497,6 +2558,64 @@ prop_string <- function(
 } # /rtemis.core::prop_string
 
 
+# %% prop_datetime ----
+#' Date-time S7 property
+#'
+#' Declares a property whose value is one point in time, a `POSIXct` of length
+#' 1, emitted as a JSON Schema `string` of format `date-time` (RFC 3339).
+#' [prop_encode()] writes it in UTC, as `2026-11-15T18:30:00Z`, with the
+#' fraction of a second rounded to the microsecond; [prop_decode()] reads any
+#' RFC 3339 date-time, applies its offset, and returns a `POSIXct` in UTC.
+#'
+#' @param default POSIXct or NULL: Default value. NULL gives no default unless
+#'   `nullable` is TRUE. A quoted call, such as `quote(Sys.time())`, is
+#'   evaluated once in the caller's environment at declaration and again for
+#'   each object.
+#' @param ... Empty. Every argument after `default` is passed by name.
+#' @param nullable Logical: If TRUE, NULL is a valid value.
+#' @param def_name Character or NULL: Name of the declaration in an emitted
+#'   JSON Schema's `$defs`; see [class_to_JSONSchema()].
+#' @param description Character: Human-readable description.
+#'
+#' @details
+#' A value is a finite `POSIXct` from year 1 to year 9999 whose only
+#' attributes are its class, exactly `c("POSIXct", "POSIXt")`, and `tzone`.
+#' `prop_array(prop_datetime())` holds a `POSIXct` vector.
+#'
+#' @return S7 property.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' Message <- S7::new_class(
+#'   "Message",
+#'   properties = list(
+#'     created = prop_datetime(quote(Sys.time()), description = "Creation time.")
+#'   )
+#' )
+#' inherits(Message()@created, "POSIXct")
+prop_datetime <- function(
+  default = NULL,
+  ...,
+  nullable = FALSE,
+  def_name = NULL,
+  description = ""
+) {
+  dots <- take_dots(list(...), RELEASED_DOTS[["datetime"]], "prop_datetime")
+  scalar_prop(
+    type = "datetime",
+    default = default,
+    dots = dots,
+    keywords = list(),
+    nullable = nullable,
+    def_name = def_name,
+    description = description,
+    env = parent.frame()
+  )
+} # /rtemis.core::prop_datetime
+
+
 # %% prop_array ----
 #' Array S7 property
 #'
@@ -2967,8 +3086,8 @@ prop_table <- function(
       abort(
         "`",
         what,
-        "` must be a prop_boolean(), prop_integer(), prop_number(), or ",
-        "prop_string().",
+        "` must be a prop_boolean(), prop_integer(), prop_number(), ",
+        "prop_string(), or prop_datetime().",
         class = c("rtemis_type_error", "rtemis_input_error")
       )
     }
@@ -3414,6 +3533,75 @@ prop_any <- function(..., default = NULL, description = "") {
   )
   make_prop(fields, default = default)
 } # /rtemis.core::prop_any
+
+
+# %% prop_r ----
+#' R-value S7 property
+#'
+#' Declares a property whose value is an R value with no JSON form, such as a
+#' function, an environment, or a fitted model object. S7 checks the value's
+#' class. The declaration builds no JSON Schema node: [prop_encode()],
+#' [prop_decode()], [class_to_JSONSchema()], and [prop_to_JSONSchema()] abort
+#' on it and on an instance whose class holds it. Only a property of a class
+#' takes a `prop_r()` declaration; a structural factory and the `members` of
+#' [prop_instance()] abort when given one.
+#'
+#' @param cls S7 class: The class of the value: an S7 class, an S3 class from
+#'   `S7::new_S3_class()`, an S7 base class such as `S7::class_function` or
+#'   `S7::class_environment`, or a union of them.
+#' @param ... Empty. Every argument after `cls` is passed by name.
+#' @param default Default value, a quoted call, or NULL. A quoted call is
+#'   evaluated once in the caller's environment at declaration and again for
+#'   each object.
+#' @param nullable Logical: If TRUE, NULL is a valid value.
+#' @param description Character: Human-readable description.
+#'
+#' @return S7 property.
+#'
+#' @author EDG
+#' @export
+#'
+#' @examples
+#' Tool <- S7::new_class(
+#'   "Tool",
+#'   properties = list(
+#'     impl = prop_r(S7::class_function, nullable = TRUE, description = "Implementation.")
+#'   )
+#' )
+#' Tool(impl = function(x) x + 1)@impl(1)
+prop_r <- function(
+  cls,
+  ...,
+  default = NULL,
+  nullable = FALSE,
+  description = ""
+) {
+  take_dots(list(...), character(0L), "prop_r")
+  ok <- !is.null(cls) &&
+    tryCatch(
+      {
+        S7::as_class(cls)
+        TRUE
+      },
+      error = function(e) FALSE
+    )
+  if (!ok) {
+    abort(
+      "`cls` must be an S7 class, an S3 class from S7::new_S3_class(), an S7 ",
+      "base class such as S7::class_function, or a union of them.",
+      class = c("rtemis_type_error", "rtemis_input_error")
+    )
+  }
+  fields <- new_prop_spec(
+    type = "r",
+    default = default,
+    nullable = nullable,
+    description = description,
+    default_env = parent.frame(),
+    extra = list(r_class = class_ref(cls))
+  )
+  make_prop(fields, default = default)
+} # /rtemis.core::prop_r
 
 
 # %% prop_spec ----

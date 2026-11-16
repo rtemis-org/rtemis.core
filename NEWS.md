@@ -2,6 +2,8 @@
 
 - The `prop_*` factories follow one grammar: one factory per JSON Schema node, one argument per keyword, and containers by composition.
 - New structural factories: `prop_array()`, `prop_map()`, `prop_struct()`, `prop_table()`, `prop_factor()`, `prop_union()`, `prop_matrix()`, `prop_instance()`, and `prop_any()`.
+- New `prop_datetime()` declares a `POSIXct` date-time, written as an RFC 3339 string in UTC.
+- New `prop_r()` declares an R value with no JSON form, such as a function or an environment.
 - `prop_instance()` takes an S7 class or a class name, `"pkg::Class"` or `"Class"`, resolved at first use, so a class may refer to itself or to a class declared later; `check_class_references()` resolves every name a package's classes use. An instance has no implicit default. `members` constrains named properties of the instance at one use.
 - `prop_array()` gains `contains`, `min_contains`, and `max_contains`; `prop_map()` gains `keys`; `prop_struct()` gains `min_members` and `max_members`.
 - A union whose alternatives are all instances decodes by its discriminator.

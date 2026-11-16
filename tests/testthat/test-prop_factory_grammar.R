@@ -49,6 +49,13 @@
     def_name = NULL,
     description = ""
   ),
+  prop_datetime = alist(
+    default = NULL,
+    ... = ,
+    nullable = FALSE,
+    def_name = NULL,
+    description = ""
+  ),
   prop_array = alist(
     items = ,
     ... = ,
@@ -136,7 +143,14 @@
     nullable = FALSE,
     description = ""
   ),
-  prop_any = alist(... = , default = NULL, description = "")
+  prop_any = alist(... = , default = NULL, description = ""),
+  prop_r = alist(
+    cls = ,
+    ... = ,
+    default = NULL,
+    nullable = FALSE,
+    description = ""
+  )
 )
 
 .COMPAT_PROPS <- c("prop_float", "prop_bag", "prop_const")
