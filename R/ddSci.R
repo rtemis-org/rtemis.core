@@ -2,20 +2,23 @@
 
 #' Format Numbers for Printing
 #'
-#' 2 Decimal places, otherwise scientific notation
+#' Fixed decimal places, otherwise scientific notation
 #'
-#' Numbers will be formatted to 2 decimal places, unless this results in 0.00 (e.g. if input was .0032),
-#' in which case they will be converted to scientific notation with 2 significant figures.
-#' `ddSci` will return `0.00` if the input is exactly zero.
+#' Formats numbers to `decimal_places` decimal places. A nonzero number that
+#' rounds to zero at `decimal_places` (e.g. .0032 at 2 decimal places) is
+#' written in scientific notation with up to 2 significant figures, so it does
+#' not read as zero. An exact zero is written with `decimal_places` zeros. A
+#' magnitude at or above `hi` is written in scientific notation with
+#' `decimal_places` significant figures.
 #' This function can be used to format numbers in plots, on the console, in logs, etc.
 #'
 #' @param x Vector of numbers
 #' @param decimal_places Integer: Return this many decimal places.
 #' @param hi Float: Threshold at or above which scientific notation is used.
-#' @param as_numeric Logical: If TRUE, convert to numeric before returning.
-#' This will not force all numbers to print 2 decimal places. For example:
-#' 1.2035 becomes "1.20" if `as_numeric = FALSE`, but 1.2 otherwise
-#' This can be helpful if you want to be able to use the output as numbers / not just for printing.
+#' @param as_numeric Logical: If TRUE, convert to numeric before returning,
+#' for output used as numbers rather than printed. Numbers then print without
+#' trailing zeros: 1.2035 becomes "1.20" with `as_numeric = FALSE`, and 1.2
+#' with `as_numeric = TRUE`.
 #' @return Formatted number
 #'
 #' @author EDG
@@ -50,14 +53,10 @@ ddSci <- function(x, decimal_places = 2, hi = 1e06, as_numeric = FALSE) {
 
   xf <- list()
 
-  # Check for non-zero decimals
-  # decs <- sum(unlist(x) %% 1, na.rm = TRUE) > 0
-
   for (i in seq(x)) {
     if (is.na(x[[i]])) {
       xf[[i]] <- NA
     } else {
-      # if (decs & x[[i]] == 0) { # x[[i]] is zero but others have decimals
       if (x[[i]] == 0) {
         # always give requested decimal places
         xf[[i]] <- format(0, nsmall = decimal_places)
@@ -70,19 +69,11 @@ ddSci <- function(x, decimal_places = 2, hi = 1e06, as_numeric = FALSE) {
             nsmall = decimal_places
           )
         } else {
-          # if (decs) {
-          #   xf[[i]] <- ifelse(round(x[[i]], 2) != 0,
-          #     format(round(x[[i]], decimal_places), nsmall = decimal_places),
-          #     format(x[[i]], scientific = TRUE, digits = 2)
-          #   )
-          # } else {
-          #   xf[[i]] <- as.character(x[[i]])
-          # }
-          xf[[i]] <- ifelse(
-            round(x[[i]], 2) != 0,
-            format(round(x[[i]], decimal_places), nsmall = decimal_places),
+          xf[[i]] <- if (round(x[[i]], decimal_places) != 0) {
+            format(round(x[[i]], decimal_places), nsmall = decimal_places)
+          } else {
             format(x[[i]], scientific = TRUE, digits = 2)
-          )
+          }
         }
       }
     }
